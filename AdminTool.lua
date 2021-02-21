@@ -31,8 +31,8 @@ local accept_load_clog = false
 
 update_state = false
 
-local script_version = 5
-local script_version_text = "5.02"
+local script_version = 6
+local script_version_text = "5.1"
 local script_path = thisScript().path 
 local script_url = "https://raw.githubusercontent.com/alfantasy/AdminTool/main/AdminTool.lua"
 local update_path = getWorkingDirectory() .. '/ATupdate.ini'
@@ -367,6 +367,8 @@ function main()
 			os.remove(update_path)
 		end
 	end)
+
+	sampRegisterChatCommand("update", cmd_update)
 
 	------------- Чтение ChatLogger -----------------
 	chatlogDirectory = getWorkingDirectory() .. "\\config\\AdminTool\\chatlog"
@@ -1162,6 +1164,10 @@ function main()
 end
 
 local lc_lvl, lc_adm, lc_color, lc_nick, lc_id, lc_text
+
+function cmd_update(arg)
+	sampAddChatMessage(tag .. "Обновление 6.0", -1)
+end
 
 function cmd_tool(arg)
 	one_window_state.v = not one_window_state.v
