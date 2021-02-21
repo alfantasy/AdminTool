@@ -34,7 +34,7 @@ update_state = false
 local script_version = 5
 local script_version_text = "5.02"
 local script_path = thisScript().path 
-local script_url = ""
+local script_url = "https://raw.githubusercontent.com/alfantasy/AdminTool/main/AdminTool.lua"
 local update_path = getWorkingDirectory() .. '/ATupdate.ini'
 local update_url = "https://raw.githubusercontent.com/alfantasy/AdminTool/main/update.ini"
 -------- Введение локальные переменные, отвечающие за автообновление ----------
