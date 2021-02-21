@@ -61,6 +61,7 @@ local defTable = {
 		ATReportAns = "None",
 		ATReportRP = "None",
 		ATReportRP1 = "None",
+		ATReprotRP2 = "None",
 		P_Log = "None",
 		Re_menu = "None",
 	},
@@ -1145,7 +1146,7 @@ function main()
 			sampSetChatInputText(string.gsub(sampGetChatInputText(), "/gvk", "https://vk.com/dmdriftgta"))
 		end
 
-		if isKeyDown(strToIdKeys(config.keys.ATReportRP1)) and sampIsChatInputActive() then
+		if isKeyDown(strToIdKeys(config.keys.ATReportRP2)) and sampIsChatInputActive() then
 			local string = string.sub(sampGetChatInputText(), 0, string.len(sampGetChatInputText()) - 1)
 			sampSetChatInputText(string .. " | Приятной игры на RDS! <3")
 			wait(650)
@@ -3305,6 +3306,15 @@ function imgui.OnDrawFrame()
 					imgui.SetCursorPosX(imgui.GetWindowWidth() - 84)
 					if imgui.Button(u8"Записать. ## 6", imgui.ImVec2(75, 0)) then
 						config.keys.ATReportRP1 = getDownKeysText()
+						inicfg.save(config, directIni)
+					end
+					imgui.Separator()
+					imgui.Text(u8'Вывод "Приятной игры" в чат: ' )
+					imgui.SameLine()
+					imgui.Text(config.keys.ATReportRP2)
+					imgui.SetCursorPosX(imgui.GetWindowWidth() - 84)
+					if imgui.Button(u8"Записать. ## 7", imgui.ImVec2(75, 0)) then
+						config.keys.ATReportRP2 = getDownKeysText()
 						inicfg.save(config, directIni)
 					end
 				imgui.End()
