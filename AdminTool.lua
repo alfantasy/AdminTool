@@ -31,8 +31,8 @@ local accept_load_clog = false
 
 update_state = false
 
-local script_version = 6
-local script_version_text = "5.1"
+local script_version = 7
+local script_version_text = "5.4"
 local script_path = thisScript().path 
 local script_url = "https://raw.githubusercontent.com/alfantasy/AdminTool/main/AdminTool.lua"
 local update_path = getWorkingDirectory() .. '/ATupdate.ini'
@@ -742,7 +742,7 @@ function main()
 		if update_state then  
 			downloadUrlToFile(script_url, script_path, function(id, status)
 				if status == dlstatus.STATUS_ENDDOWNLOADDATA then  
-					sampAddChatMessage(tag .. "AdminTool обновлен.", -1)
+					notify.addNotify("{87CEEB}[AdminTool]", 'AdminTool обновлен. \nПриятной работы!', 2, 1, 6)
 					thisScript():reload()
 				end
 			end)
@@ -818,7 +818,7 @@ function main()
 		end 
 		-- введенный ключ клавиши по /ans
 		
-		if isKeyDown(config.keys.ATReportRP1) and sampIsDialogActive() then 
+		if isKeyDown(strToIdKeys(config.keys.ATReportRP1)) and sampIsDialogActive() then 
 			local string = string.sub(sampGetCurrentDialogEditboxText(), 0, string.len(sampGetCurrentDialogEditboxText()) - 1)
 			sampSetCurrentDialogEditboxText(string .. color() .. " | Удачного времяпрепровождения. ")
 			wait(650)
@@ -1145,7 +1145,7 @@ function main()
 			sampSetChatInputText(string.gsub(sampGetChatInputText(), "/gvk", "https://vk.com/dmdriftgta"))
 		end
 
-		if isKeyDown(VK_HOME) and sampIsChatInputActive() then
+		if isKeyDown(strToIdKeys(config.keys.ATReportRP1)) and sampIsChatInputActive() then
 			local string = string.sub(sampGetChatInputText(), 0, string.len(sampGetChatInputText()) - 1)
 			sampSetChatInputText(string .. " | Приятной игры на RDS! <3")
 			wait(650)
@@ -3301,7 +3301,7 @@ function imgui.OnDrawFrame()
 					imgui.Separator()
 					imgui.Text(u8'Вывод "Приятного времяпрепровождения" в /ans: ' )
 					imgui.SameLine()
-					imgui.Text(config.keys.ATReportRP)
+					imgui.Text(config.keys.ATReportRP1)
 					imgui.SetCursorPosX(imgui.GetWindowWidth() - 84)
 					if imgui.Button(u8"Записать. ## 6", imgui.ImVec2(75, 0)) then
 						config.keys.ATReportRP1 = getDownKeysText()
