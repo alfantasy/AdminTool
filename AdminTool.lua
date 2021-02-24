@@ -31,8 +31,8 @@ local accept_load_clog = false
 
 update_state = false
 
-local script_version = 8
-local script_version_text = "5.6"
+local script_version = 9
+local script_version_text = "5.7"
 local script_path = thisScript().path 
 local script_url = "https://raw.githubusercontent.com/alfantasy/AdminTool/main/AdminTool.lua"
 local update_path = getWorkingDirectory() .. '/update.ini'
@@ -362,7 +362,7 @@ function main()
 		if status == dlstatus.STATUS_ENDDOWNLOADDATA then  
 			updateIni = inicfg.load(nil, update_path)
 			if tonumber(updateIni.info.version) > script_version then 
-				sampAddChatMessage(tag .. "Есть обновление! Версия: " .. updateIni.info.version_text, -1)
+				notify.addNotify("{87CEEB}[AdminTool]", 'На GitHub новая версия \nAdminTool обновляется', 2, 1, 6)
 				update_state = true
 			end
 			os.remove(update_path)
