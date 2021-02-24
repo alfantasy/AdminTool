@@ -31,11 +31,11 @@ local accept_load_clog = false
 
 update_state = false
 
-local script_version = 7
-local script_version_text = "5.4"
+local script_version = 8
+local script_version_text = "5.6"
 local script_path = thisScript().path 
 local script_url = "https://raw.githubusercontent.com/alfantasy/AdminTool/main/AdminTool.lua"
-local update_path = getWorkingDirectory() .. '/ATupdate.ini'
+local update_path = getWorkingDirectory() .. '/update.ini'
 local update_url = "https://raw.githubusercontent.com/alfantasy/AdminTool/main/update.ini"
 -------- Введение локальные переменные, отвечающие за автообновление ----------
 
@@ -61,7 +61,7 @@ local defTable = {
 		ATReportAns = "None",
 		ATReportRP = "None",
 		ATReportRP1 = "None",
-		ATReprotRP2 = "None",
+		ATReportRP2 = "None",
 		P_Log = "None",
 		Re_menu = "None",
 	},
