@@ -31,12 +31,14 @@ local accept_load_clog = false
 
 update_state = false
 
-local script_version = 9
-local script_version_text = "5.7"
+local script_version = 10
+local script_version_text = "5.9"
 local script_path = thisScript().path 
 local script_url = "https://raw.githubusercontent.com/alfantasy/AdminTool/main/AdminTool.lua"
 local update_path = getWorkingDirectory() .. '/update.ini'
 local update_url = "https://raw.githubusercontent.com/alfantasy/AdminTool/main/update.ini"
+local config_url = "https://raw.githubusercontent.com/alfantasy/AdminTool/main/settings.ini"
+local config_path = getWorkingDirectory() .. '\\config\\AdminTool\\settings.ini'
 -------- Введение локальные переменные, отвечающие за автообновление ----------
 
 
@@ -745,6 +747,14 @@ function main()
 				if status == dlstatus.STATUS_ENDDOWNLOADDATA then  
 					notify.addNotify("{87CEEB}[AdminTool]", 'AdminTool обновлен. \nПриятной работы!', 2, 1, 6)
 					thisScript():reload()
+				end
+			end)
+			break
+		end
+		if update_state then  
+			downloadUrlToFile(config_url, config_path, function(id, status)
+				if status == dlstatus.STATUS_ENDDOWNLOADDATA then  
+					sampAddChatMessage(tag .. "Настройки были обновлены, выставлены по уполчанию.")
 				end
 			end)
 			break
@@ -2890,6 +2900,76 @@ function imgui.OnDrawFrame()
 				sampAddChatMessage("{87CEEB}[AdminTool] {4169E1}11 - темно-зеленый, 12 - золотой, 13 - серый, 14 - светло-желтый", main_color)
 				sampAddChatMessage("{87CEEB}[AdminTool] {4169E1}15 - розовый, 16 - коричневый, 17 - темно-розовый", main_color)
 				sampAddChatMessage("{87CEEB}[AdminTool] {4169E1}Данное сообщение выведено лишь вам...", main_color)
+			end
+			if imgui.CollapsingHeader(u8"Призыв в /gw") then  
+				if imgui.Button(u8"Aztecas vs Ballas") then  
+					sampSendChat("/mess 7 Игра -  GangWar: /gw")
+					sampSendChat("/mess 10 Varios Los Aztecas vs East Side Ballas ")
+					sampSendChat("/mess 10 Помогите своим братьям, заходите через /gw за любимую банду")
+					sampSendChat("/mess 7 Игра - GangWar: /gw")
+				end
+				imgui.SameLine()
+				if imgui.Button(u8"Aztecas vs Groove") then  
+					sampSendChat("/mess 7 Игра -  GangWar: /gw")
+					sampSendChat("/mess 10 Varios Los Aztecas vs Groove Street ")
+					sampSendChat("/mess 10 Помогите своим братьям, заходите через /gw за любимую банду")
+					sampSendChat("/mess 7 Игра - GangWar: /gw")
+				end
+				imgui.SameLine()
+				if imgui.Button(u8"Aztecas vs Vagos") then  
+					sampSendChat("/mess 7 Игра -  GangWar: /gw")
+					sampSendChat("/mess 10 Varios Los Aztecas vs Los Santos Vagos ")
+					sampSendChat("/mess 10 Помогите своим братьям, заходите через /gw за любимую банду")
+					sampSendChat("/mess 7 Игра - GangWar: /gw")
+				end
+				imgui.SameLine()
+				if imgui.Button(u8"Aztecas vs Rifa") then  
+					sampSendChat("/mess 7 Игра -  GangWar: /gw")
+					sampSendChat("/mess 10 Varios Los Aztecas vs The Rifa ")
+					sampSendChat("/mess 10 Помогите своим братьям, заходите через /gw за любимую банду")
+					sampSendChat("/mess 7 Игра - GangWar: /gw")
+				end
+				imgui.SameLine()
+				if imgui.Button(u8"Ballas vs Groove") then  
+					sampSendChat("/mess 7 Игра -  GangWar: /gw")
+					sampSendChat("/mess 10 East Side Ballas vs Groove Street  ")
+					sampSendChat("/mess 10 Помогите своим братьям, заходите через /gw за любимую банду")
+					sampSendChat("/mess 7 Игра - GangWar: /gw")
+				end
+				imgui.SameLine()
+				if imgui.Button(u8"Ballas vs Vagos") then  
+					sampSendChat("/mess 7 Игра -  GangWar: /gw")
+					sampSendChat("/mess 10 East Side Ballas vs Los Santos Vagos ")
+					sampSendChat("/mess 10 Помогите своим братьям, заходите через /gw за любимую банду")
+					sampSendChat("/mess 7 Игра - GangWar: /gw")
+				end
+				if imgui.Button(u8"Ballas vs Rifa") then  
+					sampSendChat("/mess 7 Игра -  GangWar: /gw")
+					sampSendChat("/mess 10 East Side Ballas vs The Rifa ")
+					sampSendChat("/mess 10 Помогите своим братьям, заходите через /gw за любимую банду")
+					sampSendChat("/mess 7 Игра - GangWar: /gw")
+				end
+				imgui.SameLine()
+				if imgui.Button(u8"Groove vs Rifa") then  
+					sampSendChat("/mess 7 Игра -  GangWar: /gw")
+					sampSendChat("/mess 10 Groove Street  vs The Rifa ")
+					sampSendChat("/mess 10 Помогите своим братьям, заходите через /gw за любимую банду")
+					sampSendChat("/mess 7 Игра - GangWar: /gw")
+				end
+				imgui.SameLine()
+				if imgui.Button(u8"Groove vs Vagos") then  
+					sampSendChat("/mess 7 Игра -  GangWar: /gw")
+					sampSendChat("/mess 10 Groove Street vs Los Santos Vagos ")
+					sampSendChat("/mess 10 Помогите своим братьям, заходите через /gw за любимую банду")
+					sampSendChat("/mess 7 Игра - GangWar: /gw")
+				end
+				imgui.SameLine()
+				if imgui.Button(u8"Vagos vs Rifa") then  
+					sampSendChat("/mess 7 Игра -  GangWar: /gw")
+					sampSendChat("/mess 10 Los Santos Vagos vs The Rifa ")
+					sampSendChat("/mess 10 Помогите своим братьям, заходите через /gw за любимую банду")
+					sampSendChat("/mess 7 Игра - GangWar: /gw")
+				end
 			end
 			if imgui.CollapsingHeader(u8"Флуды") then
 				if imgui.Button(u8'Флуд про репорты') then
