@@ -31,8 +31,8 @@ local accept_load_clog = false
 
 update_state = false
 
-local script_version = 10
-local script_version_text = "5.9"
+local script_version = 11
+local script_version_text = "7.0"
 local script_path = thisScript().path 
 local script_url = "https://raw.githubusercontent.com/alfantasy/AdminTool/main/AdminTool.lua"
 local update_path = getWorkingDirectory() .. '/update.ini'
@@ -55,6 +55,12 @@ local defTable = {
 		Push_Report = false,
 		Chat_Logger = false,
 		ranremenu = false,
+		ATAdminPass = "",
+		prefix_adm = '',
+		prefix_STadm = '',
+		prefix_Madm = '',
+		prefix_ZGAadm = '',
+		prefix_GAadm = '',
 		-- new
 	},
 	keys = {
@@ -238,6 +244,7 @@ local three_window_state = imgui.ImBool(false)
 local four_window_state = imgui.ImBool(false)
 local five_window_state = imgui.ImBool(false)
 local six_window_state = imgui.ImBool(false)
+local seven_window_state = imgui.ImBool(false)
 local ATChat = imgui.ImBool(false)
 local ATChatLogger = imgui.ImBool(false)
 local ATre_menu = imgui.ImBool(false)
@@ -245,12 +252,18 @@ local chat_logger = imgui.ImBuffer(10000)
 local chat_find = imgui.ImBuffer(256)
 local settings_keys = imgui.ImBool(false)
 local btn_size = imgui.ImVec2(-0.1, 0)
+local ATAdminPass = imgui.ImBuffer(214)
 local text_buffer_mp = imgui.ImBuffer(516)
 local text_buffer_prize = imgui.ImBuffer(524)
 local text_buffer_name = imgui.ImBuffer(256)
 local text_buffer_sniat = imgui.ImBuffer(2048)
 local text_buffer_kick = imgui.ImBuffer(1024)
 local text_buffer_adm = imgui.ImBuffer(4096)
+local prefix_Madm = imgui.ImBuffer(4096)
+local prefix_adm = imgui.ImBuffer(4096)
+local prefix_STadm = imgui.ImBuffer(4096)
+local prefix_ZGAadm = imgui.ImBuffer(4096)
+local prefix_GAadm = imgui.ImBuffer(4096)
 local arr_str = {u8"1 LVL", u8"2 LVL", u8"3 LVL", u8"4 LVL", u8"5 LVL", u8"6 LVL", u8"7 LVL", u8"8 LVL", u8"9 LVL", u8"10 LVL", u8"11 LVL", u8"12 LVL", u8"13 LVL", u8"14 LVL", u8"15 LVL", u8"16 LVL", u8"17 LVL", u8"18 LVL" }
 
 local checked_test = imgui.ImBool(false) -- отвечает за чекбокс
@@ -371,8 +384,6 @@ function main()
 		end
 	end)
 
-	sampRegisterChatCommand("update", cmd_update)
-
 	------------- Чтение ChatLogger -----------------
 	chatlogDirectory = getWorkingDirectory() .. "\\config\\AdminTool\\chatlog"
     if not doesDirectoryExist(chatlogDirectory) then
@@ -387,6 +398,14 @@ function main()
 	setting_items.Push_Report.v = config.setting.Push_Report
 	setting_items.Chat_Logger.v = config.setting.Chat_Logger
 	setting_items.ranremenu.v = config.setting.ranremenu
+
+	prefix_adm.v = config.setting.prefix_adm
+	prefix_STadm.v = config.setting.prefix_STadm
+	prefix_Madm.v = config.setting.prefix_Madm
+	prefix_ZGAadm.v = config.setting.prefix_ZGAadm
+	prefix_GAadm.v = config.setting.prefix_GAadm
+
+	ATAdminPass.v = config.setting.ATAdminPass
 	index_text_pos = config.setting.Y
 	
 	if not doesDirectoryExist(getWorkingDirectory() .. "/config/AdminTool") then
@@ -413,6 +432,20 @@ function main()
 	end)
 	------------- Команды, отвечающие за замороженные функции ---------
 
+
+	--------- Команды, ИСКЛЮЧИТЕЛЬНО ДЛЯ РАЗРАБОТЧИКОВ ИЛИ ВНУТРИИГРОВЫХ ДЕЙСТВИЙ -----------
+	sampRegisterChatCommand("tpcord", tpcord)
+	sampRegisterChatCommand("iddialog", iddialog)
+	sampRegisterChatCommand("cchat", cchat)
+	--------- Команды, ИСКЛЮЧИТЕЛЬНО ДЛЯ РАЗРАБОТЧИКОВ ИЛИ ВНУТРИИГРОВЫХ ДЕЙСТВИЙ -----------
+	
+	--------------------------- Команды для префиксов -------------------
+	sampRegisterChatCommand("pradm1", pradm1)
+	sampRegisterChatCommand("pradm2", pradm2)
+	sampRegisterChatCommand("pradm3", pradm3)
+	sampRegisterChatCommand("pradm4", pradm4)
+	sampRegisterChatCommand("pradm5", pradm5)
+	--------------------------- Команды для префиксов -------------------
 
 	------- Команды для запуска интерфейса ------- 
 	sampRegisterChatCommand("tool", cmd_tool)
@@ -784,6 +817,13 @@ function main()
 		if isKeyDown(VK_R) and (sampIsChatInputActive() == false) and (sampIsDialogActive() == false) and control_recon and recon_to_player then
 			sampSendClickTextdraw(32)
 		end
+		---------- Обновление рекона -----------
+
+		if isKeyDown(VK_Q) and (sampIsChatInputActive() == false) and (sampIsDialogActive() == false) and control_recon and recon_to_player then
+			recon_to_player = false
+			sampSendChat("/reoff ")
+		end
+		--------------- Выход из рекона ------------
 
 		if isKeysDown(strToIdKeys(config.keys.Re_menu)) and (sampIsChatInputActive() == false) and (sampIsDialogActive() == false) and control_recon and recon_to_player then
 			right_re_menu = not right_re_menu	
@@ -804,6 +844,12 @@ function main()
 			end
 		end
 		--------------- Загрузка админского чата -------------
+
+		if sampGetCurrentDialogId() == 1227 and ATAdminPass.v and sampIsDialogActive() then
+            sampSendDialogResponse(1227, 1, _, ATAdminPass.v)
+			sampCloseCurrentDialogWithButton(1227, 1)
+		end
+		-- автоматический ввод пароля
 
 		if isKeyDown(strToIdKeys(config.keys.ATOnline)) and (sampIsChatInputActive() == false) and (sampIsDialogActive() == false) then
 			sampSendChat("/online")
@@ -1176,9 +1222,69 @@ end
 
 local lc_lvl, lc_adm, lc_color, lc_nick, lc_id, lc_text
 
-function cmd_update(arg)
-	sampAddChatMessage(tag .. "Обновление 6.0", -1)
+-- выдача префиксов --
+function pradm1(arg)
+	sampSendChat("/prefix " .. arg .. " Мл.Администратор " .. prefix_Madm.v)
 end
+
+function pradm2(arg)
+	sampSendChat("/prefix " .. arg .. " Администратор " .. prefix_adm.v)
+end  
+
+function pradm3(arg)
+	sampSendChat("/prefix " .. arg .. " Ст.Администратор " .. prefix_STadm.v)
+end  
+
+function pradm4(arg)
+	sampSendChat("/prefix " .. arg .. " Зам.Гл.Администратора " .. prefix_ZGAadm.v)
+end  
+
+function pradm5(arg)
+	sampSendChat("/prefix " .. arg .. " Главный.Администратор " .. prefix_GAadm.v)
+end  
+-- выдача префиксов --
+
+function tpcord(coords)
+	local x, y, z = coords:match('(.+) (.+) (.+)') 
+	setCharCoordinates(PLAYER_PED, x, y, z)
+end  
+-- телепортация по координатам
+
+function iddialog(arg)
+	iddea = sampGetCurrentDialogId()
+	sampAddChatMessage(tag .. "Диалог с ID: " .. iddea)
+end
+-- показ ID последнего/активного диалога
+
+function cchat(arg)
+	notify.addNotify("{87CEEB}[AdminTool]", 'Визуальная очистка чата началась', 2, 1, 6)
+	sampAddChatMessage("", -1)
+	sampAddChatMessage("", -1)
+	sampAddChatMessage("", -1)
+	sampAddChatMessage("", -1)
+	sampAddChatMessage("", -1)
+	sampAddChatMessage("", -1)
+	sampAddChatMessage("", -1)
+	sampAddChatMessage("", -1)
+	sampAddChatMessage("", -1)
+	sampAddChatMessage("", -1)
+	sampAddChatMessage("", -1)
+	sampAddChatMessage("", -1)
+	sampAddChatMessage("", -1)
+	sampAddChatMessage("", -1)
+	sampAddChatMessage("", -1)
+	sampAddChatMessage("", -1)
+	sampAddChatMessage("", -1)
+	sampAddChatMessage("", -1)
+	sampAddChatMessage("", -1)
+	sampAddChatMessage("", -1)
+	sampAddChatMessage("", -1)
+	sampAddChatMessage("", -1)
+	sampAddChatMessage("", -1)
+	sampAddChatMessage("", -1)
+	sampAddChatMessage("", -1)
+end
+-- функция, отвечающая за очистку чата (визуал)
 
 function cmd_tool(arg)
 	one_window_state.v = not one_window_state.v
@@ -1311,7 +1417,7 @@ function thread_function(opt)
 	end
 	if opt == "arep" then  
 		sampSendChat("/a /ans -> отвечаем на репорт")
-		wait(1000)
+		wait(2500)
 		sampSendChat("/a /ans -> отвечаем на репорт")
 		wait(2500)
 		sampSendChat("/a /ans -> отвечаем на репорт")
@@ -1331,7 +1437,7 @@ function cmd_fd1(arg)
 end
 
 function cmd_fd2(arg)
-	sampSendChat("/mute " .. arg .. " 240 " .. " Спам/Флуд - x2")
+	sampSendChat("/mute " .. arg .. " 240 " .. " Спам/Флуд - x2 ")
 end
 
 function cmd_fd3(arg)
@@ -2064,6 +2170,10 @@ end
 function cmd_zsk(arg)
 	sampSendChat("/ans " .. arg .. " Если вы застряли, введите /spawn | /kill | Приятной игры на RDS <3")
 end
+
+function cmd_smh(arg)
+	sampSendChat("/ans " .. arg .. " /sellmyhouse (игроку)  ||  /hpanel -> слот -> Изменить -> Продать дом государству ")
+end
 ------- Функции, относящиеся к быстрым ответам -------
 
 
@@ -2562,6 +2672,7 @@ function imgui.OnDrawFrame()
 	not four_window_state.v and 
 	not five_window_state.v and 
 	not six_window_state.v and 
+	not seven_window_state.v and
 	not ATChat.v and 
 	not settings_keys.v and
 	not ATre_menu.v and
@@ -2580,6 +2691,10 @@ function imgui.OnDrawFrame()
 		imgui.Text(u8".. на примечание в интерфейсе по /ans, команды с значком $, могут вводится как ответ в окне /ans")
 		imgui.Text(" ")
 		imgui.Separator()
+			imgui.Text(u8"Ниже будут приведены координаты персонажа.")
+			psX, psY, psZ = getCharCoordinates(PLAYER_PED)
+			imgui.Text(u8"Позиция от X:" .. psX .. u8" | Позиция от Y:" .. psY .. u8" | Позиция от Z: " .. psZ)
+		imgui.Separator()
 		if imgui.CollapsingHeader(u8"Дополнительные команды") then
 			imgui.Text(u8"Команда для мероприятий: /toolmp | помощь по командам: /tool (напоминание)")
 			imgui.Text(u8"Помощь по флудам: /toolfd | Помощь по /ans: /toolans")
@@ -2587,6 +2702,7 @@ function imgui.OnDrawFrame()
 			imgui.Text(u8"/u id - размутить игрока; /uu id - размутить и попросить прощение")
 			imgui.Text(u8"/sw id - выдать миниган кому-то; /as id - заспавнить игрока")
 			imgui.Text(u8"/wallh - включение/выключение ВХ")
+			imgui.Text(u8"/cchat - визуальная очистка чата; /cfind - чат-логгер")
 		end
 		imgui.Separator()
 			imgui.BeginChild(u8"Наказания для онлайна", imgui.ImVec2(325, 200), true)
@@ -2720,6 +2836,10 @@ function imgui.OnDrawFrame()
 					six_window_state.v = not six_window_state.v
 					imgui.Process = six_window_state.v 
 				end
+				if imgui.Button(u8"Помощь по ID Guns") then  
+					seven_window_state.v = not seven_window_state.v
+					imgui.Process = seven_window_state
+				end
 			end
 		imgui.Separator()
 
@@ -2752,6 +2872,7 @@ function imgui.OnDrawFrame()
 				sampSendChat("/mess 10 И это игрок с ID: " .. u8:decode(text_buffer_prize.v))
 				sampSendChat("/mpwin " .. text_buffer_prize.v)
 				notify.addNotify("{87CEEB}[AdminTool]", "Вы выдали приз игроку с ID " .. u8:decode(text_buffer_prize.v) .. ", вам\nвыдана зарплата", 2, 1, 6)
+				sampSendChat("/spp")
 			end
 		end
 		if imgui.Button(u8'Выдача минигана самому себе') then
@@ -2765,7 +2886,6 @@ function imgui.OnDrawFrame()
 				sampSendChat("/mp")
 				sampSendDialogResponse(5343, 1, 0)
 				sampSendDialogResponse(5344, 1, 0, u8:decode(text_buffer_mp.v))
-				sampSendDialogResponse(5344, 0, 0)
 				sampSendChat("/mess 10 Чтобы попасть на мероприятие, введите /tpmp")
 				notify.addNotify("{87CEEB}[AdminTool]", "Мероприятие успешно создано\nТелепортация открыта", 2, 1, 6)
 			end
@@ -2785,12 +2905,16 @@ function imgui.OnDrawFrame()
 		imgui.BeginChild("Остальное", imgui.ImVec2(250, 200), true)
 		if imgui.CollapsingHeader(u8"Заготовленные мероприятия") then
 			if imgui.Button(u8'Мероприятия "Прятки"') then
-				sampSendChat("/mess 10 Уважаемые игроки! Проходит мероприятие: Прятки. Желающие /tpmp")
-				sampSendChat("/mp")
-				sampSendDialogResponse(5343, 1, 0)
-				sampSendDialogResponse(5344, 1, 0, "Прятки")
-				sampSendChat("/mess 10 Активнее /tpmp, делаем строй и ожидаем команды")
-				notify.addNotify("{87CEEB}[AdminTool]", 'Мероприятие "Прятки" успешно создано\nТелепортация открыта', 2, 1, 6)
+				lua_thread.create(function()
+					setCharCoordinates(PLAYER_PED,-2315,1545,18)
+					wait(1000)
+					sampSendChat("/mess 10 Уважаемые игроки! Проходит мероприятие: Прятки. Желающие /tpmp")
+					sampSendChat("/mp")
+					sampSendDialogResponse(5343, 1, 0)
+					sampSendDialogResponse(5344, 1, 0, "Прятки")
+					sampSendChat("/mess 10 Активнее /tpmp, делаем строй и ожидаем команды")
+					notify.addNotify("{87CEEB}[AdminTool]", 'Мероприятие "Прятки" успешно создано\nТелепортация открыта', 2, 1, 6)
+				end)
 			end
 			if imgui.Button(u8'Правила МП "Прятки"') then
 				sampSendChat("/mess 6 Правила: Нельзя использовать /passive, /fly, /r - /s и баги. ДМ запрещено.")
@@ -2798,12 +2922,16 @@ function imgui.OnDrawFrame()
 			end
 			imgui.Separator()
 			if imgui.Button(u8'Мероприятие "Король дигла"') then
-				sampSendChat("/mess 10 Уважаемые игроки! Проходит мероприятие: Король Дигла. Желающие /tpmp")
-				sampSendChat("/mp")
-				sampSendDialogResponse(5343, 1, 0)
-				sampSendDialogResponse(5344, 1, 0, "КД")
-				sampSendChat("/mess 10 Активнее /tpmp, делаем строй и ожидаем команды")
-				notify.addNotify("{87CEEB}[AdminTool]", 'Мероприятие "Король дигла" \nуспешно создано\nТелепортация открыта', 2, 1, 6)
+				lua_thread.create(function()
+					setCharCoordinates(PLAYER_PED,1753,2072,1955)
+					wait(1000)
+					sampSendChat("/mess 10 Уважаемые игроки! Проходит мероприятие: Король Дигла. Желающие /tpmp")
+					sampSendChat("/mp")
+					sampSendDialogResponse(5343, 1, 0)
+					sampSendDialogResponse(5344, 1, 0, "КД")
+					sampSendChat("/mess 10 Активнее /tpmp, делаем строй и ожидаем команды")
+					notify.addNotify("{87CEEB}[AdminTool]", 'Мероприятие "Король дигла" \nуспешно создано\nТелепортация открыта', 2, 1, 6)
+				end)
 			end
 			if imgui.Button(u8'Правила МП "Король дигла"') then
 				sampSendChat("/mess 6 Правила: Нельзя использовать /passive, /fly, /r - /s и баги. ДМ запрещено.")
@@ -2811,12 +2939,16 @@ function imgui.OnDrawFrame()
 			end
 			imgui.Separator()
 			if imgui.Button(u8'Мероприятие "Русская рулетка"') then
-				sampSendChat("/mess 10 Уважаемые игроки! Проходит мероприятие: Русская рулетка. Желающие /tpmp")
-				sampSendChat("/mp")
-				sampSendDialogResponse(5343, 1, 0)
-				sampSendDialogResponse(5344, 1, 0, "РР")
-				sampSendChat("/mess 10 Активнее /tpmp, делаем строй и ожидаем команды")
-				notify.addNotify("{87CEEB}[AdminTool]", 'Мероприятие "Русская рулетка" \nуспешно создано\nТелепортация открыта', 2, 1, 6)
+				lua_thread.create(function()
+					setCharCoordinates(PLAYER_PED,1973,-978,1371)
+					wait(1000)
+					sampSendChat("/mess 10 Уважаемые игроки! Проходит мероприятие: Русская рулетка. Желающие /tpmp")
+					sampSendChat("/mp")
+					sampSendDialogResponse(5343, 1, 0)
+					sampSendDialogResponse(5344, 1, 0, "РР")
+					sampSendChat("/mess 10 Активнее /tpmp, делаем строй и ожидаем команды")
+					notify.addNotify("{87CEEB}[AdminTool]", 'Мероприятие "Русская рулетка" \nуспешно создано\nТелепортация открыта', 2, 1, 6)
+				end)
 			end
 			if imgui.Button(u8'Правила МП "Русская рулетка"') then
 				sampSendChat("/mess 6 Правила: Нельзя использовать /passive, /fly, /r - /s и баги. ДМ запрещено.")
@@ -2824,12 +2956,16 @@ function imgui.OnDrawFrame()
 			end
 			imgui.Separator()
 			if imgui.Button(u8'Мероприятие "Поливалка"') then
-				sampSendChat("/mess 10 Уважаемые игроки! Проходит мероприятие: Поливалка. Желающие: /tpmp")
-				sampSendChat("/mp")
-				sampSendDialogResponse(5343, 1, 0)
-				sampSendDialogResponse(5344, 1, 0, "Поливалка")
-				sampSendChat("/mess 10 Активнее /tpmp, делаем строй и ожидаем комадны")
-				notify.addNotify("{87CEEB}[AdminTool]", 'Мероприятие "Поливалка" \nуспешно создано\nТелепортация открыта', 2, 1, 6)
+				lua_thread.create(function()
+					setCharCoordinates(PLAYER_PED,-2304,872,59)
+					wait(1000)
+					sampSendChat("/mess 10 Уважаемые игроки! Проходит мероприятие: Поливалка. Желающие: /tpmp")
+					sampSendChat("/mp")
+					sampSendDialogResponse(5343, 1, 0)
+					sampSendDialogResponse(5344, 1, 0, "Поливалка")
+					sampSendChat("/mess 10 Активнее /tpmp, делаем строй и ожидаем комадны")
+					notify.addNotify("{87CEEB}[AdminTool]", 'Мероприятие "Поливалка" \nуспешно создано\nТелепортация открыта', 2, 1, 6)
+				end)
 			end
 			if imgui.Button(u8'Правила МП "Поливалка"') then
 				sampSendChat("/mess 6 Правила: Нельзя использовать /passive, /fly, /r - /s и баги. ДМ запрещено.")
@@ -2838,12 +2974,16 @@ function imgui.OnDrawFrame()
 			end
 			imgui.Separator()
 			if imgui.Button(u8'Мероприятие "Крылья смерти"') then
-				sampSendChat("/mess 10 Уважаемые игроки! Проходит мероприятие: Крылья смерти. Желающие: /tpmp")
-				sampSendChat("/mp")
-				sampSendDialogResponse(5343, 1, 0)
-				sampSendDialogResponse(5344, 1, 0, "Крылья смерти")
-				sampSendChat("/mess 10 Активнее /tpmp, делаем строй и ожидаем команды")
-				notify.addNotify("{87CEEB}[AdminTool]", 'Мероприятие "Крылья смерти" \nуспешно создано\nТелепортация открыта', 2, 1, 6)
+				lua_thread.create(function()
+					setCharCoordinates(PLAYER_PED,2027,-2434,13)
+					wait(1000)
+					sampSendChat("/mess 10 Уважаемые игроки! Проходит мероприятие: Крылья смерти. Желающие: /tpmp")
+					sampSendChat("/mp")
+					sampSendDialogResponse(5343, 1, 0)
+					sampSendDialogResponse(5344, 1, 0, "Крылья смерти")
+					sampSendChat("/mess 10 Активнее /tpmp, делаем строй и ожидаем команды")
+					notify.addNotify("{87CEEB}[AdminTool]", 'Мероприятие "Крылья смерти" \nуспешно создано\nТелепортация открыта', 2, 1, 6)
+				end)
 			end
 			if imgui.Button(u8'Правила МП "Крылья смерти"') then
 				sampSendChat("/mess 6 Правила: Нельзя использовать /passive, /fly, /r - /s и баги. ДМ запрещено.")
@@ -2862,13 +3002,137 @@ function imgui.OnDrawFrame()
 				sampSendChat("/mess 6 Первый, кто отвечает - получает один балл")
 				sampSendChat("/mess 6 Всего баллов - 5. Готовность отправляем мне в /pm знаком +")
 			end
+			imgui.Separator()
+			if imgui.Button(u8'Мероприятие "Живи или умри') then  
+				lua_thread.create(function()
+					setCharCoordinates(PLAYER_PED,1547,-1359,329)
+					wait(1000)
+					sampSendChat("/mess 10 Уважаемые игроки! Проходит мероприятие: Живи или умри. Желающие: /tpmp")
+					sampSendChat("/mp")
+					sampSendDialogResponse(5343, 1, 0)
+					sampSendDialogResponse(5344, 1, 0, "ЖилиУ")
+					sampSendChat("/mess 10 Активнее /tpmp, делаем строй и ожидаем команды")
+					notify.addNotify("{87CEEB}[AdminTool]", 'Мероприятие "Живи или умри" \nуспешно создано\nТелепортация открыта', 2, 1, 6)
+				end)
+			end
+			if imgui.Button(u8'Правила МП "Живи или умри"') then  
+				sampSendChat("/mess 6 Правила: Нельзя использовать /passive, /fly, /r - /s и баги. ДМ запрещено.")
+				sampSendChat("/mess 6 Я буду использовать комбайн. Моя задача - давить вас")
+				sampSendChat("/mess 6 Ваша задача - разбегаться в крыше, и выживать.")
+				sampSendChat("/mess 6 Тот, кто будет последним - победитель")
+			end
+			imgui.Separator()
+			if imgui.Button(u8'Мероприятие "Развлечение"') then  
+				lua_thread.create(function()
+					setCharCoordinates(PLAYER_PED,626,-1891,3)
+					wait(1000)
+					sampSendChat("/mess 10 Уважаемые игроки! Проходит мероприятие: Развлечение. Желающие: /tpmp")
+					sampSendChat("/mp")
+					sampSendDialogResponse(5343, 1, 0)
+					sampSendDialogResponse(5344, 1, 0, "Развлекательное МП")
+					sampSendChat("/mess 10 Активнее /tpmp, делаем строй и ожидаем команды")
+					notify.addNotify("{87CEEB}[AdminTool]", 'Мероприятие "Развлечение" \nуспешно создано\nТелепортация открыта', 2, 1, 6)
+				end)
+			end
+			if imgui.Button(u8'Правила МП "Развлечение"') then  
+				sampSendChat("/mess 6 Правила: Нельзя использовать /passive, /fly, /r - /s и баги. ДМ запрещено.")
+				sampSendChat("/mess 6 Я вам ставлю любые объекты, ставите бумбокс. В течении 10 минут..")
+				sampSendChat("/mess 6 ...вы свободно веселитесь! Цель самого мероприятия - собрать сервер!")
+			end
+			imgui.Separator()
+			if imgui.Button(u8'Мероприятие "Поле чудес"') then  
+				lua_thread.create(function()
+					sampSendChat("/mess 10 Уважаемые игроки! Проходит мероприятие: Поле чудес! Телепорта не будет")
+					sampSendChat("/mess 10 Сейчас, я объясню правила игры, и те, кто прочитает правила, мне в /pm +")
+					notify.addNotify("{87CEEB}[AdminTool]", 'Мероприятие "Поле чудес" \nзапущена\nГотовьте слово', 2, 1, 6)
+				end)
+			end
+			if imgui.Button(u8'Правила МП "Поле чудес"') then
+				sampSendChat("/mess 6 Я загадываю слово, говорю его примерное значение")  
+				sampSendChat("/mess 6 Ваша задача - угадать слово, открывать буквы")
+				sampSendChat("/mess 6 Тот, кто отгадает слово - победитель")
+				sampSendChat("/mess 6 Одна буква = один балл. Один балл - 1кк виртов.")
+			end
 			imgui.Text(u8"Swat Tank - 601 ID, Shamal - 519 ID.") 
+			imgui.Text(u8"Комбайн - 532 ID")
 			imgui.Text(u8"Чтобы заспавнить машину,")
 			imgui.Text(u8"введите /veh ID 1 1")
 			imgui.Text(u8"Вопросы для Викторины,")
 			imgui.Text(u8"вы должны приготовить сами")
 		end
 		imgui.EndChild()
+		imgui.Separator()
+		if imgui.CollapsingHeader(u8"Описание каждого мероприятия") then  
+			imgui.Separator()
+			if imgui.CollapsingHeader(u8"Прятки") then 
+				imgui.Text(u8"Первоначально собирается строй, рассказываются правила.")
+				imgui.Text(u8"Люди разбегаются, после администратор начинает искать")
+				imgui.Text(u8"Администратор бегает с миниганом, убивая каждого, кого найдет")
+				imgui.Text(u8"Тот, кто остается последним - побеждает")
+			end 
+			imgui.Separator()
+			if imgui.CollapsingHeader(u8"Король дигла") then
+				imgui.Text(u8"Собирается строй, рассказываются правила игры.")
+				imgui.Text(u8"Игроки восстанавливают здоровье, берут Desert Eagle.")
+				imgui.Text(u8"Администратор выбирает двух игроков каждый раунд")
+				imgui.Text(u8"Погибающий - выбывает, победитель - остается.")
+				imgui.Text(u8"Победивший в последнем раунде - получает приз")
+			end 
+			imgui.Separator()
+			if imgui.CollapsingHeader(u8"Русская рулетка") then  
+				imgui.Text(u8"Делается строй, рассказываются правила")
+				imgui.Text(u8"Администратор берет миниган, и начинается русская рулетка")
+				imgui.Text(u8'Это делается с помощью команды "/try убил"')
+				imgui.Text(u8'Если "удачно" - игрок погибает | Если "неудачно" - жив')
+				imgui.Text(u8'Тот, кто остается последним - побеждает')
+			end 
+			imgui.Separator()
+			if imgui.CollapsingHeader(u8"Крылья смерти") then  
+				imgui.Text(u8"Сначала делается строй, рассказываются правила")
+				imgui.Text(u8"Администратор спавнит самолет Shamal")
+				imgui.Text(u8"Игроки запрыгивают на крылья самолета")
+				imgui.Text(u8"Администратор начинает полет и трюки")
+				imgui.Text(u8"Тот, кто останется последний на самолете - побеждает")
+			end 
+			imgui.Separator()
+			if imgui.CollapsingHeader(u8"Викторина") then  
+				imgui.Text(u8"Администратор объявляет о начале Викторины")
+				imgui.Text(u8"Тем временем, телепортация не задается")
+				imgui.Text(u8"Ответ = 1 балл. Тот, кто набрал 5 баллов - победитель")
+				imgui.Text(u8"Можно задавать любые вопросы. \nДаже, если они не связанные с модом сервера")
+			end 
+			imgui.Separator()
+			if imgui.CollapsingHeader(u8"Поливалка") then  
+				imgui.Text(u8"Делается строй, администратор рассказывает правила")
+				imgui.Text(u8"Он спавнит Swat Tank, и начинает поливать игроков")
+				imgui.Text(u8"Последний, кто остался на платформе - победитель")
+			end 
+			imgui.Separator()
+			if imgui.CollapsingHeader(u8"Живи или умри") then  
+				imgui.Text(u8"Делается строй, рассказываются правила")
+				imgui.Text(u8"Администратор сбивает игроков на комбайне")
+				imgui.Text(u8"Тот, кто остался последний - победил")
+			end 
+			imgui.Separator()
+			if imgui.CollapsingHeader(u8"Развлекательное МП") then  
+				imgui.Text(u8"Делается строй, рассказывается короткие правила")
+				imgui.Text(u8"Им можно на мероприятии выдавать объекты (/object)")
+				imgui.Text(u8"Слушать музыку, и веселиться всячески в течении 10 минут")
+				imgui.Text(u8"БОЛЬШАЯ ПРОСЬБА! ПОСЛЕ МЕРОПРИЯТИЯ ЗАБРАТЬ ОБЪЕКТЫ")
+			end 
+			imgui.Separator()
+			if imgui.CollapsingHeader(u8"Поле чудес") then  
+				imgui.Text(u8"Объявляется о начале Поле чудес, ТП нету")
+				imgui.Text(u8"Рассказываются правила, загадывается слово")
+				imgui.Text(u8"Игроки выбирают буквы в ЛС, но как..")
+				imgui.Text(u8"Им задаются три варианта, а они выбирают один - верный")
+				imgui.Text(u8"Первый, кто написал вариант - тот вариант учитывается")
+				imgui.Text(u8"Тот, кто отгадал слово - победитель.")
+				imgui.Text(u8"Но, участникам выдаются вирты. Одна буква = 1 балл")
+				imgui.Text(u8"1 балл - 1кк.")
+			end
+			imgui.Separator()
+		end
 		imgui.End()
 	end
   	-- Блок two_window_state отвечает за интерфейс по мероприятиям
@@ -3136,7 +3400,7 @@ function imgui.OnDrawFrame()
 							imgui.Text(u8"/ktp - как телепортироваться ($ .ктп ) |  /og - ограб.банка ($ .ог )")
 						end
 						imgui.Separator()
-						if imgui.CollapsingHeader(u8"Вопросы по продаже/купить что-либо") then   
+						if imgui.CollapsingHeader(u8"Вопросы по продаже/покупке что-либо") then   
 							imgui.Text(u8"/gak - как продать аксессуары ($ .кпа )")
 							imgui.Text(u8"/tcm - обмен очков/коинов/рублей ($ .обм )")
 							imgui.Text(u8"/smc - продажа машины ($ .пм ) | /smh - продажа дома ($ .пд )")
@@ -3222,18 +3486,40 @@ function imgui.OnDrawFrame()
 						end 
 					imgui.EndChild()
 					imgui.SameLine()
-					imgui.BeginChild('Остальное', imgui.ImVec2(270, 140), true)
+					imgui.BeginChild('Остальное', imgui.ImVec2(270, 200), true)
 						if imgui.CollapsingHeader(u8"Команды для старших администраторов") then
 							imgui.Text(u8"/al id - флуд про /alogin администратору")
 							imgui.Text(u8"/dpv - проверка на читы")
 							imgui.Text(u8"/arep - призыв админов в /a чат \nдля ответа на репорт")
 						end
+						imgui.Separator()
 						imgui.Text(u8"Актив вспом.команд (/tr, /ears)")
 						if imgui.Button(u8"Клик") then
 							sampSendChat("/tr")
 							sampSendChat("/ears")
 							notify.addNotify("{87CEEB}[AdminTool]", 'Вы включили просмотр /pm, \nи ворование репортов', 2, 1, 6)
 						end
+					imgui.EndChild()
+					imgui.BeginChild('Префиксы', imgui.ImVec2(400, 200), true)
+						if imgui.CollapsingHeader(u8"Ввод цветов для префиксов") then  
+							imgui.InputText(u8"Префикс Мл.Адм", prefix_Madm)
+							imgui.InputText(u8"Префикс Адм", prefix_adm)
+							imgui.InputText(u8"Префикс Ст.Адм", prefix_STadm)
+							imgui.InputText(u8"Префикс ЗГА", prefix_ZGAadm)
+							imgui.InputText(u8"Префикс ГА", prefix_GAadm)
+							if imgui.Button(u8"Сохранить префиксы") then
+								config.setting.prefix_adm = prefix_adm.v
+								config.setting.prefix_Madm = prefix_Madm.v
+								config.setting.prefix_STadm = prefix_STadm.v
+								config.setting.prefix_ZGAadm = prefix_ZGAadm.v
+								config.setting.prefix_GAadm = prefix_GAadm.v
+								inicfg.save(config, directIni)
+								notify.addNotify("{87CEEB}[AdminTool]", 'Сохранение прошло успешно.', 2, 1, 6)
+							end
+						end
+						imgui.Text(u8"/pradm1 id - префикс Мл.Админ | /pradm2 id - префикс Админ")
+						imgui.Text(u8"/pradm3 id - префикс Ст.Админ | /pradm4 id - префикс ЗГА")
+						imgui.Text(u8"/pradm5 id - префикс ГА")
 					imgui.EndChild()
 				imgui.End()
 			end
@@ -3280,16 +3566,69 @@ function imgui.OnDrawFrame()
 						end
 					end
 				imgui.Separator()
+				imgui.Text(u8"Ввод пароля для /alogin")
+				imgui.InputText(u8"Password for Admin", ATAdminPass)
+				imgui.Separator()
 				if imgui.Button(u8"Сохранить.") then
 					config.setting.Admin_chat = setting_items.Admin_chat.v
 					config.setting.Chat_Logger = setting_items.Chat_Logger.v
 					config.setting.ranremenu = setting_items.ranremenu.v
+					config.setting.ATAdminPass = ATAdminPass.v
 					inicfg.save(config, directIni)
 					notify.addNotify("{87CEEB}[AdminTool]", 'Сохранение прошло успешно.', 2, 1, 6)
 				end
 				imgui.SameLine()
 				imgui.Text(u8"Настройки можно посмотреть в config/AdminTool")
+				imgui.Separator()
+				if imgui.Button(u8"Выключение скрипта") then  
+						lua_thread.create(function()
+							imgui.Process = false
+							wait(200)
+							sampAddChatMessage(tag .. "Выгрузка скрипта из процесса MoonLoader...")
+							sampAddChatMessage(tag .. "Если остался курсор есть, то откройте консоль SAMPFUNCS и закройте.")
+							sampAddChatMessage(tag .. "Консоль открывается на клавишу: Тильда (Ё)")
+							wait(200)
+							imgui.ShowCursor = false
+							thisScript():unload()
+						end)
+				end  
+				imgui.Text(u8"Для того, чтобы снова запустить скрипт: ALT+R \n(перезагрузка всех скриптов)")
 				imgui.End()
+			end
+			if seven_window_state.v then  
+				imgui.SetNextWindowSize(imgui.ImVec2(650, 350), imgui.Cond.FirstUseEver)
+				imgui.SetNextWindowPos(imgui.ImVec2((sw1 / 3), sh1 / 6), imgui.Cond.FirstUseEver, imgui.ImVec2(0.5, 0.5))
+
+				imgui.ShowCursor = true  
+
+				imgui.Begin(u8"ID оружия", seven_window_state)
+					
+					imgui.Text(u8"Все ID расположены с названиями! Никаких картинок.")
+					imgui.Text(u8"При необходимости, ниже будут приведены ссылки для картинок:")
+					imgui.Text(u8"https://gtaxmods.com/skins-id.html - скины")
+					imgui.Text(u8"https://samp-mods.com/id-vehicles-samp.html - машины")
+					
+					if imgui.CollapsingHeader(u8"ID guns") then  
+						imgui.Text(u8"1 ID - кастет | 2 ID - клюшка | 3 ID - дубинка")
+						imgui.Text(u8"4 ID - нож | 5 ID - бита | 6 ID - лопата")
+						imgui.Text(u8"7 ID - кий | 8 ID - катана | 9 ID - бензопила")
+						imgui.Text(u8"10 ID - фаллоимитатор | 11-13 ID - вибраторы")
+						imgui.Text(u8"14 ID - букет цветов | 15 ID - трость")
+						imgui.Text(u8"16 ID - гранаты | 17 ID - дым/газ гранаты")
+						imgui.Text(u8"18 ID - молотов | 22 ID - Colt 45 (пистолет)")
+						imgui.Text(u8"23 ID - Colt 45 с глушителем | 24 ID - Deagle")
+						imgui.Text(u8"25 ID - ShotGun | 26 ID - двухстволки")
+						imgui.Text(u8"27 ID - Combat ShotGun | 28 ID - Узи")
+						imgui.Text(u8"29 ID - MP5 | 30 ID - AK-47 | 31 ID - M4")
+						imgui.Text(u8"32 ID - Tec-9 | 33 ID - Rifle | 34 ID - Sniper")
+						imgui.Text(u8"35 ID - RPG | 36 ID - ракетница")
+						imgui.Text(u8"37 ID - огнемет | 38 ID - minigun | 39-40 ID - C4")
+						imgui.Text(u8"41 ID - баллончики | 42 ID - огнетушитель")
+						imgui.Text(u8"43 ID - фотоаппарат | 44-45 ID - очки ночного видения")
+						imgui.Text(u8"46 ID - парашют")
+					end
+				imgui.End()
+
 			end
 			if ATChat.v then
 
@@ -3433,39 +3772,47 @@ function imgui.OnDrawFrame()
 				end
 
 				imgui.SetNextWindowPos(imgui.ImVec2(sw/2, sh/1.06), imgui.Cond.FirstUseEver, imgui.ImVec2(0.5, 1))
-				imgui.SetNextWindowSize(imgui.ImVec2(80+80+80+80+80+10, sh-sh-10), imgui.Cond.FirstUseEver)
-				imgui.Begin(u8"Наказания игрока.", false, 2+4+32)
+				imgui.SetNextWindowSize(imgui.ImVec2(80+80+80+80+80+10+80+90, sh-sh-10), imgui.Cond.FirstUseEver)
+				imgui.Begin(u8"Наказания игрока", false, 2+4+32)
+					if imgui.Button(u8"Back Player") then  
+						sampSendChat("/re " .. control_recon_playerid-1)
+					end
+					imgui.SameLine()
 					imgui.SetCursorPosX(imgui.GetWindowWidth()/2.43-160)
-					if imgui.Button(u8"Обновить.", imgui.ImVec2(75, 0)) then
+					if imgui.Button(u8"Обновить", imgui.ImVec2(75, 0)) then
 						sampSendClickTextdraw(32)
 					end
 					imgui.SameLine()
 					imgui.SetCursorPosX(imgui.GetWindowWidth()/2.43-80)
-					if imgui.Button(u8"Посадить.", imgui.ImVec2(75, 0)) then
+					if imgui.Button(u8"Посадить", imgui.ImVec2(75, 0)) then
 						tool_re = 1
 					end
 					imgui.SameLine()
 					imgui.SetCursorPosX(imgui.GetWindowWidth()/2.41)
-					if imgui.Button(u8"Забанить.", imgui.ImVec2(75, 0)) then
+					if imgui.Button(u8"Забанить", imgui.ImVec2(75, 0)) then
 						tool_re = 2
 					end
 					imgui.SameLine()
 					imgui.SetCursorPosX(imgui.GetWindowWidth()/2.43+80)
-					if imgui.Button(u8"Кикнуть.", imgui.ImVec2(75, 0)) then
+					if imgui.Button(u8"Кикнуть", imgui.ImVec2(75, 0)) then
 						tool_re = 3
 					end
 					imgui.SameLine()
 					imgui.SetCursorPosX(imgui.GetWindowWidth()/2.43+160)
-					if imgui.Button(u8"Выйти.", imgui.ImVec2(75, 0)) then
+					if imgui.Button(u8"Выйти", imgui.ImVec2(75, 0)) then
 						sampSendChat("/reoff")
 						control_recon_playerid = -1
+					end
+					imgui.SameLine()
+					if imgui.Button(u8"Next Player") then  
+						sampSendChat("/re " .. control_recon_playerid+1)
 					end
 				imgui.End()
 				imgui.SetNextWindowPos(imgui.ImVec2(sw-10, 10), imgui.Cond.FirstUseEver, imgui.ImVec2(1, 0.5))
 				imgui.SetNextWindowSize(imgui.ImVec2(250, sh/1.15), imgui.Cond.FirstUseEver)
 				if right_re_menu then
 
-					imgui.Begin(u8"Информация об игроке.", false, 2+4+32)
+					imgui.Begin(u8"Информация об игроке", false, 2+4+32)
 					if accept_load then
 						if not sampIsPlayerConnected(control_recon_playerid) then
 							control_recon_playernick = "-"
@@ -3519,7 +3866,7 @@ function imgui.OnDrawFrame()
 						end
 						imgui.Separator()
 						imgui.Text(u8"Что бы убрать курсор для\n осмотра камерой: Нажмите ПКМ.")
-						imgui.Text(u8"Клавиша: R - обновить рекон")
+						imgui.Text(u8"Клавиша: R - обновить рекон. \nКлавиша: Q - выйти из рекона")
 					else
 						imgui.SetCursorPosX(imgui.GetWindowWidth()/2.3)
 						imgui.SetCursorPosY(imgui.GetWindowHeight()/2.3)
