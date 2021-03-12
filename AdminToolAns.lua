@@ -5,6 +5,7 @@ script_description('Скрипт для облегчения работы администраторам') -- описание с
 require "lib.moonloader" -- подключение основной библиотеки mooloader
 local keys = require "vkeys" -- регистр для кнопок
 local imgui = require 'imgui' -- регистр imgui окон
+local dlstatus = require('moonloader').download_status
 local encoding = require 'encoding' -- дешифровка форматов
 local inicfg = require 'inicfg' -- работа с ini
 local sampev = require "lib.samp.events" -- поключение основных библиотек, связанные с потокам пакетов ивентов SA:MP, и их прямое соединение с LUA
@@ -28,11 +29,11 @@ local main_window_state = imgui.ImBool(false)
 
 update_state = false
 
-local script_version_ans = 2
-local script_version_ans_text = "2.0"
+local script_version_ans = 3
+local script_version_ans_text = "2.1"
 local script_path = thisScript().path 
 local script_url = "https://raw.githubusercontent.com/alfantasy/AdminTool/main/AdminToolAns.lua"
-local update_path = getWorkingDirectory() .. '/ATANSupdate.ini'
+local update_path = getWorkingDirectory() .. '/ANSupdate.ini'
 local update_url = "https://raw.githubusercontent.com/alfantasy/AdminTool/main/ANSupdate.ini"
 -------- Введение локальные переменные, отвечающие за автообновление ----------
 
@@ -135,7 +136,7 @@ function main()
 		if update_state then  
 			downloadUrlToFile(script_url, script_path, function(id, status)
 				if status == dlstatus.STATUS_ENDDOWNLOADDATA then  
-					sampAddChatMessage(tag .. "AdminTool обновлен.", -1)
+					sampAddChatMessage(tag .. "AdminToolAns обновлен.", -1)
 					thisScript():reload()
 				end
 			end)
@@ -488,7 +489,7 @@ function imgui.OnDrawFrame()
 					end
 					imgui.Separator()
 					imgui.Text("")
-					if imgui.CollapsingHeader(u8"Как продать/обменять что-то либо") then  
+					if imgui.CollapsingHeader(u8"Вопросы по продаже/покупке что-либо") then  
 						if imgui.Button(u8"Как продать машину") then  
 							closeAnsWithText(' /sellmycar IDPlayer Слот1-3 Сумма || /car -> Слот1-3 -> Продать государству' )
 						end
