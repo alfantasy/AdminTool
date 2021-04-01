@@ -23,19 +23,119 @@ local text_color = 0x4169E1
 local main_color_text = "{6e73f0}"
 local white_color = "{FFFFFF}"
 
-local main_window_state = imgui.ImBool(false)
+local ans_imgui = imgui.ImBool(false)
+local good_game_prefix = imgui.ImBool(false)
+local ans_text = imgui.ImBuffer(4096)
+local ans_report = imgui.ImBool(false)
 
 -------- Введение локальные переменные, отвечающие за автообновление ----------
 
 update_state = false
 
-local script_version_ans = 3
-local script_version_ans_text = "2.1"
+local script_version_ans = 4
+local script_version_ans_text = "3.0"
 local script_path = thisScript().path 
 local script_url = "https://raw.githubusercontent.com/alfantasy/AdminTool/main/AdminToolAns.lua"
 local update_path = getWorkingDirectory() .. '/ANSupdate.ini'
 local update_url = "https://raw.githubusercontent.com/alfantasy/AdminTool/main/ANSupdate.ini"
 -------- Введение локальные переменные, отвечающие за автообновление ----------
+
+local questions = {
+    ["reporton"] = {
+        [u8"Начало работы по жалобе"] = "Начал(а) работу по вашей жалобе!",
+		[u8"Жалоба на админа"] = "Пишите жалобу на администратора в VK: vk.com/dmdriftgta",
+		[u8"Жалоба на игрока"] = "Вы можете оставить жалобу на игрока в VK: vk.com/dmdriftgta",
+		[u8"Помогли вам"] = "Помогли вам.",
+		[u8"Ожидайте"] = "Ожидайте.",
+		[u8"Приятного времяпрепровождения"] = "Приятного времяпрепровождения на Russian Drift Server!",
+		[u8"Игрок чист"] = " Данный игрок чист.",
+		[u8"Игрок не в сети"] = "Данный игрок не в сети.",
+		[u8"Уточнение вопрос/запрос"] = "Уточните ваш вопрос/запрос.",
+		[u8"Уточнение ID"] = "Уточните ID нарушителя/читера в /report",
+		[u8"Игрок наказан"] = "Данный игрок наказан.",
+		[u8"Проверим"] = "'Проверим. ",
+		[u8"ГМ не работает"] = "GodMode (ГодМод) на сервере не работает.",
+		[u8"Никак"] = "Никак.",
+		[u8"Да"] = "Да.",
+		[u8"Нет"] = "Нет.",
+		[u8"Не запрещено"] = "Не запрещено.",
+		[u8"Не знаем"] = "Не знаем.",
+		[u8"Нельзя оффтопить"] = "Не оффтопьте.",
+		[u8"Не выдаем"] = "Не выдаем.",
+		[u8"Это баг"] = "Скорей всего - это баг.",
+		[u8"Перезайдите"] = "Попробуйте перезайти."
+    },
+	["HelpCmd"] = {
+		[u8"Команды VIP`а"] = "Данную информацию можно найти в /help -> 7 пункт.",
+		[u8"Команды для свадьбы"] = "Данную информацию можно найти в /help -> 8 пункт.",
+		[u8"Как заработать валюту"] = "Данную информацию можно найти в /help -> 13 пункт.",
+		[u8"Информация в инете"] = "Данную информацию можно узнать в интернете.",
+		[u8"Привелегия Premuim"] = "Данный игрок с привелегией Premuim VIP (/help -> 7)",
+		[u8"Привелегия Diamond"] = "Данный игрок с привелегией Diamond VIP (/help -> 7) ",
+		[u8"Привелегия Platinum"] = "Данный игрок с привелегией Platinum VIP (/help -> 7)",
+		[u8"Привелегия Личный"] = "Данный игрок с привелегией «Личный» VIP (/help -> 7)",
+		[u8"Как получать админку"] = "Ожидать набор, или же /help -> 17 пункт."
+	},
+	["HelpGangFamilyMafia"] = {
+		[u8"Как открыть меню семьи"] = "/menu (/mm) - ALT/Y -> Система банд",
+		[u8"Как открыть меню банды"] = "/familypanel",
+		[u8"Как исключить игрока"] = "/guninvite (банда) || /funinvite (семья)",
+		[u8"Как пригласить игрока"] = "/ginvite (банда) || /finvite (семья)",
+		[u8"Как покинуть банду/семью"] = "/gleave (банда) || /fleave (семья)",
+		[u8"Как покинуть мафию"] = "/leave",
+		[u8"Как выдать выговор"] = "/gvig // Должна быть лидерка"
+	},
+	["HelpTP"] = {
+		[u8"Как тп в автосалон"] = "tp -> Разное -> Автосалоны",
+		[u8"Как тп в автомастерскую"] = "/tp -> Разное -> Автосалоны -> Автомастерская",
+		[u8"Как тп в банк"] = "Оплатить бизнес/дом можно с помощью /bank или /tp -> Разное -> Банк",
+		[u8"Как ваще тп"] = "/tp (по локациям), /g (/goto) id (к игроку) с VIP (/help -> 7 пункт)"
+
+	},
+	["HelpSellBuy"] = {
+		[u8"Как продать аксы"] = "Продать аксессуары, или купить можно на /trade. Чтобы продать, /sell около лавки",
+		[u8"Как обменять валюту"] = "Чтобы обменять валюту, введите /trade, и подойдите к NPC Арману, стоит справа",
+		[u8"А как продать тачку"] = "/sellmycar IDPlayer Слот1-3 Сумма || /car -> Слот1-3 -> Продать государству",
+		[u8"А домик как продать"] = "/hpanel -> Слот1-3 -> Изменить -> Продать дом государству || /sellmyhouse (игроку)"
+	},
+	["HelpGiveEveryone"] = {
+		[u8"Как передать деньги"] = "/givemoney IDPlayer money",
+		[u8"Как передать очки"] = "/givescore IDPlayer score",
+		[u8"Как передать рубли"] = "/giverub IDPlayer rub | С Личного (/help -> 7)",
+		[u8"Как передать коины"] = "/givecoin IDPlayer coin | С Личного (/help -> 7)"
+	},
+	["HelpDefault"] = {
+		[u8"А как цвет поставить"] = "Перед словом/буквой цвет в HTML. Цвет в {} - https://colorscheme.ru/html-colors.html",
+		[u8"Машина"] = "/car",
+		[u8"Как ограбить банк"] = 'Встать на пикап "Ограбление банка", после около ячеек нажимать на ALT и ехать на красный маркер на карте',
+		[u8"Как взять оружие"] = "/menu (/mm) - ALT/Y -> Оружие",
+		[u8"Как взять предметы"] = "/menu (/mm) - ALT/Y -> Предметы",
+		[u8"Как детальки искать"] = "Детали разбросаны по всей карте. Обмен происходится на /garage. ",
+		[u8"Казино, работы и бизнес"] = "Казино, работы, бизнес. ",
+		[u8"Казик, мп, обмен на /trade и т.д."] = "Казино, МП, достижения, работы, обмен очков на коины(/trade)",
+		[u8"Ссылка на офф.группу"] = "https://vk.com/dmdriftgta | Официальная группа.",
+		[u8"Как начать капт"] = "Для того, чтобы начать капт, нужно ввести /capture",
+		[u8"Как пассив вкл"] = "/passive",
+		[u8"/statpl"] = "Чтобы посмотреть детали, очки, коины, рубли, вирты - /statpl",
+		[u8"Смена пароля"] = "/mm -> Действия -> Сменить пароль",
+		[u8"Спавн тачки"] = "/mm -> Транспортное средство -> Тип транспорта",
+		[u8"Как добавить игрока в аренду"] = "/hpanel -> Слот1-3 -> Изменить -> Аренда дома",
+		[u8"Как тюнить тачку"] = "/menu (/mm) - ALT/Y -> Т/С -> Тюнинг",
+		[u8"Ну застрял игрок"] = "/kill | /tp | /spawn",
+		[u8"Как попасть на дерби/пабг"] = "/join | Есть внутриигровые команды, следите за чатом",
+		[u8"Виртуальный мир"] = "/dt 0-990 / Виртуальный мир"
+	},
+	["HelpSkins"] = {
+		[u8"Копы"] = "65-267, 280-286, 288, 300-304, 306, 307, 309-311",
+		[u8"Балласы"] = "102-104",
+		[u8"Грув"] = "105-107",
+		[u8"Триад"] = "117-118, 120",
+		[u8"Вагосы"] = "108-110",
+		[u8"Ру.Мафия"] = "111-113",
+		[u8"Вариосы"] = "114-116",
+		[u8"Мафия"] = "124-127"
+	}
+}
 
 -- for CHECKBOX
 	local checked_test = imgui.ImBool(false)
@@ -107,9 +207,6 @@ function main()
 		end
 	end)
 
-	------- Команды для запуска интерфейса ------- 
-    sampRegisterChatCommand("ant", cmd_ant)
-
 	------------------ Показ запуска скрипта, указ автора и функций -------------------------
 	sampAddChatMessage("{87CEEB}[AdminTool] {4169E1} Подгрузка дополнительного скрипта для репортов", 0xe01df2)
 	sampAddChatMessage("{87CEEB}[AdminTool] {4169E1} Подгрузка произошла успешно!", 0xe01df2)
@@ -133,32 +230,16 @@ function main()
 	while true do
 		wait(0)
 
-		if update_state then  
-			downloadUrlToFile(script_url, script_path, function(id, status)
-				if status == dlstatus.STATUS_ENDDOWNLOADDATA then  
-					sampAddChatMessage(tag .. "AdminToolAns обновлен.", -1)
-					thisScript():reload()
-				end
-			end)
-			break
-		end
-
-        if sampGetCurrentDialogId() ~= 2349 then
-			main_window_state.v = false
+		if sampGetCurrentDialogId() ~= 2351 then
+			ans_imgui.v = false
 			imgui.Process = false
 		end
-		if sampGetCurrentDialogId() == 2349 then
-			main_window_state.v = true
+		if sampGetCurrentDialogId() == 2351 then
+			ans_imgui.v = true
 			imgui.Process = true
 		end
 	end
 end
-
-function cmd_ant(arg)
-    main_window_state.v = not main_window_state.v
-    imgui.Process = main_window_state.v
-end
--- первоначальный интерфейс AdminTool
 
 function color1() -- функция, выполняющая рандомнизацию и вывод рандомного цвета с помощью специального os.time()
 	mcolor = "{"
@@ -232,387 +313,225 @@ function closeAnsWithText(text)
 end)
 end
 
+
+local W_Win = sw2/1.280
+local H_Win = 1
 function imgui.OnDrawFrame()
-	if main_window_state.v == true then
+    if ans_imgui.v then 
         imgui.SetNextWindowPos(imgui.ImVec2(sw2 / 2, (sh2 / 2) + 320), imgui.Cond.FirstUseEver, imgui.ImVec2(0.5, 0.5))
-        imgui.SetNextWindowSize(imgui.ImVec2(600, 400), imgui.Cond.FirstUseEver)
-        imgui.Begin(u8'Ответы', main_window_state)
-		if imgui.CollapsingHeader(u8"Вывод текстовых команд") then
-			imgui.Text(u8"Команды введение на английском языке: используются лишь на чат")
-			imgui.Text(u8"А те, которые на русском и в скобках после значка $ пишутся в окне /ans")
-			imgui.Text(u8"Если случайно написали .нч на английском, т.е. /yx - все равно выведится. Введен перевод")
-			imgui.Text(u8".ц (/w) - вывод рандомного цвета, для своих ответов")
-			imgui.Text(u8"")
-			imgui.Separator()
-			imgui.Text("  ")
-			if imgui.CollapsingHeader(u8"Быстрые ответы /ans") then
-				imgui.Separator()
-				if imgui.CollapsingHeader(u8"Жалобы на кого-то/что-то") then
-					imgui.Text(u8".нч - начал(а) работать по жалобе")
-					imgui.Text(u8" .сл - слежу за игроком | .ож - ожидайте")
-					imgui.Text(u8".жба - жалоба на администратора | .жби - жалоба на игрока ")
-					imgui.Text(u8".нв - игрок не в сети |  .нвд - не выдаем ")
-					imgui.Text(u8".ут - уточните ваш вопрос/запрос  | .нн - нет нарушений у игрока ")
-					imgui.Text(u8".уид - уточнение ID  | .нак - игрок наказан")
-					imgui.Text(u8".пр - проверим | .гм - гм не робит")
-					imgui.Text(u8".нк - никак  | .нз - не запрещено | .нез - не знаем")
-					imgui.Text(u8".жда - да | .жне - нет| .офф - не оффтопить ")
-					imgui.Text(u8".баг - скорей всего - баг | .рлг - перезайдите")
-				end
-				imgui.Separator()
-				imgui.Text("")
-				if imgui.CollapsingHeader(u8"Ответы на вопросы и т.д.") then
-					imgui.Separator()
-					if imgui.CollapsingHeader(u8"Вопросы по командам, /help") then  
-						imgui.Text(u8".п7 - vip, .п8 - кмд на свадьбы,  .п13 - заработок")
-						imgui.Text(u8".инф - Инфа в инете ($ .инф ) | .вп1- .вп4 - привелегии от Premuim до Личного ")
-					end
-					imgui.Separator()
-					if imgui.CollapsingHeader(u8"Вопросы по банде, семье, мафии") then   
-						imgui.Text(u8".отф - как открыть меню семьи | .отб - как открыть меню банды ")
-						imgui.Text(u8".угб - как исключить человека из банды/семьи ")
-						imgui.Text(u8".пгб - как пригласить игроков в банду/семью ")
-						imgui.Text(u8".плм - покинуть мафию | .пгф - выйти из банды/семьи ")
-						imgui.Text(u8".вуб - выговор участнику банды ")
-					end
-					imgui.Separator()
-					if imgui.CollapsingHeader(u8"Вопросы по телепортации") then  
-						imgui.Text(u8".тас - /tp автосалон ")
-						imgui.Text(u8".там - /tp автомастерская | .бк - tp in bank ")
-						imgui.Text(u8".ктп - как телепортироваться |  .ог - ограб.банка ")
-					end
-					imgui.Separator()
-					if imgui.CollapsingHeader(u8"Вопросы по продаже/купить что-либо") then   
-						imgui.Text(u8".кпа - как продать аксессуары ")
-						imgui.Text(u8".обм - обмен очков/коинов/рублей ")
-						imgui.Text(u8".пм - продажа машины  | .пд - продажа дома ")
-					end
-					imgui.Separator()
-					if imgui.CollapsingHeader(u8"Вопросы по передачам чего-то кому-то") then  
-						imgui.Text(u8".гвм - передача денег | .гвс - передача очков ")
-					end
-					imgui.Separator()
-					if imgui.CollapsingHeader(u8"По остальным вопросам")  then
-						imgui.Text(u8".цвет - цвета ($ .цвет ) | .кар - /car ")
-						imgui.Text(u8".ган - как взять оружие | .пед - как взять предметы ")
-						imgui.Text(u8".иск - как искать детали | .крб - казик, работы, и бизнес ")
-						imgui.Text(u8".кмд - казик, мп, обмен на trade, достижения ")
-						imgui.Text(u8"/gvk - (no id)")
-						imgui.Text(u8".кпт - начать капт | .псв - пассивный режим ")
-						imgui.Text(u8".стп - /statpl (показ коинов, виртов) ")
-						imgui.Text(u8".мсп - как спавнить машину | .спр - смена пароля ")
-						imgui.Text(u8".дчд - как добавить человека в дом ")
-						imgui.Text(u8".тюн - как протюнить машину | .зч - застрял человек ")
-					end
-				end
-				imgui.Text("")
-				imgui.Separator()
-					if imgui.CollapsingHeader(u8"Скины") then
-						imgui.Text(u8".копы - копы | .бал - балласы | .грув - грув ")
-						imgui.Text(u8".ваг- вагосы | .румф - ru.мафия | .вар - вариосы ")
-						imgui.Text(u8".триад - триада | .мф - мафия")
-					end 
-			end
-			imgui.Separator()
-			imgui.Text("")
-			if imgui.CollapsingHeader(u8"Горячие клавиши по ответам") then
-				imgui.Text(u8"Кнопка HOME - желает в чат приятной игры")
-				imgui.Text(u8"Numpad {.} - вывод приятной игры с цветом | Numpad {/} - вывод удачного.. ")
-				imgui.Text(u8"..времяпрепровождения с цветом ")
-				imgui.Text(u8"Numpad {-} - вывод приятного времяпрепровождения на сервере с цветом.")
-				imgui.Text(u8"Яркий пример использования. При ручном вводе ответа в диалоговом окне /ans, ")
-				imgui.Text(u8"вы тыкаете Numpad {.} и у вас выведется Приятной игры на RDS с цветом.")
-			end
+		imgui.SetNextWindowSize(imgui.ImVec2(550, 285), imgui.Cond.FirstUseEver)
+		imgui.Begin(u8"Ответы на репорты", ans_imgui)
+        local btn_size = imgui.ImVec2(-0.1, 0)
+
+        imgui.Checkbox(u8"Пожелание в ответе", good_game_prefix)
+		imgui.BeginChild('##Select Setting', imgui.ImVec2(230, 225), true)
+
+		if imgui.Selectable(u8"Свой ответ") then ans_report.v = true end
+
+        if imgui.Selectable(u8"Жалобы на что-то/кого-то", beginchild == 1) then beginchild = 1 end
+		if imgui.Selectable(u8"Вопросы по командам, /help", beginchild == 2) then beginchild = 2 end
+		if imgui.Selectable(u8"Помощь по банде/семье", beginchild == 3) then beginchild = 3 end
+		if imgui.Selectable(u8"Помощь по телепортации", beginchild == 4) then beginchild = 4 end
+		if imgui.Selectable(u8"Помощь по продаже/покупке", beginchild == 5) then beginchild = 5 end
+		if imgui.Selectable(u8"Помощь по передаче чего-то", beginchild == 6) then beginchild = 6 end
+		if imgui.Selectable(u8"Остальные независимые вопросы", beginchild == 7) then beginchild = 7 end
+		if imgui.Selectable(u8"Скины", beginchild == 8) then beginchild = 8 end
+
+
+		imgui.EndChild()
+
+		imgui.SameLine()
+
+
+		if ans_report.v then   
+			imgui.SetNextWindowPos(imgui.ImVec2(sw2 / 2, (sh2 / 2) - 320), imgui.Cond.FirstUseEver, imgui.ImVec2(0.5, 0.5))
+			imgui.SetNextWindowSize(imgui.ImVec2(400, 285), imgui.Cond.FirstUseEver)
+				imgui.Begin(u8"Собственный ответ в /ans", ans_report)
+					imgui.Text(u8"Введите свой ответ")
+
+						imgui.InputText(u8"##Ответ", ans_text)
+						imgui.Separator()
+						if imgui.Button(u8"Ответить") then  
+								local settext2 = '{FFFFFF}' .. ans_text.v
+								sampSendDialogResponse(2351, 1, 0, u8:decode(settext2))	
+								sampCloseCurrentDialogWithButton(13)
+								ans_report.v = false	
+						end
+						imgui.Separator()
+						if imgui.Button(u8"Очистить текст") then  
+							ans_text.v = ""
+						end
+				imgui.End()
 		end
-            if imgui.CollapsingHeader(u8"Жалобы на кого-то/что-то") then  
-				if imgui.Button(u8"Жалоба на администратора") then  
-					closeAnsWithText(color1() .. 'Пишите жалобу на администратора в VK: vk.com/dmdriftgta')
-				end
-				imgui.SameLine()
-				if imgui.Button(u8"Жалоба на игрока") then  
-					closeAnsWithText(color1() .. 'Вы можете оставить жалобу на игрока в VK: vk.com/dmdriftgta ')
-				end
-                if imgui.Button(u8"Начало слежки за игроком") then  
-                    closeAnsWithText(' Начал(а) работу по вашей жалобе! ' .. color1() .. ' Приятной игры на сервере RDS. <3 ')
-				end
-				imgui.SameLine()
-				if imgui.Button(u8"Помогли вам") then  
-					closeAnsWithText(' Помогли вам. | ' .. color1() .. 'Приятного времяпрепровождения на RDS <3')
-				end
-				imgui.SameLine()
-				if imgui.Button(u8"Ожидание") then  
-					closeAnsWithText(' Ожидайте. '  .. color1() ..  ' Приятного времяпрепровождения на RDS <3')
-				end
-				imgui.SameLine()
-				if imgui.Button(u8"Приятного времяпрепровождения") then  
-					closeAnsWithText(color1() .. 'Приятного времяпрепровождения на Russian Drift Server!')
-				end
-				if imgui.Button(u8"Игрок чист") then  
-					closeAnsWithText(' Данный игрок чист. ' .. color1() .. ' Приятной игры на RDS. <3 ')
-				end
-				imgui.SameLine()
-				if imgui.Button(u8"Пожелания приятной игры") then  
-					closeAnsWithText(color1() .. 'Приятной игры на сервере RDS!')
-				end
-				if imgui.Button(u8"Игрок не в сети") then  
-					closeAnsWithText(' Данный игрок не в сети. | ' .. color1() .. ' Приятной игры на RDS. <3')
-				end
-				imgui.SameLine()
-				if imgui.Button(u8"Уточнение вопрос/запроса/жалобы") then  
-					closeAnsWithText(' Уточните ваш вопрос/запрос. ' .. color1() .. ' Удачной игры <3')
-				end
-				imgui.SameLine()
-				if imgui.Button(u8"Уточнение ID") then  
-					closeAnsWithText(' Уточните ID нарушителя/читера в /report ' .. color1() .. ' | Удачного времяпрепровождения.')
-				end
-				if imgui.Button(u8"Игрок наказан") then  
-					closeAnsWithText(' Данный игрок наказан.' .. color1() .. ' | Удачного времяпрепровождения.')
-				end
-				imgui.SameLine()
-				if imgui.Button(u8"Проверим") then  
-					closeAnsWithText('Проверим. ' .. color1() .. ' | Удачного времяпрепровождения. ')
-				end
-				imgui.SameLine()
-				if imgui.Button(u8"ГМ не робит") then  
-					closeAnsWithText('GodMode (ГодМод) на сервере не работает. ' .. color1() .. ' | Удачного времяпрепровождения. ')
-				end
-				if imgui.Button(u8"Никак") then  
-					closeAnsWithText('Никак. ' .. color1() .. ' | Удачного времяпрепровождения. ')
-				end
-				imgui.SameLine()
-				if imgui.Button(u8"Да") then  
-					closeAnsWithText('Да. ' .. color1() .. ' | Удачного времяпрепровождения. ')
-				end
-				imgui.SameLine()
-				if imgui.Button(u8"Нет") then  
-					closeAnsWithText('Нет. ' .. color1() .. ' | Удачного времяпрепровождения. ')
-				end
-				imgui.SameLine()
-				if imgui.Button(u8"Не запрещено") then  
-					closeAnsWithText('Не запрещено. '  .. color1() .. ' | Удачного времяпрепровожодения. ')
-				end
-				imgui.SameLine()
-				if imgui.Button(u8"Не знаем") then  
-					closeAnsWithText('Не знаем.' .. color1() .. ' | Удачного времяпрепровождения. ')
-				end
-				imgui.SameLine()
-				if imgui.Button(u8"Нельзя оффтоп") then  
-					closeAnsWithText('Не оффтопьте. ' .. color1() .. ' | Удачного времяпрепровожодения. ')
-				end
-				if imgui.Button(u8"Не выдаем") then  
-					closeAnsWithText('Не выдаем. ' .. color1() .. ' | Удачного времяпрепровожодения ')
-				end
-				imgui.SameLine()
-				if imgui.Button(u8"Это баг") then  
-					closeAnsWithText('Скорей всего - это баг. ' .. color1() .. ' | Удачного времяпрепровождения ')
-				end
-				imgui.SameLine()
-				if imgui.Button(u8"Перезайдите") then  
-					closeAnsWithText('Попробуйте перезайти. '  .. color1() .. ' | Удачного времяпрепровождения. ')
-				end
-			end  
-			imgui.Separator()
-			if imgui.CollapsingHeader(u8"Ответы на вопросы") then
-					if imgui.CollapsingHeader(u8"Вопросы по командам, /help") then
-						if imgui.Button(u8"Команды VIP`a") then  
-							closeAnsWithText(' Данную информацию можно найти в /help -> 7 пункт. ' .. color1() .. ' | Приятной игры на RDS. <3')
-						end
-						if imgui.Button(u8"Команды для свадьбы") then  
-							closeAnsWithText(' Данную информацию можно найти в /help -> 8 пункт. ' .. color1() .. '| Приятной игры на RDS. <3')
-						end
-						imgui.SameLine()
-						if imgui.Button(u8"Как заработать что-то либо") then  
-							closeAnsWithText(' Данную информацию можно найти в /help -> 13 пункт. ' .. color1() .. ' | Приятной игры на RDS. <3')
-						end
-						if imgui.Button(u8"Инфу можно узнать в инете") then  
-							closeAnsWithText(' Данную информацию можно узнать в интернете. ' .. color1() .. ' | Приятной игры на RDS <3')
-						end
-						imgui.SameLine()
-						if imgui.Button(u8"Это привелегии Premuim`а") then  
-							closeAnsWithText(' Данный игрок с привелегией Premuim VIP (/help -> 7) ' .. color1() .. ' | Приятной игры на RDS <3 ')
-						end
-						if imgui.Button(u8"А Это привелегии Diamonda`а") then  
-							closeAnsWithText(' Данный игрок с привелегией Diamond VIP (/help -> 7) ' .. color1() .. ' | Приятной игры на RDS <3 ')
-						end
-						imgui.SameLine()
-						if imgui.Button(u8"И Это привелегии Platunum`а") then  
-							closeAnsWithText(' Данный игрок с привелегией Platinum VIP (/help -> 7)' .. color1() .. ' | Приятной игры на RDS <3 ')
-						end
-						if imgui.Button(u8"Это привелегии Личного випа") then  
-							closeAnsWithText(' Данный игрок с привелегией «Личный» VIP (/help -> 7)' .. color1() .. ' | Приятной игры на RDS <3 ')
+
+    	if beginchild == 1 then
+           imgui.BeginChild("##Reports", imgui.ImVec2(280, 225), true)
+         for key, v in pairs(questions) do
+			if key == "reporton" then
+				for key_2, v_2 in pairs(questions[key]) do
+					if imgui.Button(key_2, btn_size) then
+						if not good_game_prefix.v then
+							local settext = '{FFFFFF}' .. v_2
+							sampSendDialogResponse(2351, 1, 0, settext)
+							sampCloseCurrentDialogWithButton(13)
+						else
+							local settext = '{FFFFFF}' .. v_2 .. '' .. color1() .. ' // Приятной игры на сервере RDS <3'
+							sampSendDialogResponse(2351, 1, 0, settext)
+							sampCloseCurrentDialogWithButton(13)
 						end
 					end
-					imgui.Separator()
-					imgui.Text("")
-					if imgui.CollapsingHeader(u8"Вопросы по банде, семье, мафии") then  
-						if imgui.Button(u8"Как выйти из банды/семьи") then  
-							closeAnsWithText(' /gleave (банда) || /fleave (семья) ' .. color1() .. ' | Приятной игры на RDS <3 ')
-						end
-						imgui.SameLine()
-						if imgui.Button(u8"Как пригласить в банду/семью") then  
-							closeAnsWithText(' /ginvite (банда), /finvite (семья) ' .. color1() .. ' | Удачной игры на RDS <3')
-						end
-						if imgui.Button(u8"Как выдать выговор в банде") then  
-							closeAnsWithText(' /gvig // Должна быть лидерка' .. color1() .. ' | Приятной игры на RDS <3 ')
-						end
-						if imgui.Button(u8"Как исключить человека из банды/семьи") then  
-							closeAnsWithText(' /guninvite (банда) || /funinvite (семья)' .. color1() .. ' | Приятной игры на RDS <3 ')
-						end
-						imgui.SameLine()
-						if imgui.Button(u8"Как пригласить игрока в банду/семью") then  
-							closeAnsWithText(' /ginvite (банда) ||  /finvite (семья)' .. color1() .. ' | Приятной игры на RDS <3 ' )
-						end
-						if imgui.Button(u8"Как открыть меню семьи") then   
-							closeAnsWithText('/familypanel ' .. color1() .. ' | Удачного времяпрепровождения ')
-						end
-						if imgui.Button(u8"Как открыть меню банды") then   
-							closeAnsWithText('/menu (/mm) - ALT/Y -> Система банд ' .. color1() .. ' | Удачного времяпрепровождения. ')
-						end
-					end
-					imgui.Separator()
-					imgui.Text("")
-					if imgui.CollapsingHeader(u8"Вопросы по телепортации") then   
-						if imgui.Button(u8"Как тпхнуться на автосалон") then  
-							closeAnsWithText(' tp -> Разное -> Автосалоны ' .. color1() .. ' | Приятной игры на RDS <3 ')
-						end
-						imgui.SameLine()
-						if imgui.Button(u8"Как тпхнуться на автомастерскую") then  
-							closeAnsWithText(' /tp -> Разное -> Автосалоны -> Автомастерская ' .. color1() .. ' | Приятной игры на RDS <3 ')
-						end
-						if imgui.Button(u8"Как тпхнуться в банк") then  
-							closeAnsWithText(' Оплатить бизнес/дом можно с помощью /bank или /tp -> Разное -> Банк ' .. color1() .. ' | Удачной игры на RDS <3')
-						end
-						imgui.SameLine()
-						if imgui.Button(u8"Как тпхаться") then  
-							closeAnsWithText(' /tp (по локациям), /g (/goto) id (к игроку) с VIP (/help -> 7 пункт)'.. color1() .. ' | Приятной игры на RDS <3 ')
-						end
-					end
-					imgui.Separator()
-					imgui.Text("")
-					if imgui.CollapsingHeader(u8"Вопросы по продаже/покупке что-либо") then  
-						if imgui.Button(u8"Как продать машину") then  
-							closeAnsWithText(' /sellmycar IDPlayer Слот1-3 Сумма || /car -> Слот1-3 -> Продать государству' )
-						end
-						if imgui.Button(u8"Как продать дом") then  
-							closeAnsWithText(' /hpanel -> Слот1-3 -> Изменить -> Продать дом государству || /sellmyhouse (игроку)')
-						end
-						imgui.SameLine()
-						if imgui.Button(u8"Где обменять рубли/коины/очки") then  
-							closeAnsWithText(' Чтобы обменять валюту, введите /trade, и подойдите к NPC Арману, стоит справа')
-						end
-						if imgui.Button(u8"Купить/продать аксы") then  
-							closeAnsWithText('Продать аксессуары, или купить можно на /trade. Чтобы продать, /sell около лавки')
-						end
-					end
-					imgui.Separator()
-					imgui.Text("")
-					if imgui.CollapsingHeader(u8"Вопросы по передачам чего-то кому-то") then  
-						if imgui.Button(u8"Как передать деньги игроку") then  
-							closeAnsWithText(' /givemoney IDPlayer money ' .. color1() .. ' | Приятной игры на RDS <3 ')
-						end
-						imgui.SameLine()
-						if imgui.Button(u8"Как передать очки игроку") then  
-							closeAnsWithText(' /givescore IDPlayer score ' .. color1() .. ' | Удачной игры на RDS <3 ')
-						end
-					end
-				imgui.Separator()
-				imgui.Text("")
-				if imgui.CollapsingHeader(u8"По остальным вопросам") then
-					if imgui.Button(u8"Как открыть меню личной машины (/car)") then   
-						closeAnsWithText(' /car ' ..color1() .. ' | Приятной игры на сервере RDS <3')
-					end  
-					if imgui.Button(u8"Как взять оружие") then   
-						closeAnsWithText('/menu (/mm) - ALT/Y -> Оружие ' .. color1() .. ' | Приятной игры на RDS <3 ')
-					end
-					imgui.SameLine()
-					if imgui.Button(u8"Как взять предметы") then   
-						closeAnsWithText('/menu (/mm) - ALT/Y -> Предметы ' .. color1() .. ' | Приятной игры на RDS <3 ')
-					end
-					if imgui.Button(u8"Как искать детали") then   
-						closeAnsWithText(color1() .. 'Детали разбросаны по всей карте. Обмен происходится на /garage. ')
-					end
-					if imgui.Button(u8"Казик, работы и бизнес") then   
-						closeAnsWithText('Казино, работы, бизнес. ' .. color1() .. ' | Удачного времяпрепровождения. ')
-					end
-					imgui.SameLine()
-					if imgui.Button(u8"Казик, мп, работы, достяги и тд") then   
-						closeAnsWithText('Казино, МП, достижения, работы, обмен очков на коины(/trade)' .. color1() .. ' | Приятной игры на RDS <3 ')
-					end
-					imgui.SameLine()
-					if imgui.Button(u8"Как протюнить машину") then   
-						closeAnsWithText('/menu (/mm) - ALT/Y -> Т/С -> Тюнинг ' .. color1() .. ' | Приятной игры на RDS <3 ')
-					end
-					if imgui.Button(u8"Как начать капт") then  
-						closeAnsWithText(' Для того, чтобы начать капт, нужно ввести /capture ' .. color1() .. ' | Удачной игры на RDS <3 ')
-					end
-					imgui.SameLine()
-					if imgui.Button(u8"Как ограбить банк") then  
-						closeAnsWithText(' Встать на пикап "Ограбление банка", после около ячеек нажимать на ALT и ехать на красный маркер на карте')
-					end
-					imgui.SameLine()
-					if imgui.Button(u8"Как включить пассивку") then  
-						closeAnsWithText(' /passive ' .. color1() .. ' | Приятной игры на RDS <3 ')
-					end
-					imgui.SameLine()
-					if imgui.Button(u8"Как попасть на дерби/паб и т.д.") then  
-						closeAnsWithText(' /join // Но, можно написать /derby, /pubg. Все команды пишутся в чате при начале')
-					end
-					if imgui.Button(u8"Как заспавнить машину") then  
-						closeAnsWithText(' /mm -> Транспортное средство -> Тип транспорта ' .. color1() .. ' | Удачной игры на RDS <3 ')
-					end
-					imgui.SameLine()
-					if imgui.Button(u8"Как сменить пароль") then  
-						closeAnsWithText(' /mm -> Действия -> Сменить пароль '.. color1() .. ' Удачной игры на RDS <3 ')
-					end
-					if imgui.Button(u8"Как покинуть мафию") then  
-						closeAnsWithText(' /leave ' .. color1() .. ' Удачной игры на RDS <3 ')
-					end
-					imgui.SameLine()
-					if imgui.Button(u8"Где можно узнать цвета") then  
-						closeAnsWithText(' https://colorscheme.ru/html-colors.html' .. color1() .. ' | Приятной игры на RDS <3 ')
-					end
-					imgui.SameLine()
-					if imgui.Button(u8"Как добавить игрока в аренду") then  
-						closeAnsWithText(' /hpanel -> Слот1-3 -> Изменить -> Аренда дома ' .. color1() .. ' | Приятной игры на RDS <3')
-					end
-					if imgui.Button(u8"Как узнать статистику, кониы, рубли, очки") then   
-						closeAnsWithText('Чтобы посмотреть коины, вирты, рубли и т.д. - /statpl ' .. color1() .. ' | Приятной игры на RDS <3')
-					end   
 				end
-				imgui.Separator()
-				if imgui.CollapsingHeader(u8"Скины") then  
-					if imgui.Button(u8"Копы") then  
-						closeAnsWithText(' 265-267, 280-286, 288, 300-304, 306, 307, 309-311' .. color1() .. ' | Приятной игры на RDS <3')
-					end
-					imgui.SameLine()
-					if imgui.Button(u8"Балласы") then  
-						closeAnsWithText(' 102-104' .. color1() .. ' | Приятной игры на RDS <3')
-					end				
-					imgui.SameLine()
-					if imgui.Button(u8"Грув") then  
-						closeAnsWithText(' 105-107' .. color1() .. ' | Приятной игры на RDS <3')
-					end
-					imgui.SameLine()
-					if imgui.Button(u8"Русская мафия") then  
-						closeAnsWithText(' 111-113' .. color1() .. ' | Приятной игры на RDS <3')
-					end
-					if imgui.Button(u8"Триада") then  
-						closeAnsWithText(' 117-118, 120' .. color1() .. ' | Приятной игры на RDS <3')
-					end
-					imgui.SameLine()
-					if imgui.Button(u8"Вариосы") then  
-						closeAnsWithText(' 114-116' .. color1() .. ' | Приятной игры на RDS <3')
-					end  
-					imgui.SameLine()
-					if imgui.Button(u8"Вагосы") then
-						closeAnsWithText(' 108-110' .. color1() .. ' | Приятной игры на RDS <3')
-					end
-					imgui.SameLine()
-					if imgui.Button(u8"Да просто мафия") then  
-						closeAnsWithText(' 124-127 ' .. color1() .. ' | Приятной игры на RDS <3')
-					end
 				end
+				end
+            imgui.EndChild()
 			end
-		imgui.End()
+			if beginchild == 2 then
+				imgui.BeginChild("##HelpCmd", imgui.ImVec2(280, 225), true)
+			  	for key, v in pairs(questions) do
+					if key == "HelpCmd" then
+						for key_2, v_2 in pairs(questions[key]) do
+							if imgui.Button(key_2, btn_size) then
+								if not good_game_prefix.v then
+									local settext = '{FFFFFF}' .. v_2
+										sampSendDialogResponse(2351, 1, 0, settext)
+										sampCloseCurrentDialogWithButton(13)
+								else
+									local settext = '{FFFFFF}' .. v_2 .. '' .. color1() .. ' // Приятной игры на сервере RDS <3'
+										sampSendDialogResponse(2351, 1, 0, settext)
+										sampCloseCurrentDialogWithButton(13)
+								end
+						 	end
+					 	end
+					end
+				end
+				imgui.EndChild()
+			end
+			if beginchild == 3 then
+				imgui.BeginChild("##HelpGangFamilyMafia", imgui.ImVec2(280, 225), true)
+			  	for key, v in pairs(questions) do
+					if key == "HelpGangFamilyMafia" then
+						for key_2, v_2 in pairs(questions[key]) do
+							if imgui.Button(key_2, btn_size) then
+								if not good_game_prefix.v then
+									local settext = '{FFFFFF}' .. v_2
+										sampSendDialogResponse(2351, 1, 0, settext)
+										sampCloseCurrentDialogWithButton(13)
+								else
+									local settext = '{FFFFFF}' .. v_2 .. '' .. color1() .. ' // Приятной игры на сервере RDS <3'
+										sampSendDialogResponse(2351, 1, 0, settext)
+										sampCloseCurrentDialogWithButton(13)
+								end
+						 	end
+					 	end
+					end
+				end
+				imgui.EndChild()
+			end
+			if beginchild == 4 then
+				imgui.BeginChild("##HelpTP", imgui.ImVec2(280, 225), true)
+			  	for key, v in pairs(questions) do
+					if key == "HelpTP" then
+						for key_2, v_2 in pairs(questions[key]) do
+							if imgui.Button(key_2, btn_size) then
+								if not good_game_prefix.v then
+									local settext = '{FFFFFF}' .. v_2
+										sampSendDialogResponse(2351, 1, 0, settext)
+										sampCloseCurrentDialogWithButton(13)
+								else
+									local settext = '{FFFFFF}' .. v_2 .. '' .. color1() .. ' // Приятной игры на сервере RDS <3'
+										sampSendDialogResponse(2351, 1, 0, settext)
+										sampCloseCurrentDialogWithButton(13)
+								end
+						 	end
+					 	end
+					end
+				end
+				imgui.EndChild()
+			end
+			if beginchild == 5 then
+				imgui.BeginChild("##HelpSellBuy", imgui.ImVec2(280, 225), true)
+			  	for key, v in pairs(questions) do
+					if key == "HelpSellBuy" then
+						for key_2, v_2 in pairs(questions[key]) do
+							if imgui.Button(key_2, btn_size) then
+								if not good_game_prefix.v then
+									local settext = '{FFFFFF}' .. v_2
+										sampSendDialogResponse(2351, 1, 0, settext)
+										sampCloseCurrentDialogWithButton(13)
+								else
+									local settext = '{FFFFFF}' .. v_2 .. '' .. color1() .. ' // Приятной игры на сервере RDS <3'
+										sampSendDialogResponse(2351, 1, 0, settext)
+										sampCloseCurrentDialogWithButton(13)
+								end
+						 	end
+					 	end
+					end
+				end
+				imgui.EndChild()
+			end
+			if beginchild == 6 then
+				imgui.BeginChild("##HelpGiveEveryone", imgui.ImVec2(280, 225), true)
+			  	for key, v in pairs(questions) do
+					if key == "HelpGiveEveryone" then
+						for key_2, v_2 in pairs(questions[key]) do
+							if imgui.Button(key_2, btn_size) then
+								if not good_game_prefix.v then
+									local settext = '{FFFFFF}' .. v_2
+										sampSendDialogResponse(2351, 1, 0, settext)
+										sampCloseCurrentDialogWithButton(13)
+								else
+									local settext = '{FFFFFF}' .. v_2 .. '' .. color1() .. ' // Приятной игры на сервере RDS <3'
+										sampSendDialogResponse(2351, 1, 0, settext)
+										sampCloseCurrentDialogWithButton(13)
+								end
+						 	end
+					 	end
+					end
+				end
+				imgui.EndChild()
+			end
+			if beginchild == 7 then
+				imgui.BeginChild("##HelpDefault", imgui.ImVec2(280, 225), true)
+			  	for key, v in pairs(questions) do
+					if key == "HelpDefault" then
+						for key_2, v_2 in pairs(questions[key]) do
+							if imgui.Button(key_2, btn_size) then
+								if not good_game_prefix.v then
+									local settext = '{FFFFFF}' .. v_2
+										sampSendDialogResponse(2351, 1, 0, settext)
+										sampCloseCurrentDialogWithButton(13)
+								else
+									local settext = '{FFFFFF}' .. v_2 .. '' .. color1() .. ' // Приятной игры на сервере RDS <3'
+										sampSendDialogResponse(2351, 1, 0, settext)
+										sampCloseCurrentDialogWithButton(13)
+								end
+						 	end
+					 	end
+					end
+				end
+				imgui.EndChild()
+			end
+			if beginchild == 8 then
+				imgui.BeginChild("##HelpSkins", imgui.ImVec2(280, 225), true)
+			  	for key, v in pairs(questions) do
+					if key == "HelpSkins" then
+						for key_2, v_2 in pairs(questions[key]) do
+							if imgui.Button(key_2, btn_size) then
+								if not good_game_prefix.v then
+									local settext = '{FFFFFF}' .. v_2
+										sampSendDialogResponse(2351, 1, 0, settext)
+										sampCloseCurrentDialogWithButton(13)
+								else
+									local settext = '{FFFFFF}' .. v_2 .. '' .. color1() .. ' // Приятной игры на сервере RDS <3'
+										sampSendDialogResponse(2351, 1, 0, settext)
+										sampCloseCurrentDialogWithButton(13)
+								end
+						 	end
+					 	end
+					end
+				end
+				imgui.EndChild()
+			end
+        imgui.End()
     end
 end
