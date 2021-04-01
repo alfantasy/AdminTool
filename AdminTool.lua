@@ -20,7 +20,7 @@ u8 = encoding.UTF8 -- переименовка стандтартного режима кодировки UTF8 - u8
 
 local directIni = "AdminTool\\settings.ini" -- создание специального файла, отвечающего за настройки.
 
-local themes = import "module/imgui_themes.lua" -- подключение плагина тем
+local themes = import "config/AdminTool/imgui_themes.lua" -- подключение плагина тем
 local notify = import "module/lib_imgui_notf.lua" -- подключение плагина уведомлений
 local getBonePosition = ffi.cast("int (__thiscall*)(void*, float*, int, bool)", 0x5E4280) -- захват позиции костей
 local control_wallhack = false -- контролируемая переменная для wallhack
@@ -31,8 +31,8 @@ local accept_load_clog = false
 
 update_state = false
 
-local script_version = 11
-local script_version_text = "7.0"
+local script_version = 12
+local script_version_text = "8.0"
 local script_path = thisScript().path 
 local script_url = "https://raw.githubusercontent.com/alfantasy/AdminTool/main/AdminTool.lua"
 local update_path = getWorkingDirectory() .. '/update.ini'
@@ -278,7 +278,6 @@ local sw, sh = getScreenResolution() -- отвечает за второстепенную длину и ширин
 
 ----- Введенные локальные переменные, которые отвечают за imgui окно и/или относятся к нему -------
 
-
 ------ Введенные локальные переменная, отвечающие за перевод символов, или остальных свойств чата -----------
 local russian_characters = {
     [168] = 'Ё', [184] = 'ё', [192] = 'А', [193] = 'Б', [194] = 'В', [195] = 'Г', [196] = 'Д', [197] = 'Е', [198] = 'Ж', [199] = 'З', [200] = 'И', [201] = 'Й', [202] = 'К', [203] = 'Л', [204] = 'М', [205] = 'Н', [206] = 'О', [207] = 'П', [208] = 'Р', [209] = 'С', [210] = 'Т', [211] = 'У', [212] = 'Ф', [213] = 'Х', [214] = 'Ц', [215] = 'Ч', [216] = 'Ш', [217] = 'Щ', [218] = 'Ъ', [219] = 'Ы', [220] = 'Ь', [221] = 'Э', [222] = 'Ю', [223] = 'Я', [224] = 'а', [225] = 'б', [226] = 'в', [227] = 'г', [228] = 'д', [229] = 'е', [230] = 'ж', [231] = 'з', [232] = 'и', [233] = 'й', [234] = 'к', [235] = 'л', [236] = 'м', [237] = 'н', [238] = 'о', [239] = 'п', [240] = 'р', [241] = 'с', [242] = 'т', [243] = 'у', [244] = 'ф', [245] = 'х', [246] = 'ц', [247] = 'ч', [248] = 'ш', [249] = 'щ', [250] = 'ъ', [251] = 'ы', [252] = 'ь', [253] = 'э', [254] = 'ю', [255] = 'я',
@@ -371,7 +370,9 @@ function main()
 	if not isSampLoaded() or not isSampfuncsLoaded() then return end
 	while not isSampAvailable() do wait(100) end
 
-
+	
+	_, watermark_id = sampGetPlayerIdByCharHandle(playerPed)
+    watermark_nick = sampGetPlayerNickname(watermark_id)
 	
 	downloadUrlToFile(update_url, update_path, function(id, status)
 		if status == dlstatus.STATUS_ENDDOWNLOADDATA then  
@@ -414,10 +415,17 @@ function main()
 	--------- Отвечающие функции для настроек ---------
 
 
-	--------- Остальные команды к которым лень придумывать коммент -------
+	--------- Команды рендеринга текста -------
 	font_ac = renderCreateFont("Arial", config.setting.Font, font_admin_chat.BOLD + font_admin_chat.SHADOW)
+		--------- Команда, отвечающая за шрифт административного чата ----------
 	font_watermark = renderCreateFont("Arial", 10, font_admin_chat.BOLD)
-	--------- Команда, отвечающая за шрифт административного чата ----------
+	lua_thread.create(function()
+		while true do
+			renderFontDrawText(font_watermark, tag .. "v." .. script_version_text .. " {FFFFFF}| {AAAAAA}" .. watermark_nick, 10, sh-20, 0xCCFFFFFF)
+			wait(1)
+		end
+	end)
+	--------- Команды рендеринга текста -------
 
 
 	------------- Команды, отвечающие за замороженные функции ---------
@@ -437,6 +445,7 @@ function main()
 	sampRegisterChatCommand("tpcord", tpcord)
 	sampRegisterChatCommand("iddialog", iddialog)
 	sampRegisterChatCommand("cchat", cchat)
+	sampRegisterChatCommand("tpad", tpad)
 	--------- Команды, ИСКЛЮЧИТЕЛЬНО ДЛЯ РАЗРАБОТЧИКОВ ИЛИ ВНУТРИИГРОВЫХ ДЕЙСТВИЙ -----------
 	
 	--------------------------- Команды для префиксов -------------------
@@ -494,6 +503,8 @@ function main()
 	------- Команды исключительно для джайлов -------
 	sampRegisterChatCommand("sk", cmd_sk)
 	sampRegisterChatCommand("dz", cmd_dz)
+	sampRegisterChatCommand("dz1", cmd_dz1)
+	sampRegisterChatCommand("dz2", cmd_dz2)
 	sampRegisterChatCommand("jm", cmd_jm)
 	sampRegisterChatCommand("td", cmd_td)
 	sampRegisterChatCommand("skw", cmd_skw)
@@ -541,6 +552,8 @@ function main()
 	------- Команды исключительно для джайлов в оффлайне -------
 	sampRegisterChatCommand("ask", cmd_ask)
 	sampRegisterChatCommand("adz", cmd_adz)
+	sampRegisterChatCommand("adz1", cmd_adz1)
+	sampRegisterChatCommand("adz2", cmd_adz2)
 	sampRegisterChatCommand("afsh", cmd_afsh)
 	sampRegisterChatCommand("atd", cmd_atd)
 	sampRegisterChatCommand("abag", cmd_abag)
@@ -578,6 +591,8 @@ function main()
 	
 
 	------- Команды исключительно для быстрых ответов -------
+	sampRegisterChatCommand("tdd", cmd_tdd)
+	sampRegisterChatCommand("gadm", cmd_gadm)
 	sampRegisterChatCommand("enk", cmd_enk)
 	sampRegisterChatCommand("gak", cmd_gak)
 	sampRegisterChatCommand("ctun", cmd_ctun)
@@ -656,6 +671,9 @@ function main()
 	sampRegisterChatCommand("hin", cmd_hin)
 	sampRegisterChatCommand("smh", cmd_smh)
 	sampRegisterChatCommand("cr", cmd_cr)
+	sampRegisterChatCommand("hct", cmd_hct)
+	sampRegisterChatCommand("gvr", cmd_gvr)
+	sampRegisterChatCommand("gvc", cmd_gvc)
 	------- Команды исключительно для быстрых ответов -------
 
 	------ Команды, используемые в вспомогательных случаях -------
@@ -712,9 +730,6 @@ function main()
 	------------------ Показ запуска скрипта, указ автора и функций -------------------------
 
 	-- просмотр ID -- 
-	_, player_id = sampGetPlayerIdByCharHandle(playerPed)
-    player_nick = sampGetPlayerNickname(player_id)
-
 	_, id = sampGetPlayerIdByCharHandle(PLAYER_PED)
 	nick = sampGetPlayerNickname(id)
 
@@ -819,6 +834,16 @@ function main()
 		end
 		---------- Обновление рекона -----------
 
+		if isKeyDown(VK_NumPad6) and (sampIsChatInputActive() == false) and (sampIsDialogActive() == false) and control_recon and recon_to_player then
+			sampSendChat("/re " .. control_recon_playerid+1)
+		end
+		---------- Следующий игрок -----------
+
+		if isKeyDown(VK_NumPad4) and (sampIsChatInputActive() == false) and (sampIsDialogActive() == false) and control_recon and recon_to_player then
+			sampSendChat("/re " .. control_recon_playerid-1)
+		end
+		---------- Предыдущий игрок -----------
+
 		if isKeyDown(VK_Q) and (sampIsChatInputActive() == false) and (sampIsDialogActive() == false) and control_recon and recon_to_player then
 			recon_to_player = false
 			sampSendChat("/reoff ")
@@ -894,6 +919,10 @@ function main()
 			sampSetCurrentDialogEditboxText(string .. color() .. "https://vk.com/dmdriftgta")
 		end
 
+		if sampGetCurrentDialogEditboxText() == '.счет' or sampGetCurrentDialogEditboxText() == '/cxtn' then  
+			sampSetCurrentDialogEditboxText('/count time || /dmcount time' .. color() .. ' | Удачного времяпрепровождения. ')
+		end
+
 		if sampGetCurrentDialogEditboxText() == '.ц' or sampGetCurrentDialogEditboxText() == '/w' then  
 			sampSetCurrentDialogEditboxText(color())
 		end
@@ -912,6 +941,10 @@ function main()
 
 		if sampGetCurrentDialogEditboxText() == '.ган' or sampGetCurrentDialogEditboxText() == '/ufy' then 
 			sampSetCurrentDialogEditboxText('/menu (/mm) - ALT/Y -> Оружие ' .. color() .. ' | Приятной игры на RDS <3 ')
+		end
+
+		if sampGetCurrentDialogEditboxText() == '.дтт' or sampGetCurrentDialogEditboxText() == '/lnn' then 
+			sampSetCurrentDialogEditboxText('/dt 0-990 / Виртуальный мир ' .. color() .. ' | Приятной игры на RDS <3 ')
 		end
 
 		if sampGetCurrentDialogEditboxText() == '.пед' or sampGetCurrentDialogEditboxText() == '/gtl' then 
@@ -1016,6 +1049,10 @@ function main()
 
 		if sampGetCurrentDialogEditboxText() == '.вп4' or sampGetCurrentDialogEditboxText() == '/dg4' then
 			sampSetCurrentDialogEditboxText('Данный игрок с привелегией "Личный" VIP (/help -> 7) | ' .. color() .. ' Приятной игры! ')
+		end
+
+		if sampGetCurrentDialogEditboxText() == '.падм' or sampGetCurrentDialogEditboxText() == '/gflv' then
+			sampSetCurrentDialogEditboxText('Ожидать набор, или же /help -> 17 пункт. | ' .. color() .. ' Приятной игры! ')
 		end
 
 		if sampGetCurrentDialogEditboxText() == '.копы' or sampGetCurrentDialogEditboxText() == '/rjgs' then
@@ -1190,6 +1227,14 @@ function main()
 			sampSetCurrentDialogEditboxText('/guninvite (банда) || /funinvite (семья) | ' .. color() .. ' Удачной игры на RDS <3')
 		end
 
+		if sampGetCurrentDialogEditboxText() == '.гвр' or sampGetCurrentDialogEditboxText() == '/udh' then
+			sampSetCurrentDialogEditboxText('/giverub IDPlayer rub | С Личного (/help -> 7) | ' .. color() .. ' Удачной игры на RDS <3')
+		end
+
+		if sampGetCurrentDialogEditboxText() == '.гвк' or sampGetCurrentDialogEditboxText() == '/udr' then
+			sampSetCurrentDialogEditboxText('/givecoin IDPlayer coin | С Личного (/help -> 7) | ' .. color() .. ' Удачной игры на RDS <3')
+		end
+
 		if string.find(sampGetChatInputText(), "%.пр") then
 			sampSetChatInputText(string.gsub(sampGetChatInputText(), ".пр", "| Приятной игры на RDS <3"))
 		end
@@ -1249,6 +1294,12 @@ function tpcord(coords)
 	setCharCoordinates(PLAYER_PED, x, y, z)
 end  
 -- телепортация по координатам
+
+function tpad(arg)
+	sampAddChatMessage(tag .. " Телепортация на административный остров.. ")
+	setCharCoordinates(PLAYER_PED,3321,2308,35)
+end
+-- телепортация на админ-остров
 
 function iddialog(arg)
 	iddea = sampGetCurrentDialogId()
@@ -1569,6 +1620,18 @@ function cmd_dz(arg)
 	sampSendChat("/jail " .. arg .. " 300 " .. " DM/DB in zz")
 end
 
+function cmd_dz1(arg)
+	sampSendChat("/jail " .. arg .. " 600 " .. " DM/DB in zz x2")
+end
+
+function cmd_dz2(arg)
+	sampSendChat("/jail " .. arg .. " 900 " .. " DM/DB in zz x3")
+end
+
+function cmd_dz3(arg)
+	sampSendChat("/jail " .. arg .. " 1200 " .. " DM/DB in zz x4")
+end
+
 function cmd_td(arg)
 	sampSendChat("/jail " .. arg .. " 300 " .. " DB/car in trade ")
 end
@@ -1687,6 +1750,18 @@ end
 
 function cmd_adz(arg)
 	sampSendChat("/prisonakk " .. arg .. " 300 " .. " DM/DB in zz ")
+end
+
+function cmd_adz1(arg)
+	sampSendChat("/prisonakk " .. arg .. " 600 " .. " DM/DB in zz x2")
+end
+
+function cmd_adz2(arg)
+	sampSendChat("/prisonakk " .. arg .. " 900 " .. " DM/DB in zz x3")
+end
+
+function cmd_adz3(arg)
+	sampSendChat("/prisonakk " .. arg .. " 1200 " .. " DM/DB in zz x4")
 end
 
 function cmd_atd(arg)
@@ -2174,12 +2249,32 @@ end
 function cmd_smh(arg)
 	sampSendChat("/ans " .. arg .. " /sellmyhouse (игроку)  ||  /hpanel -> слот -> Изменить -> Продать дом государству ")
 end
+
+function cmd_gadm(arg)
+	sampSendChat("/ans " .. arg .. " Ожидать набор, или же /help -> 17 пункт. | Приятной игры на RDS. <3")
+end
+
+function cmd_hct(arg)
+	sampSendChat("/ans " .. arg .. " /count time || /dmcount time | Приятной игры на RDS. <3 ")
+end
+
+function cmd_gvr(arg)
+	sampSendChat("/ans " .. arg .. " /giverub IDPlayer rub | С Личного (/help -> 7) | Приятной игры!")
+end
+
+function cmd_gvc(arg)
+	sampSendChat("/ans " .. arg .. " /givecoin IDPlayer coin | С Личного (/help -> 7) | Приятной игры!")
+end
+
+function cmd_tdd(arg)
+	sampSendChat("/ans " .. arg .. " /dt 0-990 / Виртуальный мир | Приятной игры!")
+end
 ------- Функции, относящиеся к быстрым ответам -------
 
 
 ------ Функции, используемые в вспомогательных случаях -------
 
-function  cmd_u(arg)
+function cmd_u(arg)
 	sampSendChat("/unmute " .. arg)
 end  
 
@@ -2414,9 +2509,11 @@ end
 
 function cmd_wallh()
 	if control_wallhack then
+		sampAddChatMessage(tag .."WallHack был выключен.")
 		nameTagOff()
 		control_wallhack = false
 	else
+		sampAddChatMessage(tag .."WallHack был включен.")
 		nameTagOn()
 		control_wallhack = true
 	end
@@ -2703,135 +2800,135 @@ function imgui.OnDrawFrame()
 			imgui.Text(u8"/sw id - выдать миниган кому-то; /as id - заспавнить игрока")
 			imgui.Text(u8"/wallh - включение/выключение ВХ")
 			imgui.Text(u8"/cchat - визуальная очистка чата; /cfind - чат-логгер")
+			imgui.Text(u8"/tpad - телепорт на адм-остров")
 		end
 		imgui.Separator()
-			imgui.BeginChild(u8"Наказания для онлайна", imgui.ImVec2(325, 200), true)
-			imgui.Text(u8"             Наказания для онлайна")
-				if imgui.CollapsingHeader(u8"Наказание по jail") then
-					imgui.Text(u8"/sk - jail за SK in zz")
-					imgui.Text(u8"/dz - jail за DM/DB in zz")
-					imgui.Text(u8"/td - jail за DB/car in /trade")
-					imgui.Text(u8"/fsh - /jail за SH and FC")
-					imgui.Text(u8"/jm - jail за нарушение правил мероприятия.")
-					imgui.Text(u8"/bag - jail за багоюз")
-					imgui.Text(u8"/pk - jail за дрифт/паркур мод")
-					imgui.Text(u8"/zv - jail за злоуп.вип")
-					imgui.Text(u8"/skw - jail за SK на /gw")
-					imgui.Text(u8"/ngw - jail за использование запрет.команд на /gw")
-					imgui.Text(u8"/dbgw - jail за DB верт на /gw | /jch - jail за читы")
-					imgui.Text(u8"/pmx - jail за серьезная помеха игрокам")
-					imgui.Text(u8"/dgw - jail за наркотики на /gw")
-					imgui.Text(u8"/sch - jail за запрещенные скрипты")
-				end
-				imgui.Separator()
-				if imgui.CollapsingHeader(u8"Наказание по mute") then
-					imgui.Text(u8"/m - мут за мат | /rm - мут за мат в репорт ")
-					imgui.Text(u8"/ok - мут за оск ")
-					imgui.Text(u8"/fd1 - /fd5 - мут за флуд/спам x1-x5")
-					imgui.Text(u8"/po1 - /po5 - мут за попрошайку x1-x5")
-					imgui.Text(u8"/oa - мут за оск адм ")
-					imgui.Text(u8"/roa - мут за оск адм в репорт")
-					imgui.Text(u8"/up - мут за упом.проект")
-					imgui.Text(u8"/rup - мут за у.п в репорт")
-					imgui.Text(u8"/ia - мут за выдачу себя за адм")
-					imgui.Text(u8"/kl - мут за клевету на адм")
-					imgui.Text(u8"/nm(900), /nm1(2500), /nm2(5000) - мут за неадекват. ")
-					imgui.Text(u8"/rnm(900), /rnm1(2500), /rnm2(5000) - мут за неадекват в реп.")
-					imgui.Text(u8"/or - мут за оск род")
-					imgui.Text(u8"/ror - мут за оск род в репорт")
-					imgui.Text(u8"/cp - капс/оффтоп в репорт")
-					imgui.Text(u8"/rpo - попрошайка в репорт")
-					imgui.Text(u8"/rkl - клевета на адм в репорт")
-				end
-				imgui.Separator()
-				if imgui.CollapsingHeader(u8"Наказание по ban") then
-					imgui.Text(u8"/pl - бан за плагиат ника админа | /ch - бан за читы")
-					imgui.Text(u8"/nk - бан за ник с оском/унижением")
-					imgui.Text(u8"/gcnk - бан за название банды с оском/унижением")
-					imgui.Text(u8"/okpr/ip - оск проекта (необходимо ввести ник/ip)") 
-					imgui.Text(u8"/svocakk/ip - бан по акк/ип по рекламе")
-					imgui.Text(u8"/hl - бан за оск в хелпере")
-					imgui.Text(u8"/ob - бан за обход бана")
-				end
-				imgui.Separator()
-				if imgui.CollapsingHeader(u8"Наказание по kick") then
-					imgui.Text(u8"/dj - кик за dm in jail")
-					imgui.Text(u8"/gnk1 -- /gnk3 - кик за нецензуру в нике.")
-				end
-				imgui.Separator()
-			imgui.EndChild()
+				imgui.BeginChild("##Punish.", imgui.ImVec2(350, 200), true)
+					if imgui.Selectable(u8"Наказания в онлайне", beginchild == 1) then beginchild = 1 end
+					if imgui.Selectable(u8"Наказания в оффлайне", beginchild == 2) then beginchild = 2 end
+
+					if beginchild == 1 then  
+						imgui.BeginChild("##PunishInOnline", imgui.ImVec2(325, 200), true)
+							if imgui.CollapsingHeader(u8"Ban") then  
+								imgui.Text(u8"/pl - бан за плагиат ника админа \n/ch - бан за читы")
+								imgui.Text(u8"/nk - бан за ник с оском/унижением")
+								imgui.Text(u8"/gcnk - бан за название банды с оском/унижением")
+								imgui.Text(u8"/okpr/ip - оск проекта \n(необходимо ввести ник/ip)") 
+								imgui.Text(u8"/svocakk/ip - бан по акк/ип по рекламе")
+								imgui.Text(u8"/hl - бан за оск в хелпере")
+								imgui.Text(u8"/ob - бан за обход бана")
+							end
+							imgui.Separator()
+							if imgui.CollapsingHeader(u8"Jail") then  
+								imgui.Text(u8"/sk - jail за SK in zz")
+								imgui.Text(u8"/dz - jail за DM/DB in zz")
+								imgui.Text(u8"/dz1 - /dz3 - jail DM/DB in zz (x2-x4)")
+								imgui.Text(u8"/td - jail за DB/car in /trade")
+								imgui.Text(u8"/fsh - /jail за SH and FC")
+								imgui.Text(u8"/jm - jail за нарушение правил мероприятия.")
+								imgui.Text(u8"/bag - jail за багоюз")
+								imgui.Text(u8"/pk - jail за дрифт/паркур мод")
+								imgui.Text(u8"/zv - jail за злоуп.вип")
+								imgui.Text(u8"/skw - jail за SK на /gw")
+								imgui.Text(u8"/ngw - jail за использование запрет.команд на /gw")
+								imgui.Text(u8"/dbgw - jail за DB верт на /gw | /jch - jail за читы")
+								imgui.Text(u8"/pmx - jail за серьезная помеха игрокам")
+								imgui.Text(u8"/dgw - jail за наркотики на /gw")
+								imgui.Text(u8"/sch - jail за запрещенные скрипты")
+							end
+							imgui.Separator()
+							if imgui.CollapsingHeader(u8"Kick") then  
+								imgui.Text(u8"/dj - кик за dm in jail")
+								imgui.Text(u8"/gnk1 -- /gnk3 - кик за нецензуру в нике.")
+							end  
+							imgui.Separator()
+							if imgui.CollapsingHeader(u8"Mute") then  
+								imgui.Text(u8"/m - мут за мат | /rm - мут за мат в репорт ")
+								imgui.Text(u8"/ok - мут за оск ")
+								imgui.Text(u8"/fd1 - /fd5 - мут за флуд/спам x1-x5")
+								imgui.Text(u8"/po1 - /po5 - мут за попрошайку x1-x5")
+								imgui.Text(u8"/oa - мут за оск адм ")
+								imgui.Text(u8"/roa - мут за оск адм в репорт")
+								imgui.Text(u8"/up - мут за упом.проект")
+								imgui.Text(u8"/rup - мут за у.п в репорт")
+								imgui.Text(u8"/ia - мут за выдачу себя за адм")
+								imgui.Text(u8"/kl - мут за клевету на адм")
+								imgui.Text(u8"/nm(900), /nm1(2500), /nm2(5000) - мут за неадекват. ")
+								imgui.Text(u8"/rnm(900), /rnm1(2500), /rnm2(5000) - мут за неадекват в реп.")
+								imgui.Text(u8"/or - мут за оск род")
+								imgui.Text(u8"/ror - мут за оск род в репорт")
+								imgui.Text(u8"/cp - капс/оффтоп в репорт")
+								imgui.Text(u8"/rpo - попрошайка в репорт")
+								imgui.Text(u8"/rkl - клевета на адм в репорт")
+							end
+						imgui.EndChild()
+					end
+					if beginchild == 2 then  
+						imgui.BeginChild("##PunishInOffline", imgui.ImVec2(325,200), true)
+							if imgui.CollapsingHeader(u8"Ban") then  
+								imgui.Text(u8"/apl - бан за плагиат ник админа")
+								imgui.Text(u8"/ach (/achi) - бан за читы (ip)")
+								imgui.Text(u8"/ank - бан за ник с оск/униж")
+								imgui.Text(u8"/agcnk - бан за название банды с оск/униж")
+								imgui.Text(u8"/agcnkip - бан по IP за название банды с оск/униж")
+								imgui.Text(u8"/okpr/ip - оск проекта")
+								imgui.Text(u8"/svoakk/ip - бан по акк/IP по рекламе")
+								imgui.Text(u8"/ahl (/achi) - бан за оск в хелпере (ip)")
+								imgui.Text(u8"/aob - бан за обход бана")
+							end
+							imgui.Separator()
+							if imgui.CollapsingHeader(u8"Jail") then  
+								imgui.Text(u8"/ask - jail за SK in zz")
+								imgui.Text(u8"/adz - jail за DM/DB in zz")
+								imgui.Text(u8"/adz1 - /adz3 - jail DM/DB in zz (x2-x4)")
+								imgui.Text(u8"/atd - jail за DB/CAR in trade")
+								imgui.Text(u8"/afsh - jail за SH ans FC")
+								imgui.Text(u8"/ajm - jail за наруш.правил МП")
+								imgui.Text(u8"/abag - jail за багоюз")
+								imgui.Text(u8"/apk - jail за дрифт/паркур мод")
+								imgui.Text(u8"/azv - jail за злоуп.вип")
+								imgui.Text(u8"/askw - jail за SK на /gw")
+								imgui.Text(u8"/angw - исп.запрет.команд на /gw")
+								imgui.Text(u8"/adbgw - jail за DB верт на /gw")
+								imgui.Text(u8"/ajch - jail за читы")
+								imgui.Text(u8"/apmx - jail за серьез.помеху")
+								imgui.Text(u8"/adgw - jail за наркотики на /gw")
+								imgui.Text(u8"/asch - jail за запрещенные скрипты")
+							end
+							imgui.Separator()
+							if imgui.CollapsingHeader(u8"Mute") then  
+								imgui.Text(u8"/am - мут за мат ")
+								imgui.Text(u8"/aok - мут за оск ")
+								imgui.Text(u8"/afd - мут за флуд/спам")
+								imgui.Text(u8"/apo  - мут за попрошайку")
+								imgui.Text(u8"/aoa - мут за оск.адм")
+								imgui.Text(u8"/aup - мут за упоминание проектов")
+								imgui.Text(u8"/anm(900) /anm1(2500) /anm2(5000) - мут за неадеквата")
+								imgui.Text(u8"/aor - мут за оск/упом родных")
+								imgui.Text(u8"/aia - мут за выдачу себя за адм")
+								imgui.Text(u8"/akl - мут за клевету на адм")
+							end
+						imgui.EndChild()
+					end
+				imgui.EndChild()
 			imgui.SameLine()
-			imgui.BeginChild(u8"Наказание для оффлайна", imgui.ImVec2(315, 200), true)
-			imgui.Text(u8"             Наказания для оффлайна")
-			imgui.Text(u8"Необходимо ввести никнейм для выдачи наказания") 
-			imgui.Text(u8"При наличии /offstats - он откроется при аккбане")
-			imgui.Separator()
-			if imgui.CollapsingHeader(u8"Наказания по mute") then
-				imgui.Text(u8"/am - мут за мат ")
-				imgui.Text(u8"/aok - мут за оск ")
-				imgui.Text(u8"/afd - мут за флуд/спам")
-				imgui.Text(u8"/apo  - мут за попрошайку")
-				imgui.Text(u8"/aoa - мут за оск.адм")
-				imgui.Text(u8"/aup - мут за упоминание проектов")
-				imgui.Text(u8"/anm(900) /anm1(2500) /anm2(5000) - мут за неадеквата")
-				imgui.Text(u8"/aor - мут за оск/упом родных")
-				imgui.Text(u8"/aia - мут за выдачу себя за адм")
-				imgui.Text(u8"/akl - мут за клевету на адм")
-			end
-			imgui.Separator()
-			if imgui.CollapsingHeader(u8"Наказание по jail") then
-				imgui.Text(u8"/ask - jail за SK in zz")
-				imgui.Text(u8"/adz - jail за DM/DB in zz")
-				imgui.Text(u8"/atd - jail за DB/CAR in trade")
-				imgui.Text(u8"/afsh - jail за SH ans FC")
-				imgui.Text(u8"/ajm - jail за наруш.правил МП")
-				imgui.Text(u8"/abag - jail за багоюз")
-				imgui.Text(u8"/apk - jail за дрифт/паркур мод")
-				imgui.Text(u8"/azv - jail за злоуп.вип")
-				imgui.Text(u8"/askw - jail за SK на /gw")
-				imgui.Text(u8"/angw - исп.запрет.команд на /gw")
-				imgui.Text(u8"/adbgw - jail за DB верт на /gw")
-				imgui.Text(u8"/ajch - jail за читы")
-				imgui.Text(u8"/apmx - jail за серьез.помеху")
-				imgui.Text(u8"/adgw - jail за наркотики на /gw")
-				imgui.Text(u8"/asch - jail за запрещенные скрипты")
-			end
-			imgui.Separator()
-			if imgui.CollapsingHeader(u8"Наказание по ban") then
-				imgui.Text(u8"/apl - бан за плагиат ник админа")
-				imgui.Text(u8"/ach (/achi) - бан за читы (ip)")
-				imgui.Text(u8"/ank - бан за ник с оск/униж")
-				imgui.Text(u8"/agcnk - бан за название банды с оск/униж")
-				imgui.Text(u8"/agcnkip - бан по IP за название банды с оск/униж")
-				imgui.Text(u8"/okpr/ip - оск проекта")
-				imgui.Text(u8"/svoakk/ip - бан по акк/IP по рекламе")
-				imgui.Text(u8"/ahl (/achi) - бан за оск в хелпере (ip)")
-				imgui.Text(u8"/aob - бан за обход бана")
-			end
-			imgui.Separator()
-			imgui.EndChild()
-			imgui.Separator()
-			if imgui.CollapsingHeader(u8"Интерфейсы") then
+			imgui.BeginChild("##Interface", imgui.ImVec2(250, 200), true)
 				if imgui.Button(u8'Помощь по мероприятиям (интерфейс)') then
 					two_window_state.v = not two_window_state.v
 					imgui.Process = two_window_state.v
 				end
-				imgui.SameLine()
 				if imgui.Button(u8'Помощь по флудам (интерфейс)') then
 					three_window_state.v = not three_window_state.v
 					imgui.Process = three_window_state.v
 				end
-				imgui.Separator()
 				if imgui.Button(u8'Помощь по /ans (интерфейс)') then
 					four_window_state.v = not four_window_state.v
 					imgui.Process = four_window_state.v
 				end
-				imgui.SameLine()
 				if imgui.Button(u8'Панель старших администраторов') then 
 					five_window_state.v = not five_window_state.v	
 					imgui.Process = five_window_state.v
 				end
-				imgui.SameLine()
 				if imgui.Button(u8"Настройки") then  
 					six_window_state.v = not six_window_state.v
 					imgui.Process = six_window_state.v 
@@ -2840,7 +2937,7 @@ function imgui.OnDrawFrame()
 					seven_window_state.v = not seven_window_state.v
 					imgui.Process = seven_window_state
 				end
-			end
+			imgui.EndChild()
 		imgui.Separator()
 
 		--Блок one_window_state отвечает за помощь по командам
@@ -2862,276 +2959,286 @@ function imgui.OnDrawFrame()
 		imgui.Text(u8"Ваша задача лишь открыть телепорт, нажать кнопки и ввести МП.")
 		imgui.Text(u8"Для открытия телепорта используется команда /mp")
 		imgui.Text(u8"/jm - jail за нарушение правил мероприятия.")
-		imgui.Text("  ")
 		imgui.Separator()
-		imgui.BeginChild("Мероприятия", imgui.ImVec2(270, 140), true)
-		if imgui.CollapsingHeader(u8"Выдача приза") then
-			imgui.InputText(u8'Введите ID', text_buffer_prize)
-			if imgui.Button(u8'Вывод') then 
-				sampSendChat("/mess 10 У нас есть победитель в мероприятии!")
-				sampSendChat("/mess 10 И это игрок с ID: " .. u8:decode(text_buffer_prize.v))
-				sampSendChat("/mpwin " .. text_buffer_prize.v)
-				notify.addNotify("{87CEEB}[AdminTool]", "Вы выдали приз игроку с ID " .. u8:decode(text_buffer_prize.v) .. ", вам\nвыдана зарплата", 2, 1, 6)
-				sampSendChat("/spp")
-			end
-		end
-		if imgui.Button(u8'Выдача минигана самому себе') then
-			sampSendChat("/setweap " .. id .. " 38 " .. " 5000 ")
-		end
-		if imgui.CollapsingHeader(u8"Свое мероприятие") then
-			imgui.Text(u8"Названия своего мероприятия ниже")
-			imgui.InputText(u8'', text_buffer_mp)
-			if imgui.Button(u8'Вывод') then 
-				sampSendChat("/mess 10 Уважаемые игроки! Проходит мероприятие: " .. u8:decode(text_buffer_mp.v))
-				sampSendChat("/mp")
-				sampSendDialogResponse(5343, 1, 0)
-				sampSendDialogResponse(5344, 1, 0, u8:decode(text_buffer_mp.v))
-				sampSendChat("/mess 10 Чтобы попасть на мероприятие, введите /tpmp")
-				notify.addNotify("{87CEEB}[AdminTool]", "Мероприятие успешно создано\nТелепортация открыта", 2, 1, 6)
-			end
-			imgui.Separator()
-			if imgui.Button(u8'Стандарт.правила') then  
-				sampSendChat("/mess 6 Правила: Нельзя использовать /passive, /fly, /r - /s, баги, /flycar")
-				sampSendChat("/mess 6 Следуем командам администратора, ДМ запрещено, если..")
-				sampSendChat("/mess 6 ..это не предусмотрено мероприятием. Начинаем!")
-			end
-		end
-		if imgui.Button(u8"Призыв к телепортации") then  
-			sampSendChat("/mess 10 Дорогие игроки, телепорт все ещё открыт! /tpmp")
-			sampSendChat("/mess 10 Успейте, до начала мероприятия!")
-		end
+
+		imgui.BeginChild("##SelectWorkingMP", imgui.ImVec2(195, 225), true)
+			if imgui.Selectable(u8"Вспомогательные штучки", beginchild == 50) then beginchild = 50 end
+			if imgui.Selectable(u8"Свое МП", beginchild == 51) then beginchild = 51 end
+			if imgui.Selectable(u8"Заготовки МП", beginchild == 52) then beginchild = 52 end
+			if imgui.Selectable(u8"Описания МПшек", beginchild == 53) then beginchild = 53 end
 		imgui.EndChild()
 		imgui.SameLine()
-		imgui.BeginChild("Остальное", imgui.ImVec2(250, 200), true)
-		if imgui.CollapsingHeader(u8"Заготовленные мероприятия") then
-			if imgui.Button(u8'Мероприятия "Прятки"') then
-				lua_thread.create(function()
-					setCharCoordinates(PLAYER_PED,-2315,1545,18)
-					wait(1000)
-					sampSendChat("/mess 10 Уважаемые игроки! Проходит мероприятие: Прятки. Желающие /tpmp")
-					sampSendChat("/mp")
-					sampSendDialogResponse(5343, 1, 0)
-					sampSendDialogResponse(5344, 1, 0, "Прятки")
-					sampSendChat("/mess 10 Активнее /tpmp, делаем строй и ожидаем команды")
-					notify.addNotify("{87CEEB}[AdminTool]", 'Мероприятие "Прятки" успешно создано\nТелепортация открыта', 2, 1, 6)
-				end)
-			end
-			if imgui.Button(u8'Правила МП "Прятки"') then
-				sampSendChat("/mess 6 Правила: Нельзя использовать /passive, /fly, /r - /s и баги. ДМ запрещено.")
-				sampSendChat("/mess 6 Правила знаем, значит у вас есть минута, чтобы спрятаться")
-			end
-			imgui.Separator()
-			if imgui.Button(u8'Мероприятие "Король дигла"') then
-				lua_thread.create(function()
-					setCharCoordinates(PLAYER_PED,1753,2072,1955)
-					wait(1000)
-					sampSendChat("/mess 10 Уважаемые игроки! Проходит мероприятие: Король Дигла. Желающие /tpmp")
-					sampSendChat("/mp")
-					sampSendDialogResponse(5343, 1, 0)
-					sampSendDialogResponse(5344, 1, 0, "КД")
-					sampSendChat("/mess 10 Активнее /tpmp, делаем строй и ожидаем команды")
-					notify.addNotify("{87CEEB}[AdminTool]", 'Мероприятие "Король дигла" \nуспешно создано\nТелепортация открыта', 2, 1, 6)
-				end)
-			end
-			if imgui.Button(u8'Правила МП "Король дигла"') then
-				sampSendChat("/mess 6 Правила: Нельзя использовать /passive, /fly, /r - /s и баги. ДМ запрещено.")
-				sampSendChat("/mess 6 Я буду вызывать двоих игроков, после начну отсчет от пяти секунд.")
-			end
-			imgui.Separator()
-			if imgui.Button(u8'Мероприятие "Русская рулетка"') then
-				lua_thread.create(function()
-					setCharCoordinates(PLAYER_PED,1973,-978,1371)
-					wait(1000)
-					sampSendChat("/mess 10 Уважаемые игроки! Проходит мероприятие: Русская рулетка. Желающие /tpmp")
-					sampSendChat("/mp")
-					sampSendDialogResponse(5343, 1, 0)
-					sampSendDialogResponse(5344, 1, 0, "РР")
-					sampSendChat("/mess 10 Активнее /tpmp, делаем строй и ожидаем команды")
-					notify.addNotify("{87CEEB}[AdminTool]", 'Мероприятие "Русская рулетка" \nуспешно создано\nТелепортация открыта', 2, 1, 6)
-				end)
-			end
-			if imgui.Button(u8'Правила МП "Русская рулетка"') then
-				sampSendChat("/mess 6 Правила: Нельзя использовать /passive, /fly, /r - /s и баги. ДМ запрещено.")
-				sampSendChat("/mess 6 Я буду действовать с помощью команды /try - убил. Удачно - убиты. Неудачно - живы.")
-			end
-			imgui.Separator()
-			if imgui.Button(u8'Мероприятие "Поливалка"') then
-				lua_thread.create(function()
-					setCharCoordinates(PLAYER_PED,-2304,872,59)
-					wait(1000)
-					sampSendChat("/mess 10 Уважаемые игроки! Проходит мероприятие: Поливалка. Желающие: /tpmp")
-					sampSendChat("/mp")
-					sampSendDialogResponse(5343, 1, 0)
-					sampSendDialogResponse(5344, 1, 0, "Поливалка")
-					sampSendChat("/mess 10 Активнее /tpmp, делаем строй и ожидаем комадны")
-					notify.addNotify("{87CEEB}[AdminTool]", 'Мероприятие "Поливалка" \nуспешно создано\nТелепортация открыта', 2, 1, 6)
-				end)
-			end
-			if imgui.Button(u8'Правила МП "Поливалка"') then
-				sampSendChat("/mess 6 Правила: Нельзя использовать /passive, /fly, /r - /s и баги. ДМ запрещено.")
-				sampSendChat("/mess 6 Я буду использовать Swat Tank, и буду сбивать вас с выбранного места.")
-				sampSendChat("/mess 6 Последний, кто остается - победитель.")
-			end
-			imgui.Separator()
-			if imgui.Button(u8'Мероприятие "Крылья смерти"') then
-				lua_thread.create(function()
-					setCharCoordinates(PLAYER_PED,2027,-2434,13)
-					wait(1000)
-					sampSendChat("/mess 10 Уважаемые игроки! Проходит мероприятие: Крылья смерти. Желающие: /tpmp")
-					sampSendChat("/mp")
-					sampSendDialogResponse(5343, 1, 0)
-					sampSendDialogResponse(5344, 1, 0, "Крылья смерти")
-					sampSendChat("/mess 10 Активнее /tpmp, делаем строй и ожидаем команды")
-					notify.addNotify("{87CEEB}[AdminTool]", 'Мероприятие "Крылья смерти" \nуспешно создано\nТелепортация открыта', 2, 1, 6)
-				end)
-			end
-			if imgui.Button(u8'Правила МП "Крылья смерти"') then
-				sampSendChat("/mess 6 Правила: Нельзя использовать /passive, /fly, /r - /s и баги. ДМ запрещено.")
-				sampSendChat("/mess 6 Я буду использовать самолет Shamal, а ваша задача залезть на крылья")
-				sampSendChat("/mess 6 Ваша последующая задача не упасть, а я буду выполнять трюки.")
-				sampSendChat("/mess 6 Тот, кто останется последним на самолете - победитель")
-			end
-			imgui.Separator()
-			if imgui.Button(u8'Мероприятие "Виторина"') then
-				sampSendChat("/mess 10 Уважаемые игроки! Проходит мероприятие: Викторина! Телепорта не будет")
-				sampSendChat("/mess 10 Сейчас, я объясню правила игры, и те, кто прочитает правила, мне в /pm +")
-				notify.addNotify("{87CEEB}[AdminTool]", 'Мероприятие "Викторина" \nзапущена\nГотовьте вопросы', 2, 1, 6)
-			end
-			if imgui.Button(u8'Правила МП "Викторина"') then
-				sampSendChat("/mess 6 Я задаю вопрос из любой категории, и жду ответа.")
-				sampSendChat("/mess 6 Первый, кто отвечает - получает один балл")
-				sampSendChat("/mess 6 Всего баллов - 5. Готовность отправляем мне в /pm знаком +")
-			end
-			imgui.Separator()
-			if imgui.Button(u8'Мероприятие "Живи или умри') then  
-				lua_thread.create(function()
-					setCharCoordinates(PLAYER_PED,1547,-1359,329)
-					wait(1000)
-					sampSendChat("/mess 10 Уважаемые игроки! Проходит мероприятие: Живи или умри. Желающие: /tpmp")
-					sampSendChat("/mp")
-					sampSendDialogResponse(5343, 1, 0)
-					sampSendDialogResponse(5344, 1, 0, "ЖилиУ")
-					sampSendChat("/mess 10 Активнее /tpmp, делаем строй и ожидаем команды")
-					notify.addNotify("{87CEEB}[AdminTool]", 'Мероприятие "Живи или умри" \nуспешно создано\nТелепортация открыта', 2, 1, 6)
-				end)
-			end
-			if imgui.Button(u8'Правила МП "Живи или умри"') then  
-				sampSendChat("/mess 6 Правила: Нельзя использовать /passive, /fly, /r - /s и баги. ДМ запрещено.")
-				sampSendChat("/mess 6 Я буду использовать комбайн. Моя задача - давить вас")
-				sampSendChat("/mess 6 Ваша задача - разбегаться в крыше, и выживать.")
-				sampSendChat("/mess 6 Тот, кто будет последним - победитель")
-			end
-			imgui.Separator()
-			if imgui.Button(u8'Мероприятие "Развлечение"') then  
-				lua_thread.create(function()
-					setCharCoordinates(PLAYER_PED,626,-1891,3)
-					wait(1000)
-					sampSendChat("/mess 10 Уважаемые игроки! Проходит мероприятие: Развлечение. Желающие: /tpmp")
-					sampSendChat("/mp")
-					sampSendDialogResponse(5343, 1, 0)
-					sampSendDialogResponse(5344, 1, 0, "Развлекательное МП")
-					sampSendChat("/mess 10 Активнее /tpmp, делаем строй и ожидаем команды")
-					notify.addNotify("{87CEEB}[AdminTool]", 'Мероприятие "Развлечение" \nуспешно создано\nТелепортация открыта', 2, 1, 6)
-				end)
-			end
-			if imgui.Button(u8'Правила МП "Развлечение"') then  
-				sampSendChat("/mess 6 Правила: Нельзя использовать /passive, /fly, /r - /s и баги. ДМ запрещено.")
-				sampSendChat("/mess 6 Я вам ставлю любые объекты, ставите бумбокс. В течении 10 минут..")
-				sampSendChat("/mess 6 ...вы свободно веселитесь! Цель самого мероприятия - собрать сервер!")
-			end
-			imgui.Separator()
-			if imgui.Button(u8'Мероприятие "Поле чудес"') then  
-				lua_thread.create(function()
-					sampSendChat("/mess 10 Уважаемые игроки! Проходит мероприятие: Поле чудес! Телепорта не будет")
-					sampSendChat("/mess 10 Сейчас, я объясню правила игры, и те, кто прочитает правила, мне в /pm +")
-					notify.addNotify("{87CEEB}[AdminTool]", 'Мероприятие "Поле чудес" \nзапущена\nГотовьте слово', 2, 1, 6)
-				end)
-			end
-			if imgui.Button(u8'Правила МП "Поле чудес"') then
-				sampSendChat("/mess 6 Я загадываю слово, говорю его примерное значение")  
-				sampSendChat("/mess 6 Ваша задача - угадать слово, открывать буквы")
-				sampSendChat("/mess 6 Тот, кто отгадает слово - победитель")
-				sampSendChat("/mess 6 Одна буква = один балл. Один балл - 1кк виртов.")
-			end
-			imgui.Text(u8"Swat Tank - 601 ID, Shamal - 519 ID.") 
-			imgui.Text(u8"Комбайн - 532 ID")
-			imgui.Text(u8"Чтобы заспавнить машину,")
-			imgui.Text(u8"введите /veh ID 1 1")
-			imgui.Text(u8"Вопросы для Викторины,")
-			imgui.Text(u8"вы должны приготовить сами")
+
+		if beginchild == 50 then   
+			imgui.BeginChild("##CheckingMP", imgui.ImVec2(335, 225), true)
+					imgui.Text(u8"Выдача приза:")
+					imgui.InputText(u8'Введите ID', text_buffer_prize)
+					if imgui.Button(u8'Вывод') then 
+						sampSendChat("/mess 10 У нас есть победитель в мероприятии!")
+						sampSendChat("/mess 10 И это игрок с ID: " .. u8:decode(text_buffer_prize.v))
+						sampSendChat("/mpwin " .. text_buffer_prize.v)
+						notify.addNotify("{87CEEB}[AdminTool]", "Вы выдали приз игроку с ID " .. u8:decode(text_buffer_prize.v) .. ", вам\nвыдана зарплата", 2, 1, 6)
+						sampSendChat("/spp")
+					end
+					imgui.Separator()
+				if imgui.Button(u8'Выдача минигана самому себе') then
+					sampSendChat("/setweap " .. id .. " 38 " .. " 5000 ")
+				end
+				if imgui.Button(u8"Призыв к телепортации") then  
+					sampSendChat("/mess 10 Дорогие игроки, телепорт все ещё открыт! /tpmp")
+					sampSendChat("/mess 10 Успейте, до начала мероприятия!")
+				end
+			imgui.EndChild()
 		end
-		imgui.EndChild()
-		imgui.Separator()
-		if imgui.CollapsingHeader(u8"Описание каждого мероприятия") then  
-			imgui.Separator()
-			if imgui.CollapsingHeader(u8"Прятки") then 
-				imgui.Text(u8"Первоначально собирается строй, рассказываются правила.")
-				imgui.Text(u8"Люди разбегаются, после администратор начинает искать")
-				imgui.Text(u8"Администратор бегает с миниганом, убивая каждого, кого найдет")
-				imgui.Text(u8"Тот, кто остается последним - побеждает")
-			end 
-			imgui.Separator()
-			if imgui.CollapsingHeader(u8"Король дигла") then
-				imgui.Text(u8"Собирается строй, рассказываются правила игры.")
-				imgui.Text(u8"Игроки восстанавливают здоровье, берут Desert Eagle.")
-				imgui.Text(u8"Администратор выбирает двух игроков каждый раунд")
-				imgui.Text(u8"Погибающий - выбывает, победитель - остается.")
-				imgui.Text(u8"Победивший в последнем раунде - получает приз")
-			end 
-			imgui.Separator()
-			if imgui.CollapsingHeader(u8"Русская рулетка") then  
-				imgui.Text(u8"Делается строй, рассказываются правила")
-				imgui.Text(u8"Администратор берет миниган, и начинается русская рулетка")
-				imgui.Text(u8'Это делается с помощью команды "/try убил"')
-				imgui.Text(u8'Если "удачно" - игрок погибает | Если "неудачно" - жив')
-				imgui.Text(u8'Тот, кто остается последним - побеждает')
-			end 
-			imgui.Separator()
-			if imgui.CollapsingHeader(u8"Крылья смерти") then  
-				imgui.Text(u8"Сначала делается строй, рассказываются правила")
-				imgui.Text(u8"Администратор спавнит самолет Shamal")
-				imgui.Text(u8"Игроки запрыгивают на крылья самолета")
-				imgui.Text(u8"Администратор начинает полет и трюки")
-				imgui.Text(u8"Тот, кто останется последний на самолете - побеждает")
-			end 
-			imgui.Separator()
-			if imgui.CollapsingHeader(u8"Викторина") then  
-				imgui.Text(u8"Администратор объявляет о начале Викторины")
-				imgui.Text(u8"Тем временем, телепортация не задается")
-				imgui.Text(u8"Ответ = 1 балл. Тот, кто набрал 5 баллов - победитель")
-				imgui.Text(u8"Можно задавать любые вопросы. \nДаже, если они не связанные с модом сервера")
-			end 
-			imgui.Separator()
-			if imgui.CollapsingHeader(u8"Поливалка") then  
-				imgui.Text(u8"Делается строй, администратор рассказывает правила")
-				imgui.Text(u8"Он спавнит Swat Tank, и начинает поливать игроков")
-				imgui.Text(u8"Последний, кто остался на платформе - победитель")
-			end 
-			imgui.Separator()
-			if imgui.CollapsingHeader(u8"Живи или умри") then  
-				imgui.Text(u8"Делается строй, рассказываются правила")
-				imgui.Text(u8"Администратор сбивает игроков на комбайне")
-				imgui.Text(u8"Тот, кто остался последний - победил")
-			end 
-			imgui.Separator()
-			if imgui.CollapsingHeader(u8"Развлекательное МП") then  
-				imgui.Text(u8"Делается строй, рассказывается короткие правила")
-				imgui.Text(u8"Им можно на мероприятии выдавать объекты (/object)")
-				imgui.Text(u8"Слушать музыку, и веселиться всячески в течении 10 минут")
-				imgui.Text(u8"БОЛЬШАЯ ПРОСЬБА! ПОСЛЕ МЕРОПРИЯТИЯ ЗАБРАТЬ ОБЪЕКТЫ")
-			end 
-			imgui.Separator()
-			if imgui.CollapsingHeader(u8"Поле чудес") then  
-				imgui.Text(u8"Объявляется о начале Поле чудес, ТП нету")
-				imgui.Text(u8"Рассказываются правила, загадывается слово")
-				imgui.Text(u8"Игроки выбирают буквы в ЛС, но как..")
-				imgui.Text(u8"Им задаются три варианта, а они выбирают один - верный")
-				imgui.Text(u8"Первый, кто написал вариант - тот вариант учитывается")
-				imgui.Text(u8"Тот, кто отгадал слово - победитель.")
-				imgui.Text(u8"Но, участникам выдаются вирты. Одна буква = 1 балл")
-				imgui.Text(u8"1 балл - 1кк.")
-			end
-			imgui.Separator()
+		if beginchild == 51 then   
+			imgui.BeginChild("##YouCreateMP?", imgui.ImVec2(335, 225), true)
+				imgui.Text(u8"Название своего мероприятия:")
+				imgui.InputText(u8'', text_buffer_mp)
+				if imgui.Button(u8'Вывод') then 
+					sampSendChat("/mess 10 Уважаемые игроки! Проходит мероприятие: " .. u8:decode(text_buffer_mp.v))
+					sampSendChat("/mp")
+					sampSendDialogResponse(5343, 1, 0)
+					sampSendDialogResponse(5344, 1, 0, u8:decode(text_buffer_mp.v))
+					sampSendChat("/mess 10 Чтобы попасть на мероприятие, введите /tpmp")
+					notify.addNotify("{87CEEB}[AdminTool]", "Мероприятие успешно создано\nТелепортация открыта", 2, 1, 6)
+				end
+				imgui.Separator()
+				if imgui.Button(u8'Стандарт.правила') then  
+					sampSendChat("/mess 6 Правила: Нельзя использовать /passive, /fly, /r - /s, баги, /flycar")
+					sampSendChat("/mess 6 Следуем командам администратора, ДМ запрещено, если..")
+					sampSendChat("/mess 6 ..это не предусмотрено мероприятием. Начинаем!")
+				end
+			imgui.EndChild()
+		end
+		if beginchild == 52 then 
+			imgui.BeginChild("##ZagotovkiMP", imgui.ImVec2(335, 200), true)
+				if imgui.Button(u8'Мероприятия "Прятки"') then
+					lua_thread.create(function()
+						setCharCoordinates(PLAYER_PED,-2315,1545,18)
+						wait(1000)
+						sampSendChat("/mess 10 Уважаемые игроки! Проходит мероприятие: Прятки. Желающие /tpmp")
+						sampSendChat("/mp")
+						sampSendDialogResponse(5343, 1, 0)
+						sampSendDialogResponse(5344, 1, 0, "Прятки")
+						sampSendChat("/mess 10 Активнее /tpmp, делаем строй и ожидаем команды")
+						notify.addNotify("{87CEEB}[AdminTool]", 'Мероприятие "Прятки" успешно создано\nТелепортация открыта', 2, 1, 6)
+					end)
+				end
+				if imgui.Button(u8'Правила МП "Прятки"') then
+					sampSendChat("/mess 6 Правила: Нельзя использовать /passive, /fly, /r - /s и баги. ДМ запрещено.")
+					sampSendChat("/mess 6 Правила знаем, значит у вас есть минута, чтобы спрятаться")
+				end
+				imgui.Separator()
+				if imgui.Button(u8'Мероприятие "Король дигла"') then
+					lua_thread.create(function()
+						setCharCoordinates(PLAYER_PED,1753,2072,1955)
+						wait(1000)
+						sampSendChat("/mess 10 Уважаемые игроки! Проходит мероприятие: Король Дигла. Желающие /tpmp")
+						sampSendChat("/mp")
+						sampSendDialogResponse(5343, 1, 0)
+						sampSendDialogResponse(5344, 1, 0, "КД")
+						sampSendChat("/mess 10 Активнее /tpmp, делаем строй и ожидаем команды")
+						notify.addNotify("{87CEEB}[AdminTool]", 'Мероприятие "Король дигла" \nуспешно создано\nТелепортация открыта', 2, 1, 6)
+					end)
+				end
+				if imgui.Button(u8'Правила МП "Король дигла"') then
+					sampSendChat("/mess 6 Правила: Нельзя использовать /passive, /fly, /r - /s и баги. ДМ запрещено.")
+					sampSendChat("/mess 6 Я буду вызывать двоих игроков, после начну отсчет от пяти секунд.")
+				end
+				imgui.Separator()
+				if imgui.Button(u8'Мероприятие "Русская рулетка"') then
+					lua_thread.create(function()
+						setCharCoordinates(PLAYER_PED,1973,-978,1371)
+						wait(1000)
+						sampSendChat("/mess 10 Уважаемые игроки! Проходит мероприятие: Русская рулетка. Желающие /tpmp")
+						sampSendChat("/mp")
+						sampSendDialogResponse(5343, 1, 0)
+						sampSendDialogResponse(5344, 1, 0, "РР")
+						sampSendChat("/mess 10 Активнее /tpmp, делаем строй и ожидаем команды")
+						notify.addNotify("{87CEEB}[AdminTool]", 'Мероприятие "Русская рулетка" \nуспешно создано\nТелепортация открыта', 2, 1, 6)
+					end)
+				end
+				if imgui.Button(u8'Правила МП "Русская рулетка"') then
+					sampSendChat("/mess 6 Правила: Нельзя использовать /passive, /fly, /r - /s и баги. ДМ запрещено.")
+					sampSendChat("/mess 6 Я буду действовать с помощью команды /try - убил. Удачно - убиты. Неудачно - живы.")
+				end
+				imgui.Separator()
+				if imgui.Button(u8'Мероприятие "Поливалка"') then
+					lua_thread.create(function()
+						setCharCoordinates(PLAYER_PED,-2304,872,59)
+						wait(1000)
+						sampSendChat("/mess 10 Уважаемые игроки! Проходит мероприятие: Поливалка. Желающие: /tpmp")
+						sampSendChat("/mp")
+						sampSendDialogResponse(5343, 1, 0)
+						sampSendDialogResponse(5344, 1, 0, "Поливалка")
+						sampSendChat("/mess 10 Активнее /tpmp, делаем строй и ожидаем комадны")
+						notify.addNotify("{87CEEB}[AdminTool]", 'Мероприятие "Поливалка" \nуспешно создано\nТелепортация открыта', 2, 1, 6)
+					end)
+				end
+				if imgui.Button(u8'Правила МП "Поливалка"') then
+					sampSendChat("/mess 6 Правила: Нельзя использовать /passive, /fly, /r - /s и баги. ДМ запрещено.")
+					sampSendChat("/mess 6 Я буду использовать Swat Tank, и буду сбивать вас с выбранного места.")
+					sampSendChat("/mess 6 Последний, кто остается - победитель.")
+				end
+				imgui.Separator()
+				if imgui.Button(u8'Мероприятие "Крылья смерти"') then
+					lua_thread.create(function()
+						setCharCoordinates(PLAYER_PED,2027,-2434,13)
+						wait(1000)
+						sampSendChat("/mess 10 Уважаемые игроки! Проходит мероприятие: Крылья смерти. Желающие: /tpmp")
+						sampSendChat("/mp")
+						sampSendDialogResponse(5343, 1, 0)
+						sampSendDialogResponse(5344, 1, 0, "Крылья смерти")
+						sampSendChat("/mess 10 Активнее /tpmp, делаем строй и ожидаем команды")
+						notify.addNotify("{87CEEB}[AdminTool]", 'Мероприятие "Крылья смерти" \nуспешно создано\nТелепортация открыта', 2, 1, 6)
+					end)
+				end
+				if imgui.Button(u8'Правила МП "Крылья смерти"') then
+					sampSendChat("/mess 6 Правила: Нельзя использовать /passive, /fly, /r - /s и баги. ДМ запрещено.")
+					sampSendChat("/mess 6 Я буду использовать самолет Shamal, а ваша задача залезть на крылья")
+					sampSendChat("/mess 6 Ваша последующая задача не упасть, а я буду выполнять трюки.")
+					sampSendChat("/mess 6 Тот, кто останется последним на самолете - победитель")
+				end
+				imgui.Separator()
+				if imgui.Button(u8'Мероприятие "Виторина"') then
+					sampSendChat("/mess 10 Уважаемые игроки! Проходит мероприятие: Викторина! Телепорта не будет")
+					sampSendChat("/mess 10 Сейчас, я объясню правила игры, и те, кто прочитает правила, мне в /pm +")
+					notify.addNotify("{87CEEB}[AdminTool]", 'Мероприятие "Викторина" \nзапущена\nГотовьте вопросы', 2, 1, 6)
+				end
+				if imgui.Button(u8'Правила МП "Викторина"') then
+					sampSendChat("/mess 6 Я задаю вопрос из любой категории, и жду ответа.")
+					sampSendChat("/mess 6 Первый, кто отвечает - получает один балл")
+					sampSendChat("/mess 6 Всего баллов - 5. Готовность отправляем мне в /pm знаком +")
+				end
+				imgui.Separator()
+				if imgui.Button(u8'Мероприятие "Живи или умри') then  
+					lua_thread.create(function()
+						setCharCoordinates(PLAYER_PED,1547,-1359,329)
+						wait(1000)
+						sampSendChat("/mess 10 Уважаемые игроки! Проходит мероприятие: Живи или умри. Желающие: /tpmp")
+						sampSendChat("/mp")
+						sampSendDialogResponse(5343, 1, 0)
+						sampSendDialogResponse(5344, 1, 0, "ЖилиУ")
+						sampSendChat("/mess 10 Активнее /tpmp, делаем строй и ожидаем команды")
+						notify.addNotify("{87CEEB}[AdminTool]", 'Мероприятие "Живи или умри" \nуспешно создано\nТелепортация открыта', 2, 1, 6)
+					end)
+				end
+				if imgui.Button(u8'Правила МП "Живи или умри"') then  
+					sampSendChat("/mess 6 Правила: Нельзя использовать /passive, /fly, /r - /s и баги. ДМ запрещено.")
+					sampSendChat("/mess 6 Я буду использовать комбайн. Моя задача - давить вас")
+					sampSendChat("/mess 6 Ваша задача - разбегаться в крыше, и выживать.")
+					sampSendChat("/mess 6 Тот, кто будет последним - победитель")
+				end
+				imgui.Separator()
+				if imgui.Button(u8'Мероприятие "Развлечение"') then  
+					lua_thread.create(function()
+						setCharCoordinates(PLAYER_PED,626,-1891,3)
+						wait(1000)
+						sampSendChat("/mess 10 Уважаемые игроки! Проходит мероприятие: Развлечение. Желающие: /tpmp")
+						sampSendChat("/mp")
+						sampSendDialogResponse(5343, 1, 0)
+						sampSendDialogResponse(5344, 1, 0, "Развлекательное МП")
+						sampSendChat("/mess 10 Активнее /tpmp, делаем строй и ожидаем команды")
+						notify.addNotify("{87CEEB}[AdminTool]", 'Мероприятие "Развлечение" \nуспешно создано\nТелепортация открыта', 2, 1, 6)
+					end)
+				end
+				if imgui.Button(u8'Правила МП "Развлечение"') then  
+					sampSendChat("/mess 6 Правила: Нельзя использовать /passive, /fly, /r - /s и баги. ДМ запрещено.")
+					sampSendChat("/mess 6 Я вам ставлю любые объекты, ставите бумбокс. В течении 10 минут..")
+					sampSendChat("/mess 6 ...вы свободно веселитесь! Цель самого мероприятия - собрать сервер!")
+				end
+				imgui.Separator()
+				if imgui.Button(u8'Мероприятие "Поле чудес"') then  
+					lua_thread.create(function()
+						sampSendChat("/mess 10 Уважаемые игроки! Проходит мероприятие: Поле чудес! Телепорта не будет")
+						sampSendChat("/mess 10 Сейчас, я объясню правила игры, и те, кто прочитает правила, мне в /pm +")
+						notify.addNotify("{87CEEB}[AdminTool]", 'Мероприятие "Поле чудес" \nзапущена\nГотовьте слово', 2, 1, 6)
+					end)
+				end
+				if imgui.Button(u8'Правила МП "Поле чудес"') then
+					sampSendChat("/mess 6 Я загадываю слово, говорю его примерное значение")  
+					sampSendChat("/mess 6 Ваша задача - угадать слово, открывать буквы")
+					sampSendChat("/mess 6 Тот, кто отгадает слово - победитель")
+					sampSendChat("/mess 6 Одна буква = один балл. Один балл - 1кк виртов.")
+				end
+				imgui.Text(u8"Swat Tank - 601 ID, Shamal - 519 ID.") 
+				imgui.Text(u8"Комбайн - 532 ID")
+				imgui.Text(u8"Чтобы заспавнить машину,")
+				imgui.Text(u8"введите /veh ID 1 1")
+				imgui.Text(u8"Вопросы для Викторины,")
+				imgui.Text(u8"вы должны приготовить сами")
+			imgui.EndChild()
+		end
+		if beginchild == 53 then 
+			imgui.BeginChild("##WriteOnMP", imgui.ImVec2(335, 200), true)
+				if imgui.CollapsingHeader(u8"Прятки") then 
+					imgui.Text(u8"Первоначально собирается строй..\n рассказываются правила.")
+					imgui.Text(u8"Люди разбегаются, \nпосле администратор начинает искать")
+					imgui.Text(u8"Администратор бегает с миниганом, \nубивая каждого, кого найдет")
+					imgui.Text(u8"Тот, кто остается последним - побеждает")
+				end 
+				imgui.Separator()
+				if imgui.CollapsingHeader(u8"Король дигла") then
+					imgui.Text(u8"Собирается строй,\n рассказываются правила игры.")
+					imgui.Text(u8"Игроки восстанавливают здоровье,\n берут Desert Eagle.")
+					imgui.Text(u8"Администратор выбирает двух..\n игроков каждый раунд")
+					imgui.Text(u8"Погибающий - выбывает, \nпобедитель - остается.")
+					imgui.Text(u8"Победивший в последнем раунде \n получает приз")
+				end 
+				imgui.Separator()
+				if imgui.CollapsingHeader(u8"Русская рулетка") then  
+					imgui.Text(u8"Делается строй, \n рассказываются правила")
+					imgui.Text(u8"Администратор берет миниган, \nи начинается русская рулетка")
+					imgui.Text(u8'Это делается с помощью команды "/try убил"')
+					imgui.Text(u8'Если "удачно" - игрок погибает \n Если "неудачно" - жив')
+					imgui.Text(u8'Тот, кто остается последним \n побеждает')
+				end 
+				imgui.Separator()
+				if imgui.CollapsingHeader(u8"Крылья смерти") then  
+					imgui.Text(u8"Сначала делается строй, \nрассказываются правила")
+					imgui.Text(u8"Администратор спавнит самолет Shamal")
+					imgui.Text(u8"Игроки запрыгивают на крылья самолета")
+					imgui.Text(u8"Администратор начинает полет и трюки")
+					imgui.Text(u8"Тот, кто останется последний \n на самолете побеждает")
+				end 
+				imgui.Separator()
+				if imgui.CollapsingHeader(u8"Викторина") then  
+					imgui.Text(u8"Администратор объявляет о начале Викторины")
+					imgui.Text(u8"Тем временем, телепортация не задается")
+					imgui.Text(u8"Ответ = 1 балл. Тот, кто набрал 5 баллов - победитель")
+					imgui.Text(u8"Можно задавать любые вопросы. \nДаже, если они не связанные с модом сервера")
+				end 
+				imgui.Separator()
+				if imgui.CollapsingHeader(u8"Поливалка") then  
+					imgui.Text(u8"Делается строй, администратор рассказывает правила")
+					imgui.Text(u8"Он спавнит Swat Tank, и начинает поливать игроков")
+					imgui.Text(u8"Последний, кто остался на платформе - победитель")
+				end 
+				imgui.Separator()
+				if imgui.CollapsingHeader(u8"Живи или умри") then  
+					imgui.Text(u8"Делается строй, рассказываются правила")
+					imgui.Text(u8"Администратор сбивает игроков на комбайне")
+					imgui.Text(u8"Тот, кто остался последний - победил")
+				end 
+				imgui.Separator()
+				if imgui.CollapsingHeader(u8"Развлекательное МП") then  
+					imgui.Text(u8"Делается строй, \nрассказывается короткие правила")
+					imgui.Text(u8"Им можно на мероприятии..\n выдавать объекты (/object)")
+					imgui.Text(u8"Слушать музыку, и..\n веселиться всячески в течении 10 минут")
+					imgui.Text(u8"БОЛЬШАЯ ПРОСЬБА! \nПОСЛЕ МЕРОПРИЯТИЯ ЗАБРАТЬ ОБЪЕКТЫ")
+				end 
+				imgui.Separator()
+				if imgui.CollapsingHeader(u8"Поле чудес") then  
+					imgui.Text(u8"Объявляется о начале..\n Поле чудес, ТП нету")
+					imgui.Text(u8"Рассказываются правила, \nзагадывается слово")
+					imgui.Text(u8"Игроки выбирают буквы в ЛС, \nно как..")
+					imgui.Text(u8"Им задаются три варианта, а..\n они выбирают один - верный")
+					imgui.Text(u8"Первый, кто написал вариант.. \nтот вариант учитывается")
+					imgui.Text(u8"Тот, кто отгадал слово.. \n победитель.")
+					imgui.Text(u8"Но, участникам выдаются вирты. \nОдна буква = 1 балл")
+					imgui.Text(u8"1 балл - 1кк.")
+				end
+			imgui.EndChild()
 		end
 		imgui.End()
 	end
@@ -3150,194 +3257,220 @@ function imgui.OnDrawFrame()
 			imgui.Text(u8"Но, есть автовыдача за /online, нажмите NumPad3 и произойдет выдача за онлайн")
 			imgui.Text("  ")
 			imgui.Separator()
-			if imgui.Button(u8'Спавн каров на 15 секунд') then
-				sampSendChat("/mess 14 Уважаемые игроки. Сейчас будет респавн всего серверного транспорта")
-				sampSendChat("/mess 14 Займите водительские места, и продолжайте дрифтить, наши любимые :3")
-				sampSendChat("/delcarall ")
-				sampSendChat("/spawncars 15 ")
-				notify.addNotify("{87CEEB}[AdminTool]", 'Вы запустили респавн машин, \nожидайте', 2, 1, 6)
+
+			imgui.BeginChild("##SelectFlood", imgui.ImVec2(150, 220), true)
+
+			if imgui.Selectable(u8"Флуды", beginchild == 100) then beginchild = 100 end
+			if imgui.Selectable(u8"Призыв в /gw", beginchild == 101) then beginchild = 101 end
+			if imgui.Selectable(u8"Остальное", beginchild == 102) then beginchild = 102 end
+
+			imgui.EndChild()
+			imgui.SameLine()
+
+
+			if beginchild == 100 then  
+				imgui.BeginChild("##Floods", imgui.ImVec2(480, 220), true)
+					if imgui.Button(u8'Флуд про репорты') then
+						sampSendChat("/mess 7 Информация на Russian Drift Server!")
+						sampSendChat("/mess 10 Вы заметили читера? Или увидели нарушение?")
+						sampSendChat("/mess 10 Напишите /report, а там ID читера/нарушителя")
+						sampSendChat("/mess 10 Администраторы ответят вам и разберуться с негодяем! :D")
+						sampSendChat("/mess 7 Мы рассказали, что хотели :D. Удачной игры! :3")
+					end
+					imgui.SameLine()
+					if imgui.Button(u8'Флуд про VIP') then
+						sampSendChat("/mess 7 Информация на Russian Drift Server!")
+						sampSendChat("/mess 10 Вы давно хотели смотреть на людей свыше?")
+						sampSendChat("/mess 10 У вас есть лишние 10.000 очков?")
+						sampSendChat("/mess 10 Вводи команду /sellvip и ты получишь VIP!")
+						sampSendChat("/mess 7 Мы рассказали, что хотели :D. Удачной игры! :3")
+					end
+					imgui.SameLine()
+					if imgui.Button(u8'Флуд про оплату бизнеса/дома') then
+						sampSendChat("/mess 7 Информация на Russian Drift Server!")
+						sampSendChat("/mess 10 Купили дом или бизнес? Его обязательно нужно оплатить.")
+						sampSendChat("/mess 10 Для этого необходимо, написать /tp, затем Разное -> Банк...")
+						sampSendChat("/mess 10 ...после этого пройти в Банк, открыть счет и..")
+						sampSendChat("/mess 10 ..и щелкнуть по Оплата дома или Оплата бизнеса. На этом все.")
+						sampSendChat("/mess 7 Мы рассказали, что хотели :D. Удачной игры! :3")
+					end
+					if imgui.Button(u8'Флуд про /dt 0-990 (режим тренировки)') then
+						sampSendChat("/mess 7 Информация на Russian Drift Server!")
+						sampSendChat("/mess 10 Устали от перестрелок? Устали от бесконечных смертей?")
+						sampSendChat("/mess 10 Хочется отдохнуть с друзьями отдельно? У нас есть способ.")
+						sampSendChat("/mess 10 Введите команду /dt 0-990 и отдыхайте на здоровье.")
+						sampSendChat("/mess 10 Не забудьте сообщить друзьям свой мир. Удачной игры. :3")
+						sampSendChat("/mess 7 Мы рассказали, что хотели :D. Удачной игры! :3")
+					end
+					imgui.SameLine()
+					if imgui.Button(u8'Флуд про /arena') then
+						sampSendChat("/mess 7 Информация на Russian Drift Server!")
+						sampSendChat("/mess 10 Хочется постреляться?")
+						sampSendChat("/mess 10 Вводи /arena или /tp -> Deatchmatch-Арены. Их много.")
+						sampSendChat("/mess 10 Покажи, кто в игре - войн. :3")
+						sampSendChat("/mess 7 Мы рассказали, что хотели :D. Удачной игры! :3")
+					end
+					if imgui.Button(u8'Флуд про VK group') then
+						sampSendChat("/mess 7 Информация на Russian Drift Server!")
+						sampSendChat("/mess 10 Хотите участвовать в конкурсах?")
+						sampSendChat("/mess 10 Или хочешь написать предложение/улучшение к серверу?")
+						sampSendChat("/mess 10 Заходи в нашу группу ВКонтакте: https://vk.com/dmdriftgta")
+						sampSendChat("/mess 7 Мы рассказали, что хотели :D. Удачной игры! :3")
+					end
+					imgui.SameLine()
+					if imgui.Button(u8'Флуд про автосалон') then
+						sampSendChat("/mess 7 Информация на Russian Drift Server!")
+						sampSendChat("/mess 10 Хочешь кататься на личном транспорте, чтобы он был у тебя?")
+						sampSendChat("/mess 10 Вводи команду /tp -> Разное -> Автосалоны")
+						sampSendChat("/mess 10 Выбирай нужный автосалон, купи машину за RDS коины. И катайся :3")
+						sampSendChat("/mess 7 Мы рассказали, что хотели :D. Удачной игры! :3")
+					end
+					if imgui.Button(u8'Флуд про сайт RDS') then
+						sampSendChat("/mess 7 Информация на Russian Drift Server!")
+						sampSendChat("/mess 8 Давно хотел задонатить на любимый сервер RDS?")
+						sampSendChat("/mess 8 Ты это можешь сделать с радостью!")
+						sampSendChat("/mess 8 Сделай это через сайт: myrds.ru")
+						sampSendChat("/mess 7 Мы рассказали, что хотели :D. Удачной игры! :3")
+					end
+					imgui.SameLine()
+					if imgui.Button(u8'Флуд про /gw') then
+						sampSendChat("/mess 7 Информация на Russian Drift Server!")
+						sampSendChat("/mess 10 Хотел поиграть за свою любимую игровую банду?")
+						sampSendChat("/mess 10 Сделай это с помощью /gw, едь на территорию с друзьями")
+						sampSendChat("/mess 10 Чтобы начать воевать за территорию, введи команду /capture")
+						sampSendChat("/mess 7 Мы рассказали, что хотели :D. Удачной игры! :3")
+					end
+					imgui.SameLine()
+					if imgui.Button(u8"Флуд про группу Сейчас на RDS") then
+						sampSendChat("/mess 7 Информация на Russian Drift Server!")
+						sampSendChat("/mess 10 Давно хотели скинуть свои скрины, и показать другим?")
+						sampSendChat("/mess 10 Попробовать продать что-нибудь, но в игре никто не отзывается?")
+						sampSendChat("/mess 10 Вы можете посетить свободную группу: https://vk.com/freerds")
+						sampSendChat("/mess 7 Мы рассказали, что хотели :D. Удачной игры! :3")
+					end
+					if imgui.Button(u8"Флуд про /gangwar") then 
+						sampSendChat("/mess 7 Информация на Russian Drift Server!")
+						sampSendChat("/mess 10 Хотели сразиться с другими бандами? Выпустить гнев?")
+						sampSendChat("/mess 10 Вы можете себе это позволить! Можете побороть другие банды")
+						sampSendChat("/mess 10 Команда /gangwar, выбираете территорию и сражаетесь за неё.")
+						sampSendChat("/mess 7 Мы рассказали, что хотели :D. Удачной игры! :3")
+					end 
+					imgui.SameLine()
+					if imgui.Button(u8"Флуд про работы") then
+						sampSendChat("/mess 7 Информация на Russian Drift Server!")
+						sampSendChat("/mess 10 Не хватает денег на оружие? Не хватает на машинку?")
+						sampSendChat("/mess 10 Ради наших ДМеров и дрифтеров, придуманы работы для деньжат")
+						sampSendChat("/mess 10 Черный день открыт, переходи /tp -> Разное -> Работы")
+						sampSendChat("/mess 7 Мы рассказали, что хотели :D. Удачной игры! :3")
+					end
+					imgui.SameLine()
+					if imgui.Button(u8"Флуд о моде") then  
+						sampSendChat("/mess 7 Информация на Russian Drift Server!")
+						sampSendChat("/mess 10 Посвящаем вас в мод RDS. Прежде всего, мы Drift Server")
+						sampSendChat("/mess 10 Также у нас есть дополнения, это GangWar, DM")
+						sampSendChat("/mess 10 Большинство команд и все остальное указано в /help")
+						sampSendChat("/mess 7 Мы рассказали, что хотели :D. Удачной игры! :3")
+					end
+					imgui.SameLine()
+					if imgui.Button(u8'Флуд про /trade') then
+						sampSendChat("/mess 7 Информация на Russian Drift Server!")
+						sampSendChat("/mess 10 Хотите разные аксессуары, а долго играть не хочется и есть вирты/очки/коины/рубли?")
+						sampSendChat("/mess 10 Введите /trade, подойдите к занятой лавки, спросите у человека и купите предмет.")
+						sampSendChat("/mess 10 Также, справа от лавок есть NPC Арман, у него также можно что-то взять.")
+						sampSendChat("/mess 7 Мы рассказали, что хотели :D. Удачной игры! :3")
+					end
+				imgui.EndChild()
 			end
-			if imgui.Button(u8'Напоминание цветов к /mess') then
-				sampAddChatMessage("{87CEEB}[AdminTool] {4169E1}0 - белый, 1 - черный, 2 - зеленый, 3 - светло-зеленый", main_color)
-				sampAddChatMessage("{87CEEB}[AdminTool] {4169E1}4 - красный, 5 - синий, 6 - желтый, 7 - оранжевый", main_color)
-				sampAddChatMessage("{87CEEB}[AdminTool] {4169E1}8 - фиолетовый, 9 - бирюзовый, 10 - голубой", main_color)
-				sampAddChatMessage("{87CEEB}[AdminTool] {4169E1}11 - темно-зеленый, 12 - золотой, 13 - серый, 14 - светло-желтый", main_color)
-				sampAddChatMessage("{87CEEB}[AdminTool] {4169E1}15 - розовый, 16 - коричневый, 17 - темно-розовый", main_color)
-				sampAddChatMessage("{87CEEB}[AdminTool] {4169E1}Данное сообщение выведено лишь вам...", main_color)
+
+			if beginchild == 101 then  
+				imgui.BeginChild("##GangWar", imgui.ImVec2(480, 220), true)
+					if imgui.Button(u8"Aztecas vs Ballas") then  
+						sampSendChat("/mess 7 Игра -  GangWar: /gw")
+						sampSendChat("/mess 10 Varios Los Aztecas vs East Side Ballas ")
+						sampSendChat("/mess 10 Помогите своим братьям, заходите через /gw за любимую банду")
+						sampSendChat("/mess 7 Игра - GangWar: /gw")
+					end
+					imgui.SameLine()
+					if imgui.Button(u8"Aztecas vs Groove") then  
+						sampSendChat("/mess 7 Игра -  GangWar: /gw")
+						sampSendChat("/mess 10 Varios Los Aztecas vs Groove Street ")
+						sampSendChat("/mess 10 Помогите своим братьям, заходите через /gw за любимую банду")
+						sampSendChat("/mess 7 Игра - GangWar: /gw")
+					end
+					imgui.SameLine()
+					if imgui.Button(u8"Aztecas vs Vagos") then  
+						sampSendChat("/mess 7 Игра -  GangWar: /gw")
+						sampSendChat("/mess 10 Varios Los Aztecas vs Los Santos Vagos ")
+						sampSendChat("/mess 10 Помогите своим братьям, заходите через /gw за любимую банду")
+						sampSendChat("/mess 7 Игра - GangWar: /gw")
+					end
+					imgui.SameLine()
+					if imgui.Button(u8"Aztecas vs Rifa") then  
+						sampSendChat("/mess 7 Игра -  GangWar: /gw")
+						sampSendChat("/mess 10 Varios Los Aztecas vs The Rifa ")
+						sampSendChat("/mess 10 Помогите своим братьям, заходите через /gw за любимую банду")
+						sampSendChat("/mess 7 Игра - GangWar: /gw")
+					end
+					if imgui.Button(u8"Ballas vs Groove") then  
+						sampSendChat("/mess 7 Игра -  GangWar: /gw")
+						sampSendChat("/mess 10 East Side Ballas vs Groove Street  ")
+						sampSendChat("/mess 10 Помогите своим братьям, заходите через /gw за любимую банду")
+						sampSendChat("/mess 7 Игра - GangWar: /gw")
+					end
+					imgui.SameLine()
+					if imgui.Button(u8"Ballas vs Rifa") then  
+						sampSendChat("/mess 7 Игра -  GangWar: /gw")
+						sampSendChat("/mess 10 East Side Ballas vs The Rifa ")
+						sampSendChat("/mess 10 Помогите своим братьям, заходите через /gw за любимую банду")
+						sampSendChat("/mess 7 Игра - GangWar: /gw")
+					end
+					imgui.SameLine()
+					if imgui.Button(u8"Groove vs Rifa") then  
+						sampSendChat("/mess 7 Игра -  GangWar: /gw")
+						sampSendChat("/mess 10 Groove Street  vs The Rifa ")
+						sampSendChat("/mess 10 Помогите своим братьям, заходите через /gw за любимую банду")
+						sampSendChat("/mess 7 Игра - GangWar: /gw")
+					end
+					imgui.SameLine()
+					if imgui.Button(u8"Groove vs Vagos") then  
+						sampSendChat("/mess 7 Игра -  GangWar: /gw")
+						sampSendChat("/mess 10 Groove Street vs Los Santos Vagos ")
+						sampSendChat("/mess 10 Помогите своим братьям, заходите через /gw за любимую банду")
+						sampSendChat("/mess 7 Игра - GangWar: /gw")
+					end
+					imgui.SameLine()
+					if imgui.Button(u8"Vagos vs Rifa") then  
+						sampSendChat("/mess 7 Игра -  GangWar: /gw")
+						sampSendChat("/mess 10 Los Santos Vagos vs The Rifa ")
+						sampSendChat("/mess 10 Помогите своим братьям, заходите через /gw за любимую банду")
+						sampSendChat("/mess 7 Игра - GangWar: /gw")
+					end
+					if imgui.Button(u8"Ballas vs Vagos") then  
+						sampSendChat("/mess 7 Игра -  GangWar: /gw")
+						sampSendChat("/mess 10 East Side Ballas vs Los Santos Vagos ")
+						sampSendChat("/mess 10 Помогите своим братьям, заходите через /gw за любимую банду")
+						sampSendChat("/mess 7 Игра - GangWar: /gw")
+					end
+				imgui.EndChild()
 			end
-			if imgui.CollapsingHeader(u8"Призыв в /gw") then  
-				if imgui.Button(u8"Aztecas vs Ballas") then  
-					sampSendChat("/mess 7 Игра -  GangWar: /gw")
-					sampSendChat("/mess 10 Varios Los Aztecas vs East Side Ballas ")
-					sampSendChat("/mess 10 Помогите своим братьям, заходите через /gw за любимую банду")
-					sampSendChat("/mess 7 Игра - GangWar: /gw")
-				end
-				imgui.SameLine()
-				if imgui.Button(u8"Aztecas vs Groove") then  
-					sampSendChat("/mess 7 Игра -  GangWar: /gw")
-					sampSendChat("/mess 10 Varios Los Aztecas vs Groove Street ")
-					sampSendChat("/mess 10 Помогите своим братьям, заходите через /gw за любимую банду")
-					sampSendChat("/mess 7 Игра - GangWar: /gw")
-				end
-				imgui.SameLine()
-				if imgui.Button(u8"Aztecas vs Vagos") then  
-					sampSendChat("/mess 7 Игра -  GangWar: /gw")
-					sampSendChat("/mess 10 Varios Los Aztecas vs Los Santos Vagos ")
-					sampSendChat("/mess 10 Помогите своим братьям, заходите через /gw за любимую банду")
-					sampSendChat("/mess 7 Игра - GangWar: /gw")
-				end
-				imgui.SameLine()
-				if imgui.Button(u8"Aztecas vs Rifa") then  
-					sampSendChat("/mess 7 Игра -  GangWar: /gw")
-					sampSendChat("/mess 10 Varios Los Aztecas vs The Rifa ")
-					sampSendChat("/mess 10 Помогите своим братьям, заходите через /gw за любимую банду")
-					sampSendChat("/mess 7 Игра - GangWar: /gw")
-				end
-				imgui.SameLine()
-				if imgui.Button(u8"Ballas vs Groove") then  
-					sampSendChat("/mess 7 Игра -  GangWar: /gw")
-					sampSendChat("/mess 10 East Side Ballas vs Groove Street  ")
-					sampSendChat("/mess 10 Помогите своим братьям, заходите через /gw за любимую банду")
-					sampSendChat("/mess 7 Игра - GangWar: /gw")
-				end
-				imgui.SameLine()
-				if imgui.Button(u8"Ballas vs Vagos") then  
-					sampSendChat("/mess 7 Игра -  GangWar: /gw")
-					sampSendChat("/mess 10 East Side Ballas vs Los Santos Vagos ")
-					sampSendChat("/mess 10 Помогите своим братьям, заходите через /gw за любимую банду")
-					sampSendChat("/mess 7 Игра - GangWar: /gw")
-				end
-				if imgui.Button(u8"Ballas vs Rifa") then  
-					sampSendChat("/mess 7 Игра -  GangWar: /gw")
-					sampSendChat("/mess 10 East Side Ballas vs The Rifa ")
-					sampSendChat("/mess 10 Помогите своим братьям, заходите через /gw за любимую банду")
-					sampSendChat("/mess 7 Игра - GangWar: /gw")
-				end
-				imgui.SameLine()
-				if imgui.Button(u8"Groove vs Rifa") then  
-					sampSendChat("/mess 7 Игра -  GangWar: /gw")
-					sampSendChat("/mess 10 Groove Street  vs The Rifa ")
-					sampSendChat("/mess 10 Помогите своим братьям, заходите через /gw за любимую банду")
-					sampSendChat("/mess 7 Игра - GangWar: /gw")
-				end
-				imgui.SameLine()
-				if imgui.Button(u8"Groove vs Vagos") then  
-					sampSendChat("/mess 7 Игра -  GangWar: /gw")
-					sampSendChat("/mess 10 Groove Street vs Los Santos Vagos ")
-					sampSendChat("/mess 10 Помогите своим братьям, заходите через /gw за любимую банду")
-					sampSendChat("/mess 7 Игра - GangWar: /gw")
-				end
-				imgui.SameLine()
-				if imgui.Button(u8"Vagos vs Rifa") then  
-					sampSendChat("/mess 7 Игра -  GangWar: /gw")
-					sampSendChat("/mess 10 Los Santos Vagos vs The Rifa ")
-					sampSendChat("/mess 10 Помогите своим братьям, заходите через /gw за любимую банду")
-					sampSendChat("/mess 7 Игра - GangWar: /gw")
-				end
-			end
-			if imgui.CollapsingHeader(u8"Флуды") then
-				if imgui.Button(u8'Флуд про репорты') then
-					sampSendChat("/mess 7 Информация на Russian Drift Server!")
-					sampSendChat("/mess 10 Вы заметили читера? Или увидели нарушение?")
-					sampSendChat("/mess 10 Напишите /report, а там ID читера/нарушителя")
-					sampSendChat("/mess 10 Администраторы ответят вам и разберуться с негодяем! :D")
-					sampSendChat("/mess 7 Мы рассказали, что хотели :D. Удачной игры! :3")
-				end
-				imgui.SameLine()
-				if imgui.Button(u8'Флуд про VIP') then
-					sampSendChat("/mess 7 Информация на Russian Drift Server!")
-					sampSendChat("/mess 10 Вы давно хотели смотреть на людей свыше?")
-					sampSendChat("/mess 10 У вас есть лишние 10.000 очков?")
-					sampSendChat("/mess 10 Вводи команду /sellvip и ты получишь VIP!")
-					sampSendChat("/mess 7 Мы рассказали, что хотели :D. Удачной игры! :3")
-				end
-				imgui.SameLine()
-				if imgui.Button(u8'Флуд про оплату бизнеса/дома') then
-					sampSendChat("/mess 7 Информация на Russian Drift Server!")
-					sampSendChat("/mess 10 Купили дом или бизнес? Его обязательно нужно оплатить.")
-					sampSendChat("/mess 10 Для этого необходимо, написать /tp, затем Разное -> Банк...")
-					sampSendChat("/mess 10 ...после этого пройти в Банк, открыть счет и..")
-					sampSendChat("/mess 10 ..и щелкнуть по Оплата дома или Оплата бизнеса. На этом все.")
-					sampSendChat("/mess 7 Мы рассказали, что хотели :D. Удачной игры! :3")
-				end
-				imgui.SameLine()
-				if imgui.Button(u8'Флуд про /trade') then
-					sampSendChat("/mess 7 Информация на Russian Drift Server!")
-					sampSendChat("/mess 10 Хотите разные аксессуары, а долго играть не хочется и есть вирты/очки/коины/рубли?")
-					sampSendChat("/mess 10 Введите /trade, подойдите к занятой лавки, спросите у человека и купите предмет.")
-					sampSendChat("/mess 10 Также, справа от лавок есть NPC Арман, у него также можно что-то взять.")
-					sampSendChat("/mess 7 Мы рассказали, что хотели :D. Удачной игры! :3")
-				end
-				if imgui.Button(u8'Флуд про /dt 0-990 (режим тренировки)') then
-					sampSendChat("/mess 7 Информация на Russian Drift Server!")
-					sampSendChat("/mess 10 Устали от перестрелок? Устали от бесконечных смертей?")
-					sampSendChat("/mess 10 Хочется отдохнуть с друзьями отдельно? У нас есть способ.")
-					sampSendChat("/mess 10 Введите команду /dt 0-990 и отдыхайте на здоровье.")
-					sampSendChat("/mess 10 Не забудьте сообщить друзьям свой мир. Удачной игры. :3")
-					sampSendChat("/mess 7 Мы рассказали, что хотели :D. Удачной игры! :3")
-				end
-				imgui.SameLine()
-				if imgui.Button(u8'Флуд про /arena') then
-					sampSendChat("/mess 7 Информация на Russian Drift Server!")
-					sampSendChat("/mess 10 Хочется постреляться?")
-					sampSendChat("/mess 10 Вводи /arena или /tp -> Deatchmatch-Арены. Их много.")
-					sampSendChat("/mess 10 Покажи, кто в игре - войн. :3")
- 		 			sampSendChat("/mess 7 Мы рассказали, что хотели :D. Удачной игры! :3")
-				end
-				imgui.SameLine()	
-				if imgui.Button(u8'Флуд про VK group') then
-					sampSendChat("/mess 7 Информация на Russian Drift Server!")
-					sampSendChat("/mess 10 Хотите участвовать в конкурсах?")
-					sampSendChat("/mess 10 Или хочешь написать предложение/улучшение к серверу?")
-					sampSendChat("/mess 10 Заходи в нашу группу ВКонтакте: https://vk.com/dmdriftgta")
-					sampSendChat("/mess 7 Мы рассказали, что хотели :D. Удачной игры! :3")
-				end
-				imgui.SameLine()
-				if imgui.Button(u8'Флуд про автосалон') then
-					sampSendChat("/mess 7 Информация на Russian Drift Server!")
-					sampSendChat("/mess 10 Хочешь кататься на личном транспорте, чтобы он был у тебя?")
-					sampSendChat("/mess 10 Вводи команду /tp -> Разное -> Автосалоны")
-					sampSendChat("/mess 10 Выбирай нужный автосалон, купи машину за RDS коины. И катайся :3")
-			  		sampSendChat("/mess 7 Мы рассказали, что хотели :D. Удачной игры! :3")
-				end
-				if imgui.Button(u8'Флуд про сайт RDS') then
-					sampSendChat("/mess 7 Информация на Russian Drift Server!")
-					sampSendChat("/mess 8 Давно хотел задонатить на любимый сервер RDS?")
-					sampSendChat("/mess 8 Ты это можешь сделать с радостью!")
-					sampSendChat("/mess 8 Сделай это через сайт: myrds.ru")
-					sampSendChat("/mess 7 Мы рассказали, что хотели :D. Удачной игры! :3")
-				end
-				imgui.SameLine()
-				if imgui.Button(u8'Флуд про /gw') then
-					sampSendChat("/mess 7 Информация на Russian Drift Server!")
-					sampSendChat("/mess 10 Хотел поиграть за свою любимую игровую банду?")
-					sampSendChat("/mess 10 Сделай это с помощью /gw, едь на территорию с друзьями")
-					sampSendChat("/mess 10 Чтобы начать воевать за территорию, введи команду /capture")
-					sampSendChat("/mess 7 Мы рассказали, что хотели :D. Удачной игры! :3")
-				end
-				imgui.SameLine()
-				if imgui.Button(u8"Флуд про группу Сейчас на RDS") then
-					sampSendChat("/mess 7 Информация на Russian Drift Server!")
-					sampSendChat("/mess 10 Давно хотели скинуть свои скрины, и показать другим?")
-					sampSendChat("/mess 10 Попробовать продать что-нибудь, но в игре никто не отзывается?")
-					sampSendChat("/mess 10 Вы можете посетить свободную группу: https://vk.com/freerds")
-					sampSendChat("/mess 7 Мы рассказали, что хотели :D. Удачной игры! :3")
-				end
-				if imgui.Button(u8"Флуд про /gangwar") then 
-					sampSendChat("/mess 7 Информация на Russian Drift Server!")
-					sampSendChat("/mess 10 Хотели сразиться с другими бандами? Выпустить гнев?")
-					sampSendChat("/mess 10 Вы можете себе это позволить! Можете побороть другие банды")
-					sampSendChat("/mess 10 Команда /gangwar, выбираете территорию и сражаетесь за неё.")
-					sampSendChat("/mess 7 Мы рассказали, что хотели :D. Удачной игры! :3")
-				end 
-				imgui.SameLine()
-				if imgui.Button(u8"Флуд про работы") then
-					sampSendChat("/mess 7 Информация на Russian Drift Server!")
-					sampSendChat("/mess 10 Не хватает денег на оружие? Не хватает на машинку?")
-					sampSendChat("/mess 10 Ради наших ДМеров и дрифтеров, придуманы работы для деньжат")
-					sampSendChat("/mess 10 Черный день открыт, переходи /tp -> Разное -> Работы")
-					sampSendChat("/mess 7 Мы рассказали, что хотели :D. Удачной игры! :3")
-				end
+			if beginchild == 102 then  
+				imgui.BeginChild("##Other", imgui.ImVec2(480, 220), true)
+					if imgui.Button(u8'Спавн каров на 15 секунд') then
+						sampSendChat("/mess 14 Уважаемые игроки. Сейчас будет респавн всего серверного транспорта")
+						sampSendChat("/mess 14 Займите водительские места, и продолжайте дрифтить, наши любимые :3")
+						sampSendChat("/delcarall ")
+						sampSendChat("/spawncars 15 ")
+						notify.addNotify("{87CEEB}[AdminTool]", 'Вы запустили респавн машин, \nожидайте', 2, 1, 6)
+					end
+					if imgui.Button(u8'Напоминание цветов к /mess') then
+						sampAddChatMessage("{87CEEB}[AdminTool] {4169E1}0 - белый, 1 - черный, 2 - зеленый, 3 - светло-зеленый", main_color)
+						sampAddChatMessage("{87CEEB}[AdminTool] {4169E1}4 - красный, 5 - синий, 6 - желтый, 7 - оранжевый", main_color)
+						sampAddChatMessage("{87CEEB}[AdminTool] {4169E1}8 - фиолетовый, 9 - бирюзовый, 10 - голубой", main_color)
+						sampAddChatMessage("{87CEEB}[AdminTool] {4169E1}11 - темно-зеленый, 12 - золотой, 13 - серый, 14 - светло-желтый", main_color)
+						sampAddChatMessage("{87CEEB}[AdminTool] {4169E1}15 - розовый, 16 - коричневый, 17 - темно-розовый", main_color)
+						sampAddChatMessage("{87CEEB}[AdminTool] {4169E1}Данное сообщение выведено лишь вам...", main_color)
+					end
+				imgui.EndChild()
 			end
 			imgui.End()
 		end
@@ -3350,98 +3483,116 @@ function imgui.OnDrawFrame()
 				imgui.ShowCursor = true
 
 				imgui.Begin(u8'Помощник по командам /ans', four_window_state)
-				imgui.Text(u8"Для выведение быстрых ответов, /h7 и т.д., нужно ставить ID: /h13 ID, и обратите внимание..")
-				imgui.Text(u8".. на примечание в интерфейсе по /ans, команды с значком $, могут вводится как ответ в окне /ans")
-				imgui.Text(u8"После введения команды, необходимо нажать пробел!")
-				imgui.Text(u8"Нажатие на NumPad0 открывает /ans и первый репорт.")
-				imgui.Text(u8"Команды введение на английском языке: используются лишь на чат")
-				imgui.Text(u8"А те, которые на русском и в скобках после значка $ пишутся в окне /ans")
-				imgui.Text(u8"Если случайно написали .нч на английском, т.е. /yx - все равно выведится. Введен перевод")
-				imgui.Text(u8".ц (/w) - вывод рандомного цвета, для своих ответов")
-				imgui.Text(u8"")
+				if imgui.CollapsingHeader(u8"Объяснения") then
+					imgui.Text(u8"Для выведение быстрых ответов, /h7 и т.д., нужно ставить ID: /h13 ID, и обратите внимание")
+					imgui.Text(u8"на примечание в интерфейсе по /ans, команды с значком $, могут вводится как ответ в окне /ans")
+					imgui.Text(u8"После введения команды, необходимо нажать пробел!")
+					imgui.Text(u8"Нажатие на NumPad0 открывает /ans и первый репорт.")
+					imgui.Text(u8"Команды введение на английском языке: используются лишь на чат")
+					imgui.Text(u8"А те, которые на русском и в скобках после значка $ пишутся в окне /ans")
+					imgui.Text(u8"Если случайно написали .нч на английском, т.е. /yx - все равно выведится. Введен перевод")
+					imgui.Text(u8".ц (/w) - вывод рандомного цвета, для своих ответов")
+				end
 				imgui.Separator()
-				imgui.Text("  ")
-				if imgui.CollapsingHeader(u8"Быстрые ответы /ans") then
-					imgui.Separator()
-					if imgui.CollapsingHeader(u8"Жалобы на кого-то/что-то") then
-						imgui.Text(u8"/c - начал(а) работать по жалобе ($ .нч ) | /hg - помогли вам ")
-						imgui.Text(u8" .сл - слежу за игроком (исключительно $)  | /tm - ожидайте ($ .ож )")
-						imgui.Text(u8"/zba - жалоба на администратора ($ .жба ) | /zbp - жалоба на игрока ($ .жби )")
-						imgui.Text(u8"/vrm - приятного времяпрепровождения (no ID) | /cl - игрок чист ")
-						imgui.Text(u8".пр - приятной игры (no ID) | /dis - игрок не в сети ($ .нв )")
-						imgui.Text(u8"/yt - уточните ваш вопрос/запрос ($ .ут) | /n - нет нарушений у игрока ($ .нн )")
-						imgui.Text(u8"/rid - уточнение ID ($.уид ) | /nac - игрок наказан ($ .нак )")
-						imgui.Text(u8"/msid - ошибка в ID | /pg - проверим ($ .пр ) | /gm - гм не робит ($ .гм )")
-						imgui.Text(u8"/enk - никак ($ .нк ) | /nz - не запрещено ($ .нз ) | /en - не знаем ($ .нез )")
-						imgui.Text(u8"/yes - да ($ .жда ) | /net - нет ($ .жне ) | /of - не оффтопить ($ .офф ) | /nv - не выдаем ($ .нвд")
-						imgui.Text(u8"/vbg - скорей всего - баг ($ .баг ) | /plg - перезайдите ($ .рлг )")
-						imgui.Text(u8"/trp - жалобу в /report")
+					imgui.BeginChild("##QuestionSelect", imgui.ImVec2(205, 225), true)
+					if imgui.Selectable(u8"Жалобы на что-то/кого-то", beginchild == 103) then beginchild = 103 end
+					if imgui.Selectable(u8"Вопросы по командам, /help", beginchild == 104) then beginchild = 104 end
+					if imgui.Selectable(u8"Помощь по банде/семье", beginchild == 105) then beginchild = 105 end
+					if imgui.Selectable(u8"Помощь по телепортации", beginchild == 106) then beginchild = 106 end
+					if imgui.Selectable(u8"Помощь по продаже/покупке", beginchild == 107) then beginchild = 107 end
+					if imgui.Selectable(u8"Помощь по передаче чего-то", beginchild == 108) then beginchild = 108 end
+					if imgui.Selectable(u8"Остальные независимые вопросы", beginchild == 109) then beginchild = 109 end
+					if imgui.Selectable(u8"Скины", beginchild == 110) then beginchild = 110 end
+					if imgui.Selectable(u8"Горячие клавиши для /ans", beginchild == 111) then beginchild = 111 end
+					imgui.EndChild()
+					
+					imgui.SameLine()
+
+					if beginchild == 103 then  
+						imgui.BeginChild("##2Reports", imgui.ImVec2(480, 225), true)
+							imgui.Text(u8"/c - начал(а) работать по жалобе ($ .нч ) | /hg - помогли вам ")
+							imgui.Text(u8" .сл - слежу за игроком (исключительно $)  \n/tm - ожидайте ($ .ож )")
+							imgui.Text(u8"/zba - жалоба на администратора ($ .жба ) \n/zbp - жалоба на игрока ($ .жби )")
+							imgui.Text(u8"/vrm - приятного времяпрепровождения (no ID) \n/cl - игрок чист ")
+							imgui.Text(u8".пр - приятной игры (no ID) | /dis - игрок не в сети ($ .нв )")
+							imgui.Text(u8"/yt - уточните ваш вопрос/запрос ($ .ут) \n/n - нет нарушений у игрока ($ .нн )")
+							imgui.Text(u8"/rid - уточнение ID ($.уид ) | /nac - игрок наказан ($ .нак )")
+							imgui.Text(u8"/msid - ошибка в ID | /pg - проверим ($ .пр ) \n/gm - гм не робит ($ .гм )")
+							imgui.Text(u8"/enk - никак ($ .нк ) | /nz - не запрещено ($ .нз ) \n/en - не знаем ($ .нез )")
+							imgui.Text(u8"/yes - да ($ .жда ) | /net - нет ($ .жне ) \n/of - не оффтопить ($ .офф ) | /nv - не выдаем ($ .нвд")
+							imgui.Text(u8"/vbg - скорей всего - баг ($ .баг ) | /plg - перезайдите ($ .рлг )")
+							imgui.Text(u8"/trp - жалобу в /report")
+						imgui.EndChild()
 					end
-					imgui.Separator()
-					imgui.Text("")
-					if imgui.CollapsingHeader(u8"Ответы на вопросы и т.д.") then
-						imgui.Separator()
-						if imgui.CollapsingHeader(u8"Вопросы по командам, /help") then  
-							imgui.Text(u8"/h7 - vip ($ .п7 ), /h8 - кмд на свадьбы ($ .п8 ),  /h13 - заработок ($ .п13 ) ")
-							imgui.Text(u8"/int - Инфа в инете ($ .инф ) | /vp1 - /vp4 - привелегии от Premuim до Личного ($ .вп1 - .вп4)")
-						end
-						imgui.Separator()
-						if imgui.CollapsingHeader(u8"Вопросы по банде, семье, мафии") then   
-							imgui.Text(u8"/fp - как открыть меню семьи ($ .отф ) | /mg - как открыть меню банды ($ .отб )")
+					if beginchild == 104 then   
+						imgui.BeginChild("##2QuestionsHelp", imgui.ImVec2(480, 225), true)
+							imgui.Text(u8"/h7 - vip ($ .п7 ), /h8 - кмд на свадьбы ($ .п8 )\n/h13 - заработок ($ .п13 ) ")
+							imgui.Text(u8"/int - Инфа в инете ($ .инф ) \n/vp1 - /vp4 - привелегии от Premuim до Личного ($ .вп1 - .вп4)")
+							imgui.Text(u8"/gadm - получение адм ($ .падм)")
+						imgui.EndChild()
+					end
+					if beginchild == 105 then   
+						imgui.BeginChild("##2QuestionGangFamily", imgui.ImVec2(480, 225), true)
+							imgui.Text(u8"/fp - как открыть меню семьи ($ .отф )\n/mg - как открыть меню банды ($ .отб )")
 							imgui.Text(u8"/ugf - как исключить человека из банды/семьи ($ .угб )")
 							imgui.Text(u8"/igf - как пригласить игроков в банду/семью ($ .пгб )")
-							imgui.Text(u8"/lgf - покинуть мафию ($ .плм ) | /pgf - выйти из банды/семьи ($ .пгф )")
+							imgui.Text(u8"/lgf - покинуть мафию ($ .плм ) \n/pgf - выйти из банды/семьи ($ .пгф )")
 							imgui.Text(u8"/vgf - выговор участнику банды ($ .вуб ) ")
-						end
-						imgui.Separator()
-						if imgui.CollapsingHeader(u8"Вопросы по телепортации") then  
+						imgui.EndChild()
+					end
+					if beginchild == 106 then   
+						imgui.BeginChild("##2QuestionsTP", imgui.ImVec2(480, 225), true)
 							imgui.Text(u8"/avt - /tp автосалон ($ .тас ) | ")
 							imgui.Text(u8"/avt1 - /tp автомастерская ($ .там ) | /bk - tp in bank ($ .бк ) ")
-							imgui.Text(u8"/ktp - как телепортироваться ($ .ктп ) |  /og - ограб.банка ($ .ог )")
-						end
-						imgui.Separator()
-						if imgui.CollapsingHeader(u8"Вопросы по продаже/покупке что-либо") then   
+							imgui.Text(u8"/ktp - как телепортироваться ($ .ктп ) \n/og - ограб.банка ($ .ог )")
+						imgui.EndChild()
+					end
+					if beginchild == 107 then  
+						imgui.BeginChild("##2SellBuy", imgui.ImVec2(480, 225), true)
 							imgui.Text(u8"/gak - как продать аксессуары ($ .кпа )")
 							imgui.Text(u8"/tcm - обмен очков/коинов/рублей ($ .обм )")
 							imgui.Text(u8"/smc - продажа машины ($ .пм ) | /smh - продажа дома ($ .пд )")
-						end
-						imgui.Separator()
-						if imgui.CollapsingHeader(u8"Вопросы по передачам чего-то кому-то") then  
+						imgui.EndChild()
+					end
+					if beginchild == 108 then  
+						imgui.BeginChild('##2GiveEveryone', imgui.ImVec2(480, 225), true)
 							imgui.Text(u8"/gvm - передача денег ($ .гвм ) | /gvs - передача очков ($ .гвс )")
-						end
-						imgui.Separator()
-						if imgui.CollapsingHeader(u8"По остальным вопросам")  then
+							imgui.Text(u8"/gvr - передача рублей ($ .гвр) | /gvc - передача коинов ($ .гвк)")
+						imgui.EndChild()
+					end
+					if beginchild == 109 then  
+						imgui.BeginChild("##2OtherQuestions2", imgui.ImVec2(480, 225), true)
 							imgui.Text(u8"/html - цвета ($ .цвет ) | /cr - /car ($ .кар ) ")
-							imgui.Text(u8"/gn - как взять оружие ($ .ган ) | /pd - как взять предметы ($ .пед )")
-							imgui.Text(u8"/dtl - как искать детали ($ .иск ) | | /krb - казик, работы, и бизнес ($ .крб )  ")
+							imgui.Text(u8"/gn - как взять оружие ($ .ган ) \n/pd - как взять предметы ($ .пед )")
+							imgui.Text(u8"/dtl - как искать детали ($ .иск ) \n/krb - казик, работы, и бизнес ($ .крб )  ")
 							imgui.Text(u8"/kmd - казик, мп, обмен на trade, достижения ($ .кмд )")
 							imgui.Text(u8"/gvk - (no id)")
 							imgui.Text(u8"/cpt - начать капт ($ .кпт ) | /psv - пассивный режим ($ .псв )")
 							imgui.Text(u8"/stp - /statpl (показ коинов, виртов) ($ .стп )")
-							imgui.Text(u8"/msp - как спавнить машину ($ .мсп ) | /chap - смена пароля ($ .спр )")
+							imgui.Text(u8"/msp - как спавнить машину ($ .мсп ) \n/chap - смена пароля ($ .спр )")
 							imgui.Text(u8"/hin - как добавить человека в дом ($ .дчд )")
-							imgui.Text(u8"/ctun - как протюнить машину ($ .тюн ) | /zsk - застрял человек ($ .зч )")
-						end
+							imgui.Text(u8"/ctun - как протюнить машину ($ .тюн )\n /zsk - застрял человек ($ .зч )")
+							imgui.Text(u8"/tdd - виртуальный мир ($ .дтт )")
+						imgui.EndChild()
 					end
-					imgui.Text("")
-					imgui.Separator()
-						if imgui.CollapsingHeader(u8"Скины") then
-							imgui.Text(u8"/cops - копы ($ .копы ) | /bal - балласы ($ .бал ) | /cro - грув ($ .грув ) ")
-							imgui.Text(u8"/vg - вагосы ($ .ваг ) | /rumf - ru.мафия ($ .румф ) | /var - вариосы ($ .вар )")
-							imgui.Text(u8"/triad - триада ($ .триад ) | /mf - мафия ($ .мф )")
-						end 
-				end
-				imgui.Separator()
-				imgui.Text("")
-				if imgui.CollapsingHeader(u8"Горячие клавиши по ответам") then
-					imgui.Text(u8"Кнопка HOME - желает в чат приятной игры")
-					imgui.Text(u8"Ниже все клавиши можно сменить! // В настройках.")
-					imgui.Text(u8"Numpad {.} - вывод приятной игры с цветом | Numpad {/} - вывод удачного.. ")
-					imgui.Text(u8"..времяпрепровождения с цветом ")
-					imgui.Text(u8"Numpad {-} - вывод приятного времяпрепровождения на сервере с цветом.")
-					imgui.Text(u8"Яркий пример использования. При ручном вводе ответа в диалоговом окне /ans, ")
-					imgui.Text(u8"вы тыкаете Numpad {.} и у вас выведется Приятной игры на RDS с цветом.")
-				end
+					if beginchild == 110 then  
+						imgui.BeginChild("##2KakSkins", imgui.ImVec2(480, 225), true)	
+							imgui.Text(u8"/cops - копы ($ .копы ) \n/bal - балласы ($ .бал ) | /cro - грув ($ .грув ) ")
+							imgui.Text(u8"/vg - вагосы ($ .ваг ) \n/rumf - ru.мафия ($ .румф ) | /var - вариосы ($ .вар )")
+							imgui.Text(u8"/triad - триада ($ .триад ) \n/mf - мафия ($ .мф )")
+						imgui.EndChild()
+					end 
+					if beginchild == 111 then 
+						imgui.BeginChild("##ForAnsKeys", imgui.ImVec2(480, 225), true)
+							imgui.Text(u8"Кнопка HOME - желает в чат приятной игры")
+							imgui.Text(u8"Ниже все клавиши можно сменить! // В настройках.")
+							imgui.Text(u8"Numpad {.} - вывод приятной игры с цветом \nNumpad {/} - вывод удачного.. ")
+							imgui.Text(u8"..времяпрепровождения с цветом ")
+							imgui.Text(u8"Numpad {-} - вывод приятного времяпрепровождения.. \nна сервере с цветом.")
+							imgui.Text(u8"Яркий пример использования... \nПри ручном вводе ответа в диалоговом окне /ans, ")
+							imgui.Text(u8"вы тыкаете Numpad {.} и у вас выведется:\nПриятной игры на RDS с цветом.")
+						imgui.EndChild()
+					end
 				imgui.End()
 			end
 			-- Блок four_window_state отвечает за интерфейс по /ans
@@ -3558,9 +3709,11 @@ function imgui.OnDrawFrame()
 					imgui.Separator()
 					if imgui.Button("WallHack", btn_size) then
 						if control_wallhack then
+							sampAddChatMessage(tag .."WallHack был выключен.")
 							nameTagOff()
 							control_wallhack = false
 						else
+							sampAddChatMessage(tag .."WallHack был включен.")
 							nameTagOn()
 							control_wallhack = true
 						end
@@ -3593,6 +3746,50 @@ function imgui.OnDrawFrame()
 						end)
 				end  
 				imgui.Text(u8"Для того, чтобы снова запустить скрипт: ALT+R \n(перезагрузка всех скриптов)")
+				imgui.Separator()
+				if imgui.CollapsingHeader(u8"Смена темы") then  
+					if imgui.Button(u8"Синяя") then  
+						themes.SwitchColorTheme(1)
+					end
+					imgui.SameLine()
+					if imgui.Button(u8"Красная") then  
+						themes.SwitchColorTheme(2)
+					end
+					imgui.SameLine()
+					if imgui.Button(u8"Коричневая") then  
+						themes.SwitchColorTheme(3)
+					end
+					imgui.SameLine()
+					if imgui.Button(u8"Аква") then  
+						themes.SwitchColorTheme(4)
+					end
+					imgui.SameLine()
+					if imgui.Button(u8"Черная") then  
+						themes.SwitchColorTheme(5)
+					end
+					imgui.SameLine()
+					if imgui.Button(u8"Фиолетовая") then  
+						themes.SwitchColorTheme(6)
+					end
+					if imgui.Button(u8"Черно-оранжевая") then  
+						themes.SwitchColorTheme(7)
+					end
+					imgui.SameLine()
+					if imgui.Button(u8"Светло-синяя") then  
+						themes.SwitchColorTheme(8)
+					end
+					imgui.SameLine()
+					if imgui.Button(u8"Монохром") then  
+						themes.SwitchColorTheme(9)
+					end
+					imgui.SameLine()
+					if imgui.Button(u8"Темно-синяя") then  
+						themes.SwitchColorTheme(10)
+					end
+					if imgui.Button(u8"Темно-лунная") then  
+						themes.SwitchColorTheme(11)
+					end
+				end
 				imgui.End()
 			end
 			if seven_window_state.v then  
@@ -3867,6 +4064,7 @@ function imgui.OnDrawFrame()
 						imgui.Separator()
 						imgui.Text(u8"Что бы убрать курсор для\n осмотра камерой: Нажмите ПКМ.")
 						imgui.Text(u8"Клавиша: R - обновить рекон. \nКлавиша: Q - выйти из рекона")
+						imgui.Text(u8"NumPad4 - предыдущий игрок \nNumPad6 - следующий игрок")
 					else
 						imgui.SetCursorPosX(imgui.GetWindowWidth()/2.3)
 						imgui.SetCursorPosY(imgui.GetWindowHeight()/2.3)
