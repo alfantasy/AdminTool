@@ -54,6 +54,7 @@ local defTable = {
 		Admin_chat = false,
 		Push_Report = false,
 		Chat_Logger = false,
+		ATALogin = false,
 		ranremenu = false,
 		ATAdminPass = "",
 		prefix_adm = '',
@@ -88,6 +89,7 @@ local setting_items = {
 	Admin_chat = imgui.ImBool(false),
 	Push_Report = imgui.ImBool(false),
 	Chat_Logger = imgui.ImBool(false),
+	ATAlogin = imgui.ImBool(false),
 	ranremenu = imgui.ImBool(false),
 	}
 
@@ -398,6 +400,7 @@ function main()
 	setting_items.Admin_chat.v = config.setting.Admin_chat
 	setting_items.Push_Report.v = config.setting.Push_Report
 	setting_items.Chat_Logger.v = config.setting.Chat_Logger
+	setting_items.ATAlogin.v = config.setting.ATAlogin
 	setting_items.ranremenu.v = config.setting.ranremenu
 
 	prefix_adm.v = config.setting.prefix_adm
@@ -442,6 +445,7 @@ function main()
 
 
 	--------- Команды, ИСКЛЮЧИТЕЛЬНО ДЛЯ РАЗРАБОТЧИКОВ ИЛИ ВНУТРИИГРОВЫХ ДЕЙСТВИЙ -----------
+	sampRegisterChatCommand("update", update)
 	sampRegisterChatCommand("tpcord", tpcord)
 	sampRegisterChatCommand("iddialog", iddialog)
 	sampRegisterChatCommand("cchat", cchat)
@@ -727,6 +731,8 @@ function main()
 	sampAddChatMessage("{87CEEB}[AdminTool] {4169E1}Также, для просмотра помощи по командам, нажмите F3. Два способа", 0xe01df2)
 	sampAddChatMessage("{87CEEB}[AdminTool] {4169E1}Если вы нашли ошибку, напишите в ВК разработчика.", 0xe01df2)
 	sampAddChatMessage("{87CEEB}[AdminTool] {4169E1}Хорошей работы вам, коллега! :3", 0x6e73f0)
+
+	sampAddChatMessage("{87CEEB}[AdminTool] {4169E1}Чтобы узнать об новых функциях, нужно ввести /update", 0x6e74f0)
 	------------------ Показ запуска скрипта, указ автора и функций -------------------------
 
 	-- просмотр ID -- 
@@ -802,7 +808,7 @@ function main()
 		if update_state then  
 			downloadUrlToFile(config_url, config_path, function(id, status)
 				if status == dlstatus.STATUS_ENDDOWNLOADDATA then  
-					sampAddChatMessage(tag .. "Настройки были обновлены, выставлены по уполчанию.")
+					notify.addNotify("{87CEEB}[AdminTool]", 'Настройки обновлены. \nВсе выставлено по умолчанию.', 2, 1, 6)
 				end
 			end)
 			break
@@ -870,9 +876,11 @@ function main()
 		end
 		--------------- Загрузка админского чата -------------
 
-		if sampGetCurrentDialogId() == 1227 and ATAdminPass.v and sampIsDialogActive() then
-            sampSendDialogResponse(1227, 1, _, ATAdminPass.v)
-			sampCloseCurrentDialogWithButton(1227, 1)
+		if setting_items.ATAlogin.v == true then
+			if sampGetCurrentDialogId() == 1227 and ATAdminPass.v and sampIsDialogActive() then
+        	    sampSendDialogResponse(1227, 1, _, ATAdminPass.v)
+				sampCloseCurrentDialogWithButton(1227, 1)
+			end
 		end
 		-- автоматический ввод пароля
 
@@ -1336,6 +1344,10 @@ function cchat(arg)
 	sampAddChatMessage("", -1)
 end
 -- функция, отвечающая за очистку чата (визуал)
+
+function update(arg)
+	sampShowDialog(10, "Что в обновлении?", "Теперь можно выключить/включить AutoAlogin\nДобавлен log обновлений с lua\nОн постоянно обновляется, после каждого обновления", "Класс", "Закрыть", 0)
+end
 
 function cmd_tool(arg)
 	one_window_state.v = not one_window_state.v
@@ -3719,12 +3731,17 @@ function imgui.OnDrawFrame()
 						end
 					end
 				imgui.Separator()
+				imgui.Text(u8"AutoALogin")
+				imgui.SameLine()
+				imgui.SetCursorPosX(imgui.GetWindowWidth() - 35)
+				imgui.ToggleButton("##AutoALogin", setting_items.ATAlogin)
 				imgui.Text(u8"Ввод пароля для /alogin")
 				imgui.InputText(u8"Password for Admin", ATAdminPass)
 				imgui.Separator()
 				if imgui.Button(u8"Сохранить.") then
 					config.setting.Admin_chat = setting_items.Admin_chat.v
 					config.setting.Chat_Logger = setting_items.Chat_Logger.v
+					config.setting.ATAlogin = setting_items.ATAlogin.v
 					config.setting.ranremenu = setting_items.ranremenu.v
 					config.setting.ATAdminPass = ATAdminPass.v
 					inicfg.save(config, directIni)
