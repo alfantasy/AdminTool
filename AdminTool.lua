@@ -31,14 +31,16 @@ local accept_load_clog = false
 
 update_state = false
 
-local script_version = 12
-local script_version_text = "8.0"
+local script_version = 13
+local script_version_text = "8.1 + Fix"
 local script_path = thisScript().path 
 local script_url = "https://raw.githubusercontent.com/alfantasy/AdminTool/main/AdminTool.lua"
 local update_path = getWorkingDirectory() .. '/update.ini'
 local update_url = "https://raw.githubusercontent.com/alfantasy/AdminTool/main/update.ini"
 local config_url = "https://raw.githubusercontent.com/alfantasy/AdminTool/main/settings.ini"
 local config_path = getWorkingDirectory() .. '\\config\\AdminTool\\settings.ini'
+local themes_url = "https://raw.githubusercontent.com/alfantasy/AdminTool/main/imgui_themes.lua"
+local themes_path = getWorkingDirectory() .. '\\config\\AdminTool\\imgui_themes.lua'
 -------- Введение локальные переменные, отвечающие за автообновление ----------
 
 
@@ -809,6 +811,14 @@ function main()
 			downloadUrlToFile(config_url, config_path, function(id, status)
 				if status == dlstatus.STATUS_ENDDOWNLOADDATA then  
 					notify.addNotify("{87CEEB}[AdminTool]", 'Настройки обновлены. \nВсе выставлено по умолчанию.', 2, 1, 6)
+				end
+			end)
+			break
+		end
+		if update_state then  
+			downloadUrlToFile(themes_url, themes_path, function(id, status)
+				if status == dlstatus.STATUS_ENDDOWNLOADDATA then  
+					notify.addNotify("{87CEEB}[AdminTool]", 'Темы обновлены. \nПлагин был снова обновлен.', 2, 1, 6)
 				end
 			end)
 			break
