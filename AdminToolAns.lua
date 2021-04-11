@@ -32,8 +32,8 @@ local ans_report = imgui.ImBool(false)
 
 update_state = false
 
-local script_version_ans = 4
-local script_version_ans_text = "3.0"
+local script_version_ans = 5
+local script_version_ans_text = "3.1 + Fix"
 local script_path = thisScript().path 
 local script_url = "https://raw.githubusercontent.com/alfantasy/AdminTool/main/AdminToolAns.lua"
 local update_path = getWorkingDirectory() .. '/ANSupdate.ini'
@@ -230,11 +230,11 @@ function main()
 	while true do
 		wait(0)
 
-		if sampGetCurrentDialogId() ~= 2351 then
+		if sampGetCurrentDialogId() ~= 2349 then
 			ans_imgui.v = false
 			imgui.Process = false
 		end
-		if sampGetCurrentDialogId() == 2351 then
+		if sampGetCurrentDialogId() == 2349 then
 			ans_imgui.v = true
 			imgui.Process = true
 		end
@@ -352,10 +352,15 @@ function imgui.OnDrawFrame()
 						imgui.InputText(u8"##Ответ", ans_text)
 						imgui.Separator()
 						if imgui.Button(u8"Ответить") then  
+								lua_thread.create(function()
+								sampSendDialogResponse(2349, 1, 0)
+								sampSendDialogResponse(2350, 1, 0)
+								wait(200)
 								local settext2 = '{FFFFFF}' .. ans_text.v
 								sampSendDialogResponse(2351, 1, 0, u8:decode(settext2))	
 								sampCloseCurrentDialogWithButton(13)
 								ans_report.v = false	
+								end)
 						end
 						imgui.Separator()
 						if imgui.Button(u8"Очистить текст") then  
@@ -371,13 +376,23 @@ function imgui.OnDrawFrame()
 				for key_2, v_2 in pairs(questions[key]) do
 					if imgui.Button(key_2, btn_size) then
 						if not good_game_prefix.v then
+							lua_thread.create(function()
 							local settext = '{FFFFFF}' .. v_2
+							sampSendDialogResponse(2349, 1, 0)
+							sampSendDialogResponse(2350, 1, 0)
+							wait(200)
 							sampSendDialogResponse(2351, 1, 0, settext)
 							sampCloseCurrentDialogWithButton(13)
+							end)
 						else
+							lua_thread.create(function()
 							local settext = '{FFFFFF}' .. v_2 .. '' .. color1() .. ' // Приятной игры на сервере RDS <3'
+							sampSendDialogResponse(2349, 1, 0)
+							sampSendDialogResponse(2350, 1, 0)
+							wait(200)
 							sampSendDialogResponse(2351, 1, 0, settext)
 							sampCloseCurrentDialogWithButton(13)
+							end)
 						end
 					end
 				end
@@ -392,13 +407,23 @@ function imgui.OnDrawFrame()
 						for key_2, v_2 in pairs(questions[key]) do
 							if imgui.Button(key_2, btn_size) then
 								if not good_game_prefix.v then
+									lua_thread.create(function()
 									local settext = '{FFFFFF}' .. v_2
-										sampSendDialogResponse(2351, 1, 0, settext)
-										sampCloseCurrentDialogWithButton(13)
+									sampSendDialogResponse(2349, 1, 0)
+									sampSendDialogResponse(2350, 1, 0)
+									wait(200)
+									sampSendDialogResponse(2351, 1, 0, settext)
+									sampCloseCurrentDialogWithButton(13)
+									end)
 								else
+									lua_thread.create(function()
 									local settext = '{FFFFFF}' .. v_2 .. '' .. color1() .. ' // Приятной игры на сервере RDS <3'
-										sampSendDialogResponse(2351, 1, 0, settext)
-										sampCloseCurrentDialogWithButton(13)
+									sampSendDialogResponse(2349, 1, 0)
+									sampSendDialogResponse(2350, 1, 0)
+									wait(200)
+									sampSendDialogResponse(2351, 1, 0, settext)
+									sampCloseCurrentDialogWithButton(13)
+									end)
 								end
 						 	end
 					 	end
@@ -413,13 +438,23 @@ function imgui.OnDrawFrame()
 						for key_2, v_2 in pairs(questions[key]) do
 							if imgui.Button(key_2, btn_size) then
 								if not good_game_prefix.v then
+									lua_thread.create(function()
 									local settext = '{FFFFFF}' .. v_2
-										sampSendDialogResponse(2351, 1, 0, settext)
-										sampCloseCurrentDialogWithButton(13)
+									sampSendDialogResponse(2349, 1, 0)
+									sampSendDialogResponse(2350, 1, 0)
+									wait(200)
+									sampSendDialogResponse(2351, 1, 0, settext)
+									sampCloseCurrentDialogWithButton(13)
+									end)
 								else
+									lua_thread.create(function()
 									local settext = '{FFFFFF}' .. v_2 .. '' .. color1() .. ' // Приятной игры на сервере RDS <3'
-										sampSendDialogResponse(2351, 1, 0, settext)
-										sampCloseCurrentDialogWithButton(13)
+									sampSendDialogResponse(2349, 1, 0)
+									sampSendDialogResponse(2350, 1, 0)
+									wait(200)
+									sampSendDialogResponse(2351, 1, 0, settext)
+									sampCloseCurrentDialogWithButton(13)
+									end)
 								end
 						 	end
 					 	end
@@ -434,13 +469,23 @@ function imgui.OnDrawFrame()
 						for key_2, v_2 in pairs(questions[key]) do
 							if imgui.Button(key_2, btn_size) then
 								if not good_game_prefix.v then
+									lua_thread.create(function()
 									local settext = '{FFFFFF}' .. v_2
-										sampSendDialogResponse(2351, 1, 0, settext)
-										sampCloseCurrentDialogWithButton(13)
+									sampSendDialogResponse(2349, 1, 0)
+									sampSendDialogResponse(2350, 1, 0)
+									wait(200)
+									sampSendDialogResponse(2351, 1, 0, settext)
+									sampCloseCurrentDialogWithButton(13)
+									end)
 								else
+									lua_thread.create(function()
 									local settext = '{FFFFFF}' .. v_2 .. '' .. color1() .. ' // Приятной игры на сервере RDS <3'
-										sampSendDialogResponse(2351, 1, 0, settext)
-										sampCloseCurrentDialogWithButton(13)
+									sampSendDialogResponse(2349, 1, 0)
+									sampSendDialogResponse(2350, 1, 0)
+									wait(200)
+									sampSendDialogResponse(2351, 1, 0, settext)
+									sampCloseCurrentDialogWithButton(13)
+									end)
 								end
 						 	end
 					 	end
@@ -455,13 +500,23 @@ function imgui.OnDrawFrame()
 						for key_2, v_2 in pairs(questions[key]) do
 							if imgui.Button(key_2, btn_size) then
 								if not good_game_prefix.v then
+									lua_thread.create(function()
 									local settext = '{FFFFFF}' .. v_2
-										sampSendDialogResponse(2351, 1, 0, settext)
-										sampCloseCurrentDialogWithButton(13)
+									sampSendDialogResponse(2349, 1, 0)
+									sampSendDialogResponse(2350, 1, 0)
+									wait(200)
+									sampSendDialogResponse(2351, 1, 0, settext)
+									sampCloseCurrentDialogWithButton(13)
+									end)
 								else
+									lua_thread.create(function()
 									local settext = '{FFFFFF}' .. v_2 .. '' .. color1() .. ' // Приятной игры на сервере RDS <3'
-										sampSendDialogResponse(2351, 1, 0, settext)
-										sampCloseCurrentDialogWithButton(13)
+									sampSendDialogResponse(2349, 1, 0)
+									sampSendDialogResponse(2350, 1, 0)
+									wait(200)
+									sampSendDialogResponse(2351, 1, 0, settext)
+									sampCloseCurrentDialogWithButton(13)
+									end)
 								end
 						 	end
 					 	end
@@ -476,13 +531,23 @@ function imgui.OnDrawFrame()
 						for key_2, v_2 in pairs(questions[key]) do
 							if imgui.Button(key_2, btn_size) then
 								if not good_game_prefix.v then
-									local settext = '{FFFFFF}' .. v_2
+									lua_thread.create(function()
+										local settext = '{FFFFFF}' .. v_2
+										sampSendDialogResponse(2349, 1, 0)
+										sampSendDialogResponse(2350, 1, 0)
+										wait(200)
 										sampSendDialogResponse(2351, 1, 0, settext)
 										sampCloseCurrentDialogWithButton(13)
+									end)
 								else
+									lua_thread.create(function()
 									local settext = '{FFFFFF}' .. v_2 .. '' .. color1() .. ' // Приятной игры на сервере RDS <3'
-										sampSendDialogResponse(2351, 1, 0, settext)
-										sampCloseCurrentDialogWithButton(13)
+									sampSendDialogResponse(2349, 1, 0)
+									sampSendDialogResponse(2350, 1, 0)
+									wait(200)
+									sampSendDialogResponse(2351, 1, 0, settext)
+									sampCloseCurrentDialogWithButton(13)
+									end)
 								end
 						 	end
 					 	end
@@ -497,13 +562,23 @@ function imgui.OnDrawFrame()
 						for key_2, v_2 in pairs(questions[key]) do
 							if imgui.Button(key_2, btn_size) then
 								if not good_game_prefix.v then
+									lua_thread.create(function()
 									local settext = '{FFFFFF}' .. v_2
-										sampSendDialogResponse(2351, 1, 0, settext)
-										sampCloseCurrentDialogWithButton(13)
+									sampSendDialogResponse(2349, 1, 0)
+									sampSendDialogResponse(2350, 1, 0)
+									wait(200)
+									sampSendDialogResponse(2351, 1, 0, settext)
+									sampCloseCurrentDialogWithButton(13)
+									end)
 								else
+									lua_thread.create(function()
 									local settext = '{FFFFFF}' .. v_2 .. '' .. color1() .. ' // Приятной игры на сервере RDS <3'
-										sampSendDialogResponse(2351, 1, 0, settext)
-										sampCloseCurrentDialogWithButton(13)
+									sampSendDialogResponse(2349, 1, 0)
+									sampSendDialogResponse(2350, 1, 0)
+									wait(200)
+									sampSendDialogResponse(2351, 1, 0, settext)
+									sampCloseCurrentDialogWithButton(13)
+									end)
 								end
 						 	end
 					 	end
@@ -518,13 +593,23 @@ function imgui.OnDrawFrame()
 						for key_2, v_2 in pairs(questions[key]) do
 							if imgui.Button(key_2, btn_size) then
 								if not good_game_prefix.v then
+									lua_thread.create(function()
 									local settext = '{FFFFFF}' .. v_2
-										sampSendDialogResponse(2351, 1, 0, settext)
-										sampCloseCurrentDialogWithButton(13)
+									sampSendDialogResponse(2349, 1, 0)
+									sampSendDialogResponse(2350, 1, 0)
+									wait(200)
+									sampSendDialogResponse(2351, 1, 0, settext)
+									sampCloseCurrentDialogWithButton(13)
+									end)
 								else
+									lua_thread.create(function()
 									local settext = '{FFFFFF}' .. v_2 .. '' .. color1() .. ' // Приятной игры на сервере RDS <3'
-										sampSendDialogResponse(2351, 1, 0, settext)
-										sampCloseCurrentDialogWithButton(13)
+									sampSendDialogResponse(2349, 1, 0)
+									sampSendDialogResponse(2350, 1, 0)
+									wait(200)
+									sampSendDialogResponse(2351, 1, 0, settext)
+									sampCloseCurrentDialogWithButton(13)
+									end)
 								end
 						 	end
 					 	end
