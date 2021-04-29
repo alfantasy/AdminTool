@@ -1,5 +1,4 @@
-script_name('AdminTool') -- название скрипта
-script_author('FedoseevEgor, aka. alfantasy, feat. Unite, Liquit, Natsuki, Shtormo, Yuri_Dan__') -- автор скрипта
+script_name('PluginATAns') -- название скрипта
 script_description('Скрипт для облегчения работы администраторам') -- описание скрипта
 
 require "lib.moonloader" -- подключение основной библиотеки mooloader
@@ -32,8 +31,8 @@ local ans_report = imgui.ImBool(false)
 
 update_state = false
 
-local script_version_ans = 5
-local script_version_ans_text = "3.1 + Fix"
+local script_version_ans = 6
+local script_version_text_ans = "3.2 + Fix"
 local script_path = thisScript().path 
 local script_url = "https://raw.githubusercontent.com/alfantasy/AdminTool/main/AdminToolAns.lua"
 local update_path = getWorkingDirectory() .. '/ANSupdate.ini'
@@ -45,36 +44,36 @@ local questions = {
         [u8"Начало работы по жалобе"] = "Начал(а) работу по вашей жалобе!",
 		[u8"Жалоба на админа"] = "Пишите жалобу на администратора в VK: vk.com/dmdriftgta",
 		[u8"Жалоба на игрока"] = "Вы можете оставить жалобу на игрока в VK: vk.com/dmdriftgta",
-		[u8"Помогли вам"] = "Помогли вам.",
-		[u8"Ожидайте"] = "Ожидайте.",
+		[u8"Помогли вам"] = "Помогли вам",
+		[u8"Ожидайте"] = "Ожидайте",
 		[u8"Приятного времяпрепровождения"] = "Приятного времяпрепровождения на Russian Drift Server!",
-		[u8"Игрок чист"] = " Данный игрок чист.",
-		[u8"Игрок не в сети"] = "Данный игрок не в сети.",
-		[u8"Уточнение вопрос/запрос"] = "Уточните ваш вопрос/запрос.",
+		[u8"Игрок чист"] = " Данный игрок чист",
+		[u8"Игрок не в сети"] = "Данный игрок не в сети",
+		[u8"Уточнение вопрос/запрос"] = "Уточните ваш вопрос/запрос",
 		[u8"Уточнение ID"] = "Уточните ID нарушителя/читера в /report",
-		[u8"Игрок наказан"] = "Данный игрок наказан.",
-		[u8"Проверим"] = "'Проверим. ",
-		[u8"ГМ не работает"] = "GodMode (ГодМод) на сервере не работает.",
-		[u8"Никак"] = "Никак.",
-		[u8"Да"] = "Да.",
-		[u8"Нет"] = "Нет.",
-		[u8"Не запрещено"] = "Не запрещено.",
-		[u8"Не знаем"] = "Не знаем.",
-		[u8"Нельзя оффтопить"] = "Не оффтопьте.",
-		[u8"Не выдаем"] = "Не выдаем.",
-		[u8"Это баг"] = "Скорей всего - это баг.",
-		[u8"Перезайдите"] = "Попробуйте перезайти."
+		[u8"Игрок наказан"] = "Данный игрок наказан",
+		[u8"Проверим"] = "Проверим",
+		[u8"ГМ не работает"] = "GodMode (ГодМод) на сервере не работает",
+		[u8"Никак"] = "Никак",
+		[u8"Да"] = "Да",
+		[u8"Нет"] = "Нет",
+		[u8"Не запрещено"] = "Не запрещено",
+		[u8"Не знаем"] = "Не знаем",
+		[u8"Нельзя оффтопить"] = "Не оффтопьте",
+		[u8"Не выдаем"] = "Не выдаем",
+		[u8"Это баг"] = "Скорей всего - это баг",
+		[u8"Перезайдите"] = "Попробуйте перезайти"
     },
 	["HelpCmd"] = {
-		[u8"Команды VIP`а"] = "Данную информацию можно найти в /help -> 7 пункт.",
-		[u8"Команды для свадьбы"] = "Данную информацию можно найти в /help -> 8 пункт.",
-		[u8"Как заработать валюту"] = "Данную информацию можно найти в /help -> 13 пункт.",
-		[u8"Информация в инете"] = "Данную информацию можно узнать в интернете.",
+		[u8"Команды VIP`а"] = "Данную информацию можно найти в /help -> 7 пункт",
+		[u8"Команды для свадьбы"] = "Данную информацию можно найти в /help -> 8 пункт",
+		[u8"Как заработать валюту"] = "Данную информацию можно найти в /help -> 13 пункт",
+		[u8"Информация в инете"] = "Данную информацию можно узнать в интернете",
 		[u8"Привелегия Premuim"] = "Данный игрок с привелегией Premuim VIP (/help -> 7)",
 		[u8"Привелегия Diamond"] = "Данный игрок с привелегией Diamond VIP (/help -> 7) ",
 		[u8"Привелегия Platinum"] = "Данный игрок с привелегией Platinum VIP (/help -> 7)",
 		[u8"Привелегия Личный"] = "Данный игрок с привелегией «Личный» VIP (/help -> 7)",
-		[u8"Как получать админку"] = "Ожидать набор, или же /help -> 17 пункт."
+		[u8"Как получать админку"] = "Ожидать набор, или же /help -> 17 пункт"
 	},
 	["HelpGangFamilyMafia"] = {
 		[u8"Как открыть меню семьи"] = "/menu (/mm) - ALT/Y -> Система банд",
@@ -110,10 +109,10 @@ local questions = {
 		[u8"Как ограбить банк"] = 'Встать на пикап "Ограбление банка", после около ячеек нажимать на ALT и ехать на красный маркер на карте',
 		[u8"Как взять оружие"] = "/menu (/mm) - ALT/Y -> Оружие",
 		[u8"Как взять предметы"] = "/menu (/mm) - ALT/Y -> Предметы",
-		[u8"Как детальки искать"] = "Детали разбросаны по всей карте. Обмен происходится на /garage. ",
-		[u8"Казино, работы и бизнес"] = "Казино, работы, бизнес. ",
+		[u8"Как детальки искать"] = "Детали разбросаны по всей карте. Обмен происходится на /garage",
+		[u8"Казино, работы и бизнес"] = "Казино, работы, бизнес",
 		[u8"Казик, мп, обмен на /trade и т.д."] = "Казино, МП, достижения, работы, обмен очков на коины(/trade)",
-		[u8"Ссылка на офф.группу"] = "https://vk.com/dmdriftgta | Официальная группа.",
+		[u8"Ссылка на офф.группу"] = "https://vk.com/dmdriftgta | Официальная группа",
 		[u8"Как начать капт"] = "Для того, чтобы начать капт, нужно ввести /capture",
 		[u8"Как пассив вкл"] = "/passive",
 		[u8"/statpl"] = "Чтобы посмотреть детали, очки, коины, рубли, вирты - /statpl",
@@ -152,44 +151,74 @@ local questions = {
 
 local sw2, sh2 = getScreenResolution()
 
-function SetStyle()
+function set_custom_style()
 	imgui.SwitchContext()
-	local style = imgui.GetStyle()
+	local style  = imgui.GetStyle()
 	local colors = style.Colors
-	local clr = imgui.Col
+	local clr    = imgui.Col
 	local ImVec4 = imgui.ImVec4
-	style.ScrollbarSize = 13.0
-	style.ScrollbarRounding = 0
-	style.ChildWindowRounding = 4.0
-	colors[clr.PopupBg]                = ImVec4(0.08, 0.08, 0.08, 0.94)
-	colors[clr.ComboBg]                = colors[clr.PopupBg]
-	colors[clr.Button]                 = ImVec4(0.26, 0.59, 0.98, 0.40)
-	colors[clr.ButtonHovered]          = ImVec4(0.26, 0.59, 0.98, 1.00)
-	colors[clr.ButtonActive]           = ImVec4(0.06, 0.53, 0.98, 1.00)
-	colors[clr.TitleBg]                = ImVec4(0.04, 0.04, 0.04, 1.00)
-	colors[clr.TitleBgActive]          = ImVec4(0.16, 0.29, 0.48, 1.00)
-	colors[clr.TitleBgCollapsed]       = ImVec4(0.00, 0.00, 0.00, 0.51)
-	colors[clr.CloseButton]            = ImVec4(0.41, 0.41, 0.41, 0.50)-- (0.1, 0.9, 0.1, 1.0)
-	colors[clr.CloseButtonHovered]     = ImVec4(0.98, 0.39, 0.36, 1.00)
-	colors[clr.CloseButtonActive]      = ImVec4(0.98, 0.39, 0.36, 1.00)
-	colors[clr.TextSelectedBg]         = ImVec4(0.26, 0.59, 0.98, 0.35)
-	colors[clr.Text]                   = ImVec4(1.00, 1.00, 1.00, 1.00)
-	colors[clr.FrameBg]                = ImVec4(0.16, 0.29, 0.48, 0.54)
-	colors[clr.FrameBgHovered]         = ImVec4(0.26, 0.59, 0.98, 0.40)
-	colors[clr.FrameBgActive]          = ImVec4(0.26, 0.59, 0.98, 0.67)
-	colors[clr.MenuBarBg]              = ImVec4(0.14, 0.14, 0.14, 1.00)
-	colors[clr.ScrollbarBg]            = ImVec4(0.02, 0.02, 0.02, 0.53)
-	colors[clr.ScrollbarGrab]          = ImVec4(0.31, 0.31, 0.31, 1.00)
-	colors[clr.ScrollbarGrabHovered]   = ImVec4(0.41, 0.41, 0.41, 1.00)
-	colors[clr.ScrollbarGrabActive]    = ImVec4(0.51, 0.51, 0.51, 1.00)
-	colors[clr.CheckMark]              = ImVec4(0.26, 0.59, 0.98, 1.00)
-	colors[clr.Header]                 = ImVec4(0.26, 0.59, 0.98, 0.31)
-	colors[clr.HeaderHovered]          = ImVec4(0.26, 0.59, 0.98, 0.80)
-	colors[clr.HeaderActive]           = ImVec4(0.26, 0.59, 0.98, 1.00)
-	colors[clr.SliderGrab]             = ImVec4(0.24, 0.52, 0.88, 1.00)
-	colors[clr.SliderGrabActive]       = ImVec4(0.26, 0.59, 0.98, 1.00)
-end
-SetStyle()
+	local ImVec2 = imgui.ImVec2
+
+	style.WindowPadding       = ImVec2(4, 8)
+	style.WindowRounding      = 16
+	style.ChildWindowRounding = 16
+	style.FramePadding        = ImVec2(8, 3)
+	style.FrameRounding       = 16
+	style.ItemSpacing         = ImVec2(6, 4)
+	style.TouchExtraPadding   = ImVec2(0, 0)
+	style.IndentSpacing       = 21
+	style.ScrollbarSize       = 15
+	style.ScrollbarRounding   = 16
+	style.GrabMinSize         = 10
+	style.GrabRounding        = 4
+	style.WindowTitleAlign    = ImVec2(0.50, 0.50)
+	style.ButtonTextAlign     = ImVec2(0, 0)
+
+	colors[clr.Text]                 = ImVec4(1.00, 1.00, 1.00, 1.00)
+	colors[clr.TextDisabled]         = ImVec4(0.73, 0.75, 0.74, 1.00)
+	colors[clr.WindowBg]             = ImVec4(0.09, 0.09, 0.09, 0.94)
+	colors[clr.ChildWindowBg]        = ImVec4(0.00, 0.00, 0.00, 0.00)
+	colors[clr.PopupBg]              = ImVec4(0.08, 0.08, 0.08, 0.94)
+	colors[clr.Border]               = ImVec4(0.20, 0.20, 0.20, 0.50)
+	colors[clr.BorderShadow]         = ImVec4(0.00, 0.00, 0.00, 0.00)
+	colors[clr.FrameBg]              = ImVec4(0.13, 0.37, 0.53, 0.37)
+	colors[clr.FrameBgHovered]       = ImVec4(0.14, 0.21, 0.67, 0.00)
+	colors[clr.FrameBgActive]        = ImVec4(0.84, 0.66, 0.66, 0.67)
+	colors[clr.TitleBg]              = ImVec4(0.39, 0.33, 0.51, 0.00)
+	colors[clr.TitleBgActive]        = ImVec4(0.26, 0.20, 0.53, 1.00)
+	colors[clr.TitleBgCollapsed]     = ImVec4(0.47, 0.22, 0.59, 0.35)
+	colors[clr.MenuBarBg]            = ImVec4(0.34, 0.16, 0.22, 0.00)
+	colors[clr.ScrollbarBg]          = ImVec4(0.02, 0.02, 0.31, 0.64)
+	colors[clr.ScrollbarGrab]        = ImVec4(0.31, 0.31, 0.31, 1.00)
+	colors[clr.ScrollbarGrabHovered] = ImVec4(0.41, 0.41, 0.41, 1.00)
+	colors[clr.ScrollbarGrabActive]  = ImVec4(0.51, 0.51, 0.51, 1.00)
+	colors[clr.ComboBg]              = ImVec4(0.20, 0.20, 0.20, 0.99)
+	colors[clr.CheckMark]            = ImVec4(1.00, 1.00, 1.00, 1.00)
+	colors[clr.SliderGrab]           = ImVec4(0.71, 0.39, 0.39, 1.00)
+	colors[clr.SliderGrabActive]     = ImVec4(0.84, 0.66, 0.66, 1.00)
+	colors[clr.Button]               = ImVec4(0.32, 0.20, 0.33, 0.59)
+	colors[clr.ButtonHovered]        = ImVec4(0.71, 0.39, 0.39, 0.65)
+	colors[clr.ButtonActive]         = ImVec4(0.20, 0.20, 0.20, 0.50)
+	colors[clr.Header]               = ImVec4(0.71, 0.39, 0.39, 0.54)
+	colors[clr.HeaderHovered]        = ImVec4(0.84, 0.66, 0.66, 0.65)
+	colors[clr.HeaderActive]         = ImVec4(0.84, 0.66, 0.66, 0.00)
+	colors[clr.Separator]            = ImVec4(0.43, 0.43, 0.50, 0.50)
+	colors[clr.SeparatorHovered]     = ImVec4(0.71, 0.39, 0.39, 0.54)
+	colors[clr.SeparatorActive]      = ImVec4(0.71, 0.39, 0.39, 0.54)
+	colors[clr.ResizeGrip]           = ImVec4(0.71, 0.39, 0.39, 0.54)
+	colors[clr.ResizeGripHovered]    = ImVec4(0.84, 0.66, 0.66, 0.66)
+	colors[clr.ResizeGripActive]     = ImVec4(0.84, 0.66, 0.66, 0.66)
+	colors[clr.CloseButton]          = ImVec4(0.41, 0.41, 0.41, 1.00)
+	colors[clr.CloseButtonHovered]   = ImVec4(0.98, 0.39, 0.36, 1.00)
+	colors[clr.CloseButtonActive]    = ImVec4(0.98, 0.39, 0.36, 1.00)
+	colors[clr.PlotLines]            = ImVec4(0.61, 0.61, 0.61, 1.00)
+	colors[clr.PlotLinesHovered]     = ImVec4(1.00, 0.43, 0.35, 1.00)
+	colors[clr.PlotHistogram]        = ImVec4(0.90, 0.70, 0.00, 1.00)
+	colors[clr.PlotHistogramHovered] = ImVec4(1.00, 0.60, 0.00, 1.00)
+	colors[clr.TextSelectedBg]       = ImVec4(0.26, 0.59, 0.98, 0.35)
+	colors[clr.ModalWindowDarkening] = ImVec4(0.80, 0.80, 0.80, 0.35)
+end	
+set_custom_style()
 
 
 function main()
@@ -318,6 +347,9 @@ local W_Win = sw2/1.280
 local H_Win = 1
 function imgui.OnDrawFrame()
     if ans_imgui.v then 
+
+		set_custom_style()
+
         imgui.SetNextWindowPos(imgui.ImVec2(sw2 / 2, (sh2 / 2) + 320), imgui.Cond.FirstUseEver, imgui.ImVec2(0.5, 0.5))
 		imgui.SetNextWindowSize(imgui.ImVec2(550, 285), imgui.Cond.FirstUseEver)
 		imgui.Begin(u8"Ответы на репорты", ans_imgui)
