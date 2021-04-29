@@ -4306,6 +4306,7 @@ function imgui.OnDrawFrame()
 				imgui.SetNextWindowSize(imgui.ImVec2(600, 350), imgui.Cond.FirstUseEver)
 				imgui.SetNextWindowPos(imgui.ImVec2((sw1 / 4.5), sh1 / 4), imgui.Cond.FirstUseEver, imgui.ImVec2(0.5, 0.5))
 				imgui.Begin(u8"Чат-логгер", ATChatLogger)
+				if setting_items.Chat_Logger.v then
 					if accept_load_clog then
 						imgui.InputText(u8"Поиск.", chat_find)
 						if chat_find.v == "" then
@@ -4322,6 +4323,12 @@ function imgui.OnDrawFrame()
 						imgui.SetCursorPosY(imgui.GetWindowHeight()/2.3)
 						imgui.Spinner(20, 7)
 					end
+				else 
+					imgui.Text(u8"Поднастройка чат-логгера не была включена.")
+					imgui.Text(u8"Q: Как его включить?")
+					imgui.Text(u8"A: Все просто! Заходи в /tool. Потом жмякай на < Настройки >")
+					imgui.Text(u8"A: Жмякнул? Нажимай на переключатель < Чат-логгер > и пробуй ещё раз")
+				end
 				imgui.End()
 			end
 			-- чат-логгер
