@@ -17,6 +17,67 @@ encoding.default = 'CP1251' -- смена кодировки на CP1251
 u8 = encoding.UTF8 -- переименовка стандтартного режима кодировки UTF8 - u8
 ------- Подключение всех нужных библиотек -----------
 
+ffi.cdef[[
+struct stKillEntry
+{
+	char					szKiller[25];
+	char					szVictim[25];
+	uint32_t				clKillerColor; // D3DCOLOR
+	uint32_t				clVictimColor; // D3DCOLOR
+	uint8_t					byteType;
+} __attribute__ ((packed));
+
+struct stKillInfo
+{
+	int						iEnabled;
+	struct stKillEntry		killEntry[5];
+	int 					iLongestNickLength;
+	int 					iOffsetX;
+	int 					iOffsetY;
+	void			    	*pD3DFont; // ID3DXFont
+	void		    		*pWeaponFont1; // ID3DXFont
+	void		   	    	*pWeaponFont2; // ID3DXFont
+	void					*pSprite;
+	void					*pD3DDevice;
+	int 					iAuxFontInited;
+	void 		    		*pAuxFont1; // ID3DXFont
+	void 			    	*pAuxFont2; // ID3DXFont
+} __attribute__ ((packed));
+]]
+-- kill-list
+
+-- не трогай ваще
+colours = {
+	-- The existing colours from San Andreas
+	"0x080808FF", "0xF5F5F5FF", "0x2A77A1FF", "0x840410FF", "0x263739FF", "0x86446EFF", "0xD78E10FF", "0x4C75B7FF", "0xBDBEC6FF", "0x5E7072FF",
+	"0x46597AFF", "0x656A79FF", "0x5D7E8DFF", "0x58595AFF", "0xD6DAD6FF", "0x9CA1A3FF", "0x335F3FFF", "0x730E1AFF", "0x7B0A2AFF", "0x9F9D94FF",
+	"0x3B4E78FF", "0x732E3EFF", "0x691E3BFF", "0x96918CFF", "0x515459FF", "0x3F3E45FF", "0xA5A9A7FF", "0x635C5AFF", "0x3D4A68FF", "0x979592FF",
+	"0x421F21FF", "0x5F272BFF", "0x8494ABFF", "0x767B7CFF", "0x646464FF", "0x5A5752FF", "0x252527FF", "0x2D3A35FF", "0x93A396FF", "0x6D7A88FF",
+	"0x221918FF", "0x6F675FFF", "0x7C1C2AFF", "0x5F0A15FF", "0x193826FF", "0x5D1B20FF", "0x9D9872FF", "0x7A7560FF", "0x989586FF", "0xADB0B0FF",
+	"0x848988FF", "0x304F45FF", "0x4D6268FF", "0x162248FF", "0x272F4BFF", "0x7D6256FF", "0x9EA4ABFF", "0x9C8D71FF", "0x6D1822FF", "0x4E6881FF",
+	"0x9C9C98FF", "0x917347FF", "0x661C26FF", "0x949D9FFF", "0xA4A7A5FF", "0x8E8C46FF", "0x341A1EFF", "0x6A7A8CFF", "0xAAAD8EFF", "0xAB988FFF",
+	"0x851F2EFF", "0x6F8297FF", "0x585853FF", "0x9AA790FF", "0x601A23FF", "0x20202CFF", "0xA4A096FF", "0xAA9D84FF", "0x78222BFF", "0x0E316DFF",
+	"0x722A3FFF", "0x7B715EFF", "0x741D28FF", "0x1E2E32FF", "0x4D322FFF", "0x7C1B44FF", "0x2E5B20FF", "0x395A83FF", "0x6D2837FF", "0xA7A28FFF",
+	"0xAFB1B1FF", "0x364155FF", "0x6D6C6EFF", "0x0F6A89FF", "0x204B6BFF", "0x2B3E57FF", "0x9B9F9DFF", "0x6C8495FF", "0x4D8495FF", "0xAE9B7FFF",
+	"0x406C8FFF", "0x1F253BFF", "0xAB9276FF", "0x134573FF", "0x96816CFF", "0x64686AFF", "0x105082FF", "0xA19983FF", "0x385694FF", "0x525661FF",
+	"0x7F6956FF", "0x8C929AFF", "0x596E87FF", "0x473532FF", "0x44624FFF", "0x730A27FF", "0x223457FF", "0x640D1BFF", "0xA3ADC6FF", "0x695853FF",
+	"0x9B8B80FF", "0x620B1CFF", "0x5B5D5EFF", "0x624428FF", "0x731827FF", "0x1B376DFF", "0xEC6AAEFF", "0x000000FF",
+	-- SA-MP extended colours (0.3x)
+	"0x177517FF", "0x210606FF", "0x125478FF", "0x452A0DFF", "0x571E1EFF", "0x010701FF", "0x25225AFF", "0x2C89AAFF", "0x8A4DBDFF", "0x35963AFF",
+	"0xB7B7B7FF", "0x464C8DFF", "0x84888CFF", "0x817867FF", "0x817A26FF", "0x6A506FFF", "0x583E6FFF", "0x8CB972FF", "0x824F78FF", "0x6D276AFF",
+	"0x1E1D13FF", "0x1E1306FF", "0x1F2518FF", "0x2C4531FF", "0x1E4C99FF", "0x2E5F43FF", "0x1E9948FF", "0x1E9999FF", "0x999976FF", "0x7C8499FF",
+	"0x992E1EFF", "0x2C1E08FF", "0x142407FF", "0x993E4DFF", "0x1E4C99FF", "0x198181FF", "0x1A292AFF", "0x16616FFF", "0x1B6687FF", "0x6C3F99FF",
+	"0x481A0EFF", "0x7A7399FF", "0x746D99FF", "0x53387EFF", "0x222407FF", "0x3E190CFF", "0x46210EFF", "0x991E1EFF", "0x8D4C8DFF", "0x805B80FF",
+	"0x7B3E7EFF", "0x3C1737FF", "0x733517FF", "0x781818FF", "0x83341AFF", "0x8E2F1CFF", "0x7E3E53FF", "0x7C6D7CFF", "0x020C02FF", "0x072407FF",
+	"0x163012FF", "0x16301BFF", "0x642B4FFF", "0x368452FF", "0x999590FF", "0x818D96FF", "0x99991EFF", "0x7F994CFF", "0x839292FF", "0x788222FF",
+	"0x2B3C99FF", "0x3A3A0BFF", "0x8A794EFF", "0x0E1F49FF", "0x15371CFF", "0x15273AFF", "0x375775FF", "0x060820FF", "0x071326FF", "0x20394BFF",
+	"0x2C5089FF", "0x15426CFF", "0x103250FF", "0x241663FF", "0x692015FF", "0x8C8D94FF", "0x516013FF", "0x090F02FF", "0x8C573AFF", "0x52888EFF",
+	"0x995C52FF", "0x99581EFF", "0x993A63FF", "0x998F4EFF", "0x99311EFF", "0x0D1842FF", "0x521E1EFF", "0x42420DFF", "0x4C991EFF", "0x082A1DFF",
+	"0x96821DFF", "0x197F19FF", "0x3B141FFF", "0x745217FF", "0x893F8DFF", "0x7E1A6CFF", "0x0B370BFF", "0x27450DFF", "0x071F24FF", "0x784573FF",
+	"0x8A653AFF", "0x732617FF", "0x319490FF", "0x56941DFF", "0x59163DFF", "0x1B8A2FFF", "0x38160BFF", "0x041804FF", "0x355D8EFF", "0x2E3F5BFF",
+	"0x561A28FF", "0x4E0E27FF", "0x706C67FF", "0x3B3E42FF", "0x2E2D33FF", "0x7B7E7DFF", "0x4A4442FF", "0x28344EFF"
+	}
+
 
 local directIni = "AdminTool\\settings.ini" -- создание специального файла, отвечающего за настройки.
 
@@ -31,8 +92,8 @@ local accept_load_clog = false -- принятие переменной логгера
 
 update_state = false -- перехват нужности обновление
 
-local script_version = 15 -- основная версия, перехватываемая сайтом и скриптом
-local script_version_text = "9.0" -- текстовая версия
+local script_version = 16 -- основная версия, перехватываемая сайтом и скриптом
+local script_version_text = "9.2" -- текстовая версия
 local script_path = thisScript().path  -- патц
 local script_url = "https://raw.githubusercontent.com/alfantasy/AdminTool/main/AdminTool.lua" -- основной скрипт на github
 local update_path = getWorkingDirectory() .. '/update.ini' -- основной патч
@@ -61,12 +122,14 @@ local defTable = {
 		ranremenu = false,
 		anti_cheat = false,
 		auto_mute_mat = false,
+		translate_cmd = false,
 		ATAdminPass = "",
 		prefix_adm = "",
 		prefix_STadm = "",
 		prefix_Madm = "",
 		prefix_ZGAadm = "",
 		prefix_GAadm = "",
+		AdminLevel = 0,
 		-- new
 	},
 	keys = {
@@ -100,6 +163,7 @@ local setting_items = {
 	ranremenu = imgui.ImBool(false),
 	anti_cheat = imgui.ImBool(false),
 	auto_mute_mat = imgui.ImBool(false),
+	translate_cmd = imgui.ImBool(false),
 	}
 
 --------------- Локальные переменные отвечающие за config -----------
@@ -147,6 +211,7 @@ end
 
 ----- Введенные локальные переменные, отвечающие за админский чат ---------
 
+local AdminLevel = imgui.ImInt(defTable.setting.AdminLevel) -- отвечает за прямые настроки уровня
 
 ------ Введенные локальные переменные, отвечающие за цвет ----------
 local label = 0 -- основа
@@ -255,6 +320,20 @@ end
 
 local ac_string = '' -- строка античита
 
+function imgui.Link(link)
+	if status_hovered then
+		local p = imgui.GetCursorScreenPos()
+		imgui.TextColored(imgui.ImVec4(0, 0.5, 1, 1), link)
+		imgui.GetWindowDrawList():AddLine(imgui.ImVec2(p.x, p.y + imgui.CalcTextSize(link).y), imgui.ImVec2(p.x + imgui.CalcTextSize(link).x, p.y + imgui.CalcTextSize(link).y), imgui.GetColorU32(imgui.ImVec4(0, 0.5, 1, 1)))
+	else
+		imgui.TextColored(imgui.ImVec4(0, 0.3, 0.8, 1), link)
+	end
+	if imgui.IsItemClicked() then os.execute('explorer '..link)
+	elseif imgui.IsItemHovered() then
+		status_hovered = true else status_hovered = false
+	end
+end
+--- регистрирование ссылок в виде текстовой и кликабельной основы.
 
 imgui.ToggleButton = require('imgui_addons').ToggleButton
 imgui.Spinner = require('imgui_addons').Spinner
@@ -282,11 +361,32 @@ local text_buffer_name = imgui.ImBuffer(256)
 local text_buffer_sniat = imgui.ImBuffer(2048)
 local text_buffer_kick = imgui.ImBuffer(1024)
 local text_buffer_adm = imgui.ImBuffer(4096)
+local text_buffer_ban = imgui.ImBuffer(1234)
 local prefix_Madm = imgui.ImBuffer(4096)
 local prefix_adm = imgui.ImBuffer(4096)
 local prefix_STadm = imgui.ImBuffer(4096)
 local prefix_ZGAadm = imgui.ImBuffer(4096)
 local prefix_GAadm = imgui.ImBuffer(4096)
+
+local arr_alvl = {u8"1 Уровень", 
+					u8"2 Уровень", 
+					u8"3 Уровень", 
+					u8"4 Уровень", 
+					u8"5 Уровень", 
+					u8"6 Уровень", 
+					u8"7 Уровень", 
+					u8"8 Уровень", 
+					u8"9 Уровень", 
+					u8"10 Уровень", 
+					u8"11 Уровень", 
+					u8"12 Уровень", 
+					u8"13 Уровень", 
+					u8"14 Уровень", 
+					u8"15 Уровень", 
+					u8"16 Уровень", 
+					u8"17 Уровень", 
+					u8"18 Уровень" }
+
 local arr_str = {u8"1 LVL", 
 				u8"2 LVL", 
 				u8"3 LVL", 
@@ -534,12 +634,14 @@ function main()
 	setting_items.ranremenu.v = config.setting.ranremenu
 	setting_items.anti_cheat.v = config.setting.anti_cheat
 	setting_items.auto_mute_mat.v = config.setting.auto_mute_mat
+	setting_items.translate_cmd.v = config.setting.translate_cmd
 
 	prefix_adm.v = config.setting.prefix_adm
 	prefix_STadm.v = config.setting.prefix_STadm
 	prefix_Madm.v = config.setting.prefix_Madm
 	prefix_ZGAadm.v = config.setting.prefix_ZGAadm
 	prefix_GAadm.v = config.setting.prefix_GAadm
+	AdminLevel.v = config.setting.AdminLevel
 
 	ATAdminPass.v = config.setting.ATAdminPass
 	index_text_pos = config.setting.Y
@@ -557,7 +659,7 @@ function main()
 	font_watermark = renderCreateFont("Arial", 10, font_admin_chat.BOLD)
 	lua_thread.create(function()
 		while true do
-			renderFontDrawText(font_watermark, tag .. "v." .. script_version_text .. "{FFFFFF} | {AAAAAA}" .. watermark_nick .. " [" .. watermark_id .. "] ", 10, sh-20, 0xCCFFFFFF)
+			renderFontDrawText(font_watermark, tag .. "v." .. script_version_text .. "{FFFFFF} | {AAAAAA}" .. watermark_nick .. " [" .. watermark_id .. "] " .. " | Время: " ..os.date("%H:%M:%S"), 10, sh-20, 0xCCFFFFFF)
 
 			if setting_items.anti_cheat.v then 
 				renderFontDrawText(font_watermark, an_tag.. '\n' ..ac_string, 20, sh-430, 0xCCFFFFFF)
@@ -671,6 +773,7 @@ function main()
 	sampRegisterChatCommand("ob", cmd_ob)
 	sampRegisterChatCommand("hl", cmd_hl)
 	sampRegisterChatCommand("nk", cmd_nk)
+	sampRegisterChatCommand("menk", cmd_menk)
 	sampRegisterChatCommand("gcnk", cmd_gcnk)
 	sampRegisterChatCommand("okpr", cmd_okpr)
 	sampRegisterChatCommand("okprip", cmd_okprip)
@@ -732,6 +835,7 @@ function main()
 	sampRegisterChatCommand("ach", cmd_ach)
 	sampRegisterChatCommand("achi", cmd_achi)
 	sampRegisterChatCommand("ank", cmd_ank)
+	sampRegisterChatCommand("amenk", cmd_amenk)
 	sampRegisterChatCommand("agcnk", cmd_agcnk)
 	sampRegisterChatCommand("agcnkip", cmd_agcnkip)
 	sampRegisterChatCommand("rdsob", cmd_rdsob)
@@ -828,6 +932,7 @@ function main()
 	------ Команды, используемые в вспомогательных случаях -------
 	sampRegisterChatCommand("u", cmd_u)
 	sampRegisterChatCommand("uu", cmd_uu)
+	sampRegisterChatCommand("uj", cmd_uj)
 	sampRegisterChatCommand("as", cmd_as)
 	sampRegisterChatCommand("stw", cmd_stw)
 	sampRegisterChatCommand("ru", cmd_ru)
@@ -849,8 +954,6 @@ function main()
 	----------------- Команды исключительно для включения/выключения ВХ -----------------------
 	--local fonte = renderCreateFont("Arial", 8, 5) --creating font
 	--sampfuncsRegisterConsoleCommand("showtdid", show)   --registering command to sampfuncs console, this will call function that shows textdraw id's
-
-	sampRegisterChatCommand('leb', leb)
 
 	sampRegisterChatCommand('spp', function()
 	local playerid_to_stream = playersToStreamZone()
@@ -952,6 +1055,8 @@ function main()
 	--sampAddChatMessage("Скрипт imgui перезагружен", -1)
 
 	while true do
+
+
 		wait(0)
 
 
@@ -1348,17 +1453,27 @@ function main()
 			sampSetCurrentDialogEditboxText('Вы можете оставить жалобу на игрока в VK: vk.com/dmdriftgta ')
 		end
 
-		if sampGetCurrentDialogEditboxText() == '.нч' or sampGetCurrentDialogEditboxText() == '/yx' then
-			sampSetCurrentDialogEditboxText('Начал(а) работу по вашей жалобе! ' .. color() .. ' Приятной игры на сервере RDS. <3 ')
-		end
+		lua_thread.create(function()
+			if sampGetCurrentDialogEditboxText() == '.нч' or sampGetCurrentDialogEditboxText() == '/yx' then
+				sampSetCurrentDialogEditboxText('Начал(а) работу по вашей жалобе! ' .. color() .. ' Приятной игры на сервере RDS. <3 ')
+				wait(2000)
+				sampSetChatInputEnabled(true)
+				sampSetChatInputText("/re " )
+			end
+		end)
 
 		if sampGetCurrentDialogEditboxText() == '.ич' or sampGetCurrentDialogEditboxText() == '/bx' then
 			sampSetCurrentDialogEditboxText('Данный игрок чист. ' .. color() .. ' Приятной игры на сервере RDS. <3 ')
 		end
 
-		if sampGetCurrentDialogEditboxText() == '.сл' then
-			sampSetCurrentDialogEditboxText(color() .. ' Слежу за данным игроком, ожидайте. :3 ')
-		end
+		lua_thread.create(function()
+			if sampGetCurrentDialogEditboxText() == '.сл' then
+				sampSetCurrentDialogEditboxText(color() .. ' Слежу за данным игроком, ожидайте. :3 ')
+				wait(2000)
+				sampSetChatInputEnabled(true)
+				sampSetChatInputText("/re " )
+			end
+		end)
 
 		if sampGetCurrentDialogEditboxText() == '.п7' or sampGetCurrentDialogEditboxText() == '/g7' then
 			sampSetCurrentDialogEditboxText('Данную информацию можно найти в /help -> 7 пункт. | '  .. color() ..  ' Приятной игры на RDS. <3 ')
@@ -1567,8 +1682,12 @@ end
 -- вспомогательный интерфейс AdminTool по /ans
 
 function cmd_tooladm(arg)
-	five_window_state.v = not five_window_state.v	
-	imgui.Process = five_window_state.v
+	if AdminLevel.v >= 15 then
+		five_window_state.v = not five_window_state.v	
+		imgui.Process = five_window_state.v
+	else 
+		sampAddChatMessage(tag .. "Ваш уровень мал!") 
+	end
 end  
 -- вспомогательный интерфейс AdminTool для старшей администрации
 
@@ -1661,12 +1780,16 @@ function thread_function(opt)
 		wait(3000)
 		sampSendChat("/d Не желаете ли попробовать себя в роли администратора?")
 	end
-	if opt == "arep" then  
-		sampSendChat("/a /ans -> отвечаем на репорт")
-		wait(2500)
-		sampSendChat("/a /ans -> отвечаем на репорт")
-		wait(2500)
-		sampSendChat("/a /ans -> отвечаем на репорт")
+	if AdminLevel.v >= 15 then
+		if opt == "arep" then  
+			sampSendChat("/a /ans -> отвечаем на репорт")
+			wait(2500)
+			sampSendChat("/a /ans -> отвечаем на репорт")
+			wait(2500)
+			sampSendChat("/a /ans -> отвечаем на репорт")
+		end
+	else 
+		sampAddChatMessage(tag .. " Ваш уровень мал! ")
 	end
 	-- запуск замороженной/временной функции для набора администраторов
 end	
@@ -1675,129 +1798,489 @@ end
 -- function sampev.onSendClickTextDraw(id)
 	-- sampAddChatMessage(tag .. " ID TextDraw: " .. id)
 -- end
-
 ------- Функции, относящиеся к мутам -------
+
 function cmd_fd1(arg)
-	sampSendChat("/mute " .. arg .. " 120 " .. " Спам/Флуд")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then 
+			sampSendChat("/mute " .. arg .. " 120 " .. " Спам/Флуд")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /mute " .. arg .. " 120 " .. " Спам/Флуд ")
+		end)
+	end
 end
 
 function cmd_fd2(arg)
-	sampSendChat("/mute " .. arg .. " 240 " .. " Спам/Флуд - x2 ")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then 
+			sampSendChat("/mute " .. arg .. " 240 " .. " Спам/Флуд - x2 ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /mute " .. arg .. " 240 " .. " Спам/Флуд - x2 ")
+		end)
+	end
 end
 
 function cmd_fd3(arg)
-   sampSendChat("/mute " .. arg .. " 360 " .. " Спам/Флуд - x3 ")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then
+	   		sampSendChat("/mute " .. arg .. " 360 " .. " Спам/Флуд - x3 ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /mute " .. arg .. " 360 " .. " Спам/Флуд - x3 ")
+		end)
+	end
 end
 
 function cmd_fd4(arg)
-   sampSendChat("/mute " .. arg .. " 480 " .. " Спам/Флуд - x4 ")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then 
+			sampSendChat("/mute " .. arg .. " 480 " .. " Спам/Флуд - x4 ")
+		else
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /mute " .. arg .. " 480 " .. " Спам/Флуд - x4 ")
+		end)
+	end
 end
 
 function cmd_fd5(arg)
-  sampSendChat("/mute " .. arg .. " 600 " .. " Спам/Флуд - x5 ")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then 
+			sampSendChat("/mute " .. arg .. " 600 " .. " Спам/Флуд - x5 ")
+		else
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /mute " .. arg .. " 600 " .. " Спам/Флуд - x5 ")
+		end)
+	end
 end
 
 function cmd_po1(arg)
-	sampSendChat("/mute "  .. arg .. " 120 " .. " Попрошайничество")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then
+			sampSendChat("/mute "  .. arg .. " 120 " .. " Попрошайничество")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /mute " .. arg .. " 120 " .. " Попрошайничество")
+		end)
+	end
 end
 
 function cmd_po2(arg)
-	sampSendChat("/mute " .. arg .. " 240 " .. " Попрошайничество - x2")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then
+			sampSendChat("/mute " .. arg .. " 240 " .. " Попрошайничество - x2")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /mute " .. arg .. " 240 " .. " Попрошайничество - x2")
+		end)
+	end
 end
 
 function cmd_po3(arg)
-	sampSendChat("/mute " .. arg .. " 360 " .. " Попрошайничество - x3")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then
+			sampSendChat("/mute " .. arg .. " 360 " .. " Попрошайничество - x3")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /mute " .. arg .. " 360 " .. " Попрошайничество - x3")
+		end)
+	end
 end
 
 function cmd_po4(arg)
-	sampSendChat("/mute " .. arg .. " 480 " .. " Попрошайничество - x4")
+	if AdminLevel.v >= 2 then
+		if #arg > 0 then
+			sampSendChat("/mute " .. arg .. " 480 " .. " Попрошайничество - x4")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /mute " .. arg .. " 480 " .. " Попрошайничество - x4")
+		end)
+	end
 end
 
 function cmd_po5(arg)
-	sampSendChat("/mute " .. arg .. " 600 " .. " Попрошайничество - x5")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then
+			sampSendChat("/mute " .. arg .. " 600 " .. " Попрошайничество - x5")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /mute " .. arg .. " 600 " .. " Попрошайничество - x5")
+		end)
+	end
 end
 
 function cmd_m(arg)
-	sampSendChat("/mute " .. arg .. " 300 " .. " Нецензурная лексика")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then
+			sampSendChat("/mute " .. arg .. " 300 " .. " Нецензурная лексика. ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /mute " .. arg .. " 300 " .. " Нецензурная лексика. ")
+		end)
+	end
 end
 
 function cmd_ia(arg)
-	sampSendChat("/mute " ..  arg .. " 2500 " .. " Выдача себя за администрацию ")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then
+			sampSendChat("/mute " ..  arg .. " 2500 " .. " Выдача себя за администрацию ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /mute " .. arg .. " 2500 " .. " Выдача себя за администрацию ")
+		end)
+	end
 end
 
 function cmd_kl(arg)
-	sampSendChat("/mute " .. arg .. " 3000 " .. " Клевета на администрацию ")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then
+			sampSendChat("/mute " .. arg .. " 3000 " .. " Клевета на администрацию ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /mute " .. arg .. " 3000 " .. " Клевета на администрацию ")
+		end)
+	end
 end
 
 function cmd_oa(arg)
-	sampSendChat("/mute " .. arg .. " 2500 " .. " Оскорбление/Унижение администратора")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then
+			sampSendChat("/mute " .. arg .. " 2500 " .. " Оскорбление/Унижение администратора ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /mute " .. arg .. " 2500 " .. " Оскорбление/Унижение администратора ")
+		end)
+	end
 end
 
 function cmd_ok(arg)
-	sampSendChat("/mute " .. arg .. " 400 " .. " Оскорбление/Унижение")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then
+			sampSendChat("/mute " .. arg .. " 400 " .. " Оскорбление/Унижение. ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /mute " .. arg .. " 400  " .. " Оскорбление/Унижение. ")
+		end)
+	end
 end
 
 function cmd_nm1(arg)
-	sampSendChat("/mute " .. arg .. " 2500 " .. " Неадекватное поведение ")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then
+			sampSendChat("/mute " .. arg .. " 2500 " .. " Неадекватное поведение ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /mute " .. arg .. " 2500 " .. " Неадекватное поведение ")
+		end)
+	end
 end
 
 function cmd_nm2(arg)
-	sampSendChat("/mute " .. arg .. " 5000 " ..  " Неадекватное поведение ")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then
+			sampSendChat("/mute " .. arg .. " 5000 " ..  " Неадекватное поведение ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /mute " .. arg .. " 5000 " .. " Неадекватное поведение ")
+		end)
+	end
 end
 
 function cmd_or(arg)
-	sampSendChat("/mute " .. arg .. " 5000 " .. " Оскорбление/Унижение родных")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then
+			sampSendChat("/mute " .. arg .. " 5000 " .. " Оскорбление/Унижение родных ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /mute " .. arg .. " 5000 " .. " Оскорбление/Унижение родных ")
+		end)
+	end
 end
 
 function cmd_nm(arg)
-	sampSendChat("/mute " .. arg .. " 900 " .. " Неадекватное поведение ")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then
+			sampSendChat("/mute " .. arg .. " 900 " .. " Неадекватное поведение ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /mute " .. arg .. " 900 " .. " Неадекватное поведение ")
+		end)
+	end
 end
 
 function cmd_up(arg)
-	sampSendChat("/mute " .. arg .. " 1000 " .. " Упоминание сторонних проектов ")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then
+			sampSendChat("/mute " .. arg .. " 1000 " .. " Упоминание сторонних проектов ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /mute " .. arg .. " 1000 " .. " Упоминание сторонних проектов ")
+		end)
+	end
 end
 ------- Функции, относящиеся к мутам -------
 
 
 ------- Функции, относящиеся к мутам за репорт -------
 function cmd_rup(arg)
-	sampSendChat("/rmute " .. arg .. " 1000 " .. " Упоминание сторонних проектов. ")
-  end
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then
+			sampSendChat("/rmute " .. arg .. " 1000 " .. " Упоминание сторонних проектов. ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /rmute " .. arg .. " 1000 " .. " Упоминание сторонних проектов ")
+		end)
+	end
+end
  
 function cmd_ror(arg)
-	sampSendChat("/rmute " .. arg .. " 5000 " .. " Оскорбление/Унижение родных ")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then
+			sampSendChat("/rmute " .. arg .. " 5000 " .. " Оскорбление/Унижение родных ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /rmute " .. arg .. " 5000 " .. " Оскорбление/Унижение родных ")
+		end)
+	end
 end
   
 function cmd_cp(arg)
-	sampSendChat("/rmute " .. arg .. " 120 " .. " caps/offtop in report ")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then
+			sampSendChat("/rmute " .. arg .. " 120 " .. " caps/offtop in report ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /rmute " .. arg .. " 120 " .. " caps/offtop in report ")
+		end)
+	end
 end
   
 function cmd_rpo(arg)
-	sampSendChat("/rmute " .. arg .. " 120 " .. " Попрошайничество ")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then
+			sampSendChat("/rmute " .. arg .. " 120 " .. " Попрошайничество ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /rmute " .. arg .. " 120 " .. " Попрошайничество ")
+		end)
+	end
 end
 
 function cmd_rm(arg)
-	sampSendChat("/rmute " .. arg .. " 300 " .. " Нецензурная лексика ")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then
+			sampSendChat("/rmute " .. arg .. " 300 " .. " Нецензурная лексика. ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /rmute " .. arg .. " 300 " .. " Нецензурная лексика. ")
+		end)
+	end
 end
 
 function cmd_roa(arg)
-	sampSendChat("/rmute " .. arg .. " 2500 " .. " Оскорбление/Унижение администратора ")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then
+			sampSendChat("/rmute " .. arg .. " 2500 " .. " Оскорбление/Унижение администрации ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /rmute " .. arg .. " 2500 " .. " Оскорбление/Унижение администрации ")
+		end)
+	end
 end
 
 function cmd_rnm(arg)
-  sampSendChat("/rmute " .. arg .. " 900 " .. " Неадекватное поведение ")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then
+			sampSendChat("/rmute " .. arg .. " 900 " .. " Неадекватное поведение ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /rmute " .. arg .. " 900  " .. " Неадекватное поведение ")
+		end)
+	end
 end
 
 function cmd_rnm1(arg)
-  sampSendChat("/rmute " .. arg .. " 2500 " .. " Неадекватное поведение ")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then
+			sampSendChat("/rmute " .. arg .. " 2500 " .. " Неадекватное поведение ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /rmute " .. arg .. " 2500 " .. " Неадекватное поведение ")
+		end)
+	end
 end
 
 function cmd_rnm2(arg)
-  sampSendChat("/rmute " .. arg .. " 5000 " ..  " Неадекватное поведение ")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then
+			sampSendChat("/rmute " .. arg .. " 5000 " ..  " Неадекватное поведение ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /rmute " .. arg .. " 5000 " .. " Неадекватное поведение ")
+		end)
+	end
 end
 
 function cmd_rok(arg)
-	sampSendChat("/rmute " .. arg .. " 400 " .. " Оскорбление/Унижение ")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then
+			sampSendChat("/rmute " .. arg .. " 400 " .. " Оскорбление/Унижение. ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /rmute " .. arg .. " 400 " .. " Оскорбление/Унижение. ")
+		end)
+	end
 end
 ------- Функции, относящиеся к мутам за репорт -------
 
@@ -1807,118 +2290,436 @@ end
 
 ------- Функции, относящиеся к джайлам -------
 function cmd_sk(arg)
-	sampSendChat("/jail " .. arg .. " 300 " .. " Spawn Kill")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then
+			sampSendChat("/jail " .. arg .. " 300 " .. " Spawn Kill")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /jail " .. arg .. " 300 " .. " SpawnKill ")
+		end)
+	end
 end
 
 function cmd_dz(arg)
-	sampSendChat("/jail " .. arg .. " 300 " .. " DM/DB in zz")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then
+			sampSendChat("/jail " .. arg .. " 300 " .. " DM/DB in zz")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /jail " .. arg .. " 300 " .. " DM/DB in zz ")
+		end)
+	end
 end
 
 function cmd_dz1(arg)
-	sampSendChat("/jail " .. arg .. " 600 " .. " DM/DB in zz x2")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then
+			sampSendChat("/jail " .. arg .. " 600 " .. " DM/DB in zz x2")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /jail " .. arg .. " 600 " .. " DM/DB in zz x2 ")
+		end)
+	end
 end
 
 function cmd_dz2(arg)
-	sampSendChat("/jail " .. arg .. " 900 " .. " DM/DB in zz x3")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then
+			sampSendChat("/jail " .. arg .. " 900 " .. " DM/DB in zz x3")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /jail " .. arg .. " 900 " .. " DM/DB in zz x3 ")
+		end)
+	end
 end
 
 function cmd_dz3(arg)
-	sampSendChat("/jail " .. arg .. " 1200 " .. " DM/DB in zz x4")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then
+			sampSendChat("/jail " .. arg .. " 1200 " .. " DM/DB in zz x4")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /jail " .. arg .. " 1200 " .. " DM/DB in zz x4 ")
+		end)
+	end
 end
 
 function cmd_td(arg)
-	sampSendChat("/jail " .. arg .. " 300 " .. " DB/car in trade ")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then
+			sampSendChat("/jail " .. arg .. " 300 " .. " DB/car in trade ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /jail " .. arg .. " 300 " .. " DB/car in trade ")
+		end)
+	end
 end
 
 function cmd_jm(arg)
-	sampSendChat("/jail " .. arg .. " 300 " .. " Нарушение правил МП ")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then
+			sampSendChat("/jail " .. arg .. " 300 " .. " Нарушение правил МП ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /jail " .. arg .. " 300 " .. " Нарушение правил МП ")
+		end)
+	end
 end
 
 function cmd_pmx(arg)
-	sampSendChat("/jail " .. arg .. " 300 " .. " Серьезная помеха игрокам ")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then
+			sampSendChat("/jail " .. arg .. " 300 " .. " Серьезная помеха игрокам ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /jail " .. arg .. " 300 " .. " Серьезная помеха игрокам ")
+		end)
+	end
 end
 
 function cmd_skw(arg)
-  sampSendChat("/jail " .. arg .. " 600 " .. " SK in /gw ")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then
+			sampSendChat("/jail " .. arg .. " 600 " .. " SK in /gw ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /jail " .. arg .. " 600 " .. " SK in /gw ")
+		end)
+	end
 end
 
 function cmd_dgw(arg)
-  sampSendChat("/jail " .. arg .. " 500 " .. " Использование наркотиков in /gw ")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then
+			sampSendChat("/jail " .. arg .. " 500 " .. " Использование наркотиков in /gw ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /jail " .. arg .. " 500 " .. " Использование наркотиков in /gw ")
+		end)
+	end
 end
 
 function cmd_ngw(arg)
-	sampSendChat("/jail " .. arg .. " 600 " .. " Использование запрещенных команд in /gw ")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then
+			sampSendChat("/jail " .. arg .. " 600 " .. " Использование запрещенных команд in /gw ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /jail " .. arg .. " 600 " .. " Использование запрещенных команд in /gw ")
+		end)
+	end
 end
 
 function cmd_dbgw(arg)
-	sampSendChat("/jail " .. arg .. " 600 " .. " Использование вертолета in /gw ")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then
+			sampSendChat("/jail " .. arg .. " 600 " .. " Использование вертолета in /gw ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /jail " .. arg .. " 600 " .. " Использование вертолета in /gw ")
+		end)
+	end
 end
 
 function cmd_fsh(arg)
-	sampSendChat("/jail " .. arg .. " 900 " .. " Использование SpeedHack/FlyCar ")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then
+			sampSendChat("/jail " .. arg .. " 900 " .. " Использование SpeedHack/FlyCar ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /jail " .. arg .. " 900 " .. " Использование SpeedHack/FlyCar ")
+		end)
+	end
 end
 
 function cmd_bag(arg)
-	sampSendChat("/jail " .. arg .. " 300 " .. " Игровой багоюз (deagle in car)")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then
+			sampSendChat("/jail " .. arg .. " 300 " .. " Игровой багоюз (deagle in car)")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /jail " .. arg .. " 300 " .. " Игровой багоюз (deagle in car) ")
+		end)
+	end
 end
 
 function cmd_pk(arg)
-  	sampSendChat("/jail " .. arg .. " 900 " .. " Использование паркур/дрифт мода ")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then
+			sampSendChat("/jail " .. arg .. " 900 " .. " Использование паркур/дрифт мода ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /jail " .. arg .. " 900 " .. " Использование паркур/дрифт мода ")
+		end)
+	end
 end
 
 function cmd_jch(arg)
-	sampSendChat("/jail " .. arg .. " 3000 " .. " Использование читерского скрипта/ПО ")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then
+			sampSendChat("/jail " .. arg .. " 3000 " .. " Использование читерского скрипта/ПО ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /jail " .. arg .. " 3000 " .. " Использование читерского скрипта/ПО ")
+		end)
+	end
 end
 
 function cmd_zv(arg)
-	sampSendChat("/jail " ..  arg .. " 3000 " .. " Злоупотребление VIP`om ")
+	if AdminLevel.v >= 2 then
+		if #arg > 0 then
+			sampSendChat("/jail " ..  arg .. " 3000 " .. " Злоупотребление VIP`om ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /jail " .. arg .. " 3000 " .. " Злоупотрбление VIP`om ")
+		end)
+	end
 end
 
 function cmd_sch(arg)
-	sampSendChat("/jail " .. arg .. " 900 " .. " Использование запрещенных скриптов ")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then
+			sampSendChat("/jail " .. arg .. " 900 " .. " Использование запрещенных скриптов ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /jail " .. arg .. " 900 " .. " Использование запрещенных скриптов ")
+		end)
+	end
 end
 
 function cmd_jcw(arg)
-	sampSendChat("/jail " .. arg .. " 900 " .. " Использование ClickWarp/Metla (ИЧС)")
+	if AdminLevel.v >= 2 then 
+		if #arg > 0 then
+			sampSendChat("/jail " .. arg .. " 900 " .. " Использование ClickWarp/Metla (ИЧС)")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /jail " .. arg .. " 900 " .. " Использование ClickWarp/Metla (ИЧС) ")
+		end)
+	end
 end
 ------- Функции, относящиеся к джайлам -------
 
 
 ------- Функции, относящиеся к банам -------
 function cmd_hl(arg)
-	sampSendChat("/ans " .. arg .. " Уважаемый игрок, вы нарушали правила сервера, и если вы..")
-	sampSendChat("/ans " .. arg .. " ..не согласны с наказанием, напишите жалобу в VK: dmdriftgta")
-	sampSendChat("/iban " .. arg .. " 3 " .. " Оскорбление/Унижение/Мат в хелпере")
+	if AdminLevel.v >= 6 then
+		if #arg > 0 then
+			sampSendChat("/ans " .. arg .. " Уважаемый игрок, вы нарушали правила сервера, и если вы..")
+			sampSendChat("/ans " .. arg .. " ..не согласны с наказанием, напишите жалобу в VK: dmdriftgta")
+			sampSendChat("/iban " .. arg .. " 3 " .. " Оскорбление/Унижение/Мат в хелпере")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)	
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /iban " .. arg .. " 3 " .. " Оскорбление/Унижение/Мат в хелпере ")
+		end)
+	end
 end
 
 function cmd_pl(arg)
-	sampSendChat("/ans " .. arg .. " Уважаемый игрок, вы нарушали правила сервера, и если вы..")
-  	sampSendChat("/ans " .. arg .. " ..не согласны с наказанием, напишите жалобу в VK: dmdriftgta")
-  	sampSendChat("/ban " .. arg .. " 7 " .. " Плагиат ника администратора ")
+	if AdminLevel.v >= 6 then
+		if #arg > 0 then
+			sampSendChat("/ans " .. arg .. " Уважаемый игрок, вы нарушали правила сервера, и если вы..")
+			sampSendChat("/ans " .. arg .. " ..не согласны с наказанием, напишите жалобу в VK: dmdriftgta")
+			sampSendChat("/ban " .. arg .. " 7 " .. " Плагиат ника администратора ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /ban " .. arg .. " 7 " .. " Плагиат ника администратора ")
+		end)
+	end	
 end
 
 function cmd_ob(arg)
-	sampSendChat("/ans " .. arg .. " Уважаемый игрок, вы нарушали правила сервера, и если вы..")
-	sampSendChat("/ans " .. arg .. " ..не согласны с наказанием, напишите жалобу в VK: dmdriftgta")
-	sampSendChat("/iban " .. arg .. " 7 " .. " Обход прошлого бана ")
+	if AdminLevel.v >= 6 then
+		if #arg > 0 then
+			sampSendChat("/ans " .. arg .. " Уважаемый игрок, вы нарушали правила сервера, и если вы..")
+			sampSendChat("/ans " .. arg .. " ..не согласны с наказанием, напишите жалобу в VK: dmdriftgta")
+			sampSendChat("/iban " .. arg .. " 7 " .. " Обход прошлого бана ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /iban " .. arg .. " 7 " .. " Обход прошлого бана ")
+		end)
+	end	
 end 	
 
 function cmd_ch(arg)
-	sampSendChat("/ans " .. arg .. " Уважаемый игрок, вы нарушали правила сервера, и если вы..")
-  	sampSendChat("/ans " .. arg .. " ..не согласны с наказанием, напишите жалобу в VK: dmdriftgta")
-	sampSendChat("/iban " .. arg .. " 7 " .. " Использование читерского скрипта/ПО. ")
+	if AdminLevel.v >= 6 then
+		if #arg > 0 then
+			sampSendChat("/ans " .. arg .. " Уважаемый игрок, вы нарушали правила сервера, и если вы..")
+			sampSendChat("/ans " .. arg .. " ..не согласны с наказанием, напишите жалобу в VK: dmdriftgta")
+			sampSendChat("/iban " .. arg .. " 7 " .. " Использование читерского скрипта/ПО. ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /ban " .. arg .. " 7 " .. " Использование читерского скрипта/ПО. ")
+		end)
+	end	
 end
 
 function cmd_gcnk(arg)
-	sampSendChat("/ans " .. arg .. " Уважаемый игрок, вы нарушали правила сервера, и если вы..")
- 	sampSendChat("/ans " .. arg .. " ..не согласны с наказанием, напишите жалобу в VK: dmdriftgta")
-	sampSendChat("/iban " .. arg .. " 7 " .. " Банда, содержащая нецензурную лексину ")
+	if AdminLevel.v >= 6 then
+		if #arg > 0 then
+			sampSendChat("/ans " .. arg .. " Уважаемый игрок, вы нарушали правила сервера, и если вы..")
+			sampSendChat("/ans " .. arg .. " ..не согласны с наказанием, напишите жалобу в VK: dmdriftgta")
+			sampSendChat("/iban " .. arg .. " 7 " .. " Банда, содержащая нецензурную лексину ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /iban " .. arg .. " 7 " .. " Банда, содержащая нецензурную лексику ")
+		end)
+	end	
+end
+
+function cmd_menk(arg)
+	if AdminLevel.v >= 6 then
+		if #arg > 0 then
+			sampSendChat("/ans " .. arg .. " Уважаемый игрок, вы нарушали правила сервера, и если вы..")
+			sampSendChat("/ans " .. arg .. " ..не согласны с наказанием, напишите жалобу в VK: dmdriftgta")
+			sampSendChat("/ban " .. arg .. " 7 " .. " Ник, содержающий запрещенные слова ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /ban " .. arg .. " 7 " .. " Ник, содержающий запрещенные слова ")
+		end)
+	end	
 end
 
 function cmd_nk(arg)
-	sampSendChat("/ans " .. arg .. " Уважаемый игрок, вы нарушали правила сервера, и если вы..")
- 	sampSendChat("/ans " .. arg .. " ..не согласны с наказанием, напишите жалобу в VK: dmdriftgta")
-	sampSendChat("/ban " .. arg .. " 7 " .. " Ник, содержащий нецензурную лексику ")
+	if AdminLevel.v >= 6 then
+		if #arg > 0 then
+			sampSendChat("/ans " .. arg .. " Уважаемый игрок, вы нарушали правила сервера, и если вы..")
+			sampSendChat("/ans " .. arg .. " ..не согласны с наказанием, напишите жалобу в VK: dmdriftgta")
+			sampSendChat("/ban " .. arg .. " 7 " .. " Ник, содержащий нецензурную лексику ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /ban " .. arg .. " 7 " .. " Ник, содержащий нецензурную лексику ")
+		end)
+	end	
 end
 
 
@@ -1927,222 +2728,851 @@ end
 ------- Функции, относящиеся к джайлам в оффлайне -------
 
 function cmd_asch(arg)
-	sampSendChat("/prisonakk " .. arg .. " 900 " .. " Использование запрещенных скриптов ")
+	if AdminLevel.v >= 2 then
+		if #arg > 0 then
+			sampSendChat("/prisonakk " .. arg .. " 900 " .. " Использование запрещенных скриптов ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести NICK нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /prisonakk " .. arg .. " 900 " .. " Использование запрещенных скриптов ")
+		end)
+	end	
 end
 
 function cmd_ajch(arg)
-	sampSendChat("/prisonakk " .. arg .. " 3000 " .. " Использование читерского скрипта/ПО ")
+	if AdminLevel.v >= 2 then
+		if #arg > 0 then
+			sampSendChat("/prisonakk " .. arg .. " 3000 " .. " Использование читерского скрипта/ПО ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести NICK нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /prisonakk " .. arg .. " 3000 " .. " Использование читерского скрипта/ПО ")
+		end)
+	end	
 end
 
 function cmd_azv(arg)
-	sampSendChat("/prisonakk " ..  arg .. " 3000 " .. " Злоупотребление VIP`om ")
+	if AdminLevel.v >= 2 then
+		if #arg > 0 then
+			sampSendChat("/prisonakk " ..  arg .. " 3000 " .. " Злоупотребление VIP`om ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести NICK нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /prisonakk " .. arg .. " 3000 " .. " Злоупотребление VIP`om ")
+		end)
+	end	
 end
 
 function cmd_adgw(arg)
-	sampSendChat("/prisonakk " .. arg .. " 500 " .. " Использование наркотиков in /gw ")
+	if AdminLevel.v >= 2 then
+		if #arg > 0 then
+			sampSendChat("/prisonakk " .. arg .. " 500 " .. " Использование наркотиков in /gw ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести NICK нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /prisonakk " .. arg .. " 500 " .. " Использование наркотиков in /gw ")
+		end)
+	end	
 end
 
 function cmd_ask(arg)
-	sampSendChat("/prisonakk " .. arg .. " 300 " .. " Spawn Kill in zz ")
+	if AdminLevel.v >= 2 then
+		if #arg > 0 then
+			sampSendChat("/prisonakk " .. arg .. " 300 " .. " SpawnKill ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести NICK нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /prisonakk " .. arg .. " 300 " .. " SpawnKill ")
+		end)
+	end	
 end
 
 function cmd_adz(arg)
-	sampSendChat("/prisonakk " .. arg .. " 300 " .. " DM/DB in zz ")
+	if AdminLevel.v >= 2 then
+		if #arg > 0 then
+			sampSendChat("/prisonakk " .. arg .. " 300 " .. " DM/DB in zz ")	
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести NICK нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /prisonakk " .. arg .. " 300 " .. " DM/DB in zz ")
+		end)
+	end	
 end
 
 function cmd_adz1(arg)
-	sampSendChat("/prisonakk " .. arg .. " 600 " .. " DM/DB in zz x2")
+	if AdminLevel.v >= 2 then
+		if #arg > 0 then
+			sampSendChat("/prisonakk " .. arg .. " 600 " .. " DM/DB in zz x2")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести NICK нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /prisonakk " .. arg .. " 600 " .. " DM/DB in zz x2 ")
+		end)
+	end	
 end
 
 function cmd_adz2(arg)
-	sampSendChat("/prisonakk " .. arg .. " 900 " .. " DM/DB in zz x3")
+	if AdminLevel.v >= 2 then
+		if #arg > 0 then
+			sampSendChat("/prisonakk " .. arg .. " 900 " .. " DM/DB in zz x3")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести NICK нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /prisonakk " .. arg .. " 900 " .. " DM/DB in zz x3 ")
+		end)
+	end	
 end
 
 function cmd_adz3(arg)
-	sampSendChat("/prisonakk " .. arg .. " 1200 " .. " DM/DB in zz x4")
+	if AdminLevel.v >= 2 then
+		if #arg > 0 then
+			sampSendChat("/prisonakk " .. arg .. " 1200 " .. " DM/DB in zz x4")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести NICK нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /prisonakk " .. arg .. " 1200 " .. " DM/DB in zz x4 ")
+		end)
+	end	
 end
 
 function cmd_atd(arg)
-	sampSendChat("/prisonakk " .. arg .. " 300 " .. " DB/car in trade ")
+	if AdminLevel.v >= 2 then
+		if #arg > 0 then
+			sampSendChat("/prisonakk " .. arg .. " 300 " .. " DB/car in trade ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести NICK нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /prisonakk " .. arg .. " 300 " .. " DB/car in trade ")
+		end)
+	end	
 end
 
 function cmd_ajm(arg)
-	sampSendChat("/prisonakk " .. arg .. " 300 " .. " Нарушение правил МП ")
+	if AdminLevel.v >= 2 then
+		if #arg > 0 then
+			sampSendChat("/prisonakk " .. arg .. " 300 " .. " Нарушение правил МП ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести NICK нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /prisonakk " .. arg .. " 300 " .. " Нарушение правил МП ")
+		end)
+	end	
 end
 
 function cmd_apmx(arg)
-	sampSendChat("/prisonakk " .. arg .. " 300 " .. " Серьезная помеха игрокам ")
+	if AdminLevel.v >= 2 then
+		if #arg > 0 then
+			sampSendChat("/prisonakk " .. arg .. " 300 " .. " Серьезная помеха игрокам ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести NICK нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /prisonakk " .. arg .. " 300 " .. " Серьезная помеха игрокам ")
+		end)
+	end	
 end
 
 function cmd_askw(arg)
-    sampSendChat("/prisonakk " .. arg .. " 600 " .. " SK in /gw ")
+	if AdminLevel.v >= 2 then
+		if #arg > 0 then
+			sampSendChat("/prisonakk " .. arg .. " 600 " .. " SK in /gw ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести NICK нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /prisonakk " .. arg .. " 600 " .. " SK in /gw ")
+		end)
+	end	
 end
 
 function cmd_angw(arg)
-    sampSendChat("/prisonakk " .. arg .. " 600 " .. " Использование запрещенных команд in /gw ")
+	if AdminLevel.v >= 2 then
+		if #arg > 0 then
+			sampSendChat("/prisonakk " .. arg .. " 600 " .. " Использование запрещенных команд in /gw ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести NICK нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /prisonakk " .. arg .. " 600 " .. " Использование запрещенных команд in /gw ")
+		end)
+	end	
 end
 
 function cmd_adbgw(arg)
-    sampSendChat("/prisonakk " .. arg .. " 600 " .. " db-верт, стрельба с авт/мото/крыши in /gw ")
+	if AdminLevel.v >= 2 then
+		if #arg > 0 then
+			sampSendChat("/prisonakk " .. arg .. " 600 " .. " db-верт, стрельба с авт/мото/крыши in /gw ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести NICK нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /prisonakk " .. arg .. " 600 " .. " db-верт, стрельба с авт/мото/крыши in /gw ")
+		end)
+	end	
 end
 
 function cmd_afsh(arg)
-    sampSendChat("/prisonakk " .. arg .. " 900 " .. " Использование SpeedHack/FlyCar ")
+	if AdminLevel.v >= 2 then
+		if #arg > 0 then
+			sampSendChat("/prisonakk " .. arg .. " 900 " .. " Использование SpeedHack/FlyCar ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести NICK нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /prisonakk " .. arg .. " 900 " .. " Использование SpeedHack/FlyCar ")
+		end)
+	end	
 end
 
 function cmd_abag(arg)
-    sampSendChat("/prisonakk " .. arg .. " 300 " .. " Игровой багоюз (deagle in car)")
+	if AdminLevel.v >= 2 then
+		if #arg > 0 then
+			sampSendChat("/prisonakk " .. arg .. " 300 " .. " Игровой багоюз (deagle in car)")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести NICK нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /prisonakk " .. arg .. " 300 " .. " Игровой багоюз (deagle in car) ")
+		end)
+	end	
 end
 
 function cmd_apk(arg)
-	sampSendChat("/prisonakk " .. arg .. " 900 " .. " Использование паркур/дрифт мода ")
+	if AdminLevel.v >= 2 then
+		if #arg > 0 then
+			sampSendChat("/prisonakk " .. arg .. " 900 " .. " Использование паркур/дрифт мода ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести NICK нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /prisonakk " .. arg .. " 900 " .. " Использование паркур/дрифт мода ")
+		end)
+	end	
 end
 
 function cmd_ajcw(arg)
-	sampSendChat("/prisonakk " .. arg .. " 900 " .. " Использование ClickWarp/Metla (ИЧС)")
+	if AdminLevel.v >= 2 then
+		if #arg > 0 then
+			sampSendChat("/prisonakk " .. arg .. " 900 " .. " Использование ClickWarp/Metla (ИЧС)")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести NICK нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /prisonakk " .. arg .. " 900 " .. " Использование ClickWarp/Metla (ИЧС) ")
+		end)
+	end	
 end
 ------- Функции, относящиеся к джайлам в оффлайне -------
 
 
 ------- Функции, относящиеся к мутам в оффлайне -------
 function cmd_afd(arg)
-	sampSendChat("/muteakk " .. arg .. " 120 " .. " Спам/Флуд")
+	if AdminLevel.v >= 2 then
+		if #arg > 0 then
+			sampSendChat("/muteakk " .. arg .. " 120 " .. " Спам/Флуд")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести NICK нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /muteakk " .. arg .. " 120 " .. " Спам/Флуд ")
+		end)
+	end	
 end
 
 function cmd_apo(arg)
-	sampSendChat("/muteakk " .. arg .. " 120 " .. " Попрошайничество ")
+	if AdminLevel.v >= 2 then
+		if #arg > 0 then
+			sampSendChat("/muteakk " .. arg .. " 120 " .. " Попрошайничество ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести NICK нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /muteakk " .. arg .. " 120 " .. " Попрошайничество ")
+		end)
+	end	
 end
 
 function cmd_am(arg)
-	sampSendChat("/muteakk " .. arg .. " 300 " .. " Нецензурная лексика")
+	if AdminLevel.v >= 2 then
+		if #arg > 0 then
+			sampSendChat("/muteakk " .. arg .. " 300 " .. " Нецензурная лексика.")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести NICK нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /muteakk " .. arg .. " 300 " .. " Нецензурная лексика. ")
+		end)
+	end	
 end
 
 function cmd_aok(arg)
-	sampSendChat("/muteakk " .. arg .. " 400 " .. " Оскорбление/Унижение ")
+	if AdminLevel.v >= 2 then
+		if #arg > 0 then
+			sampSendChat("/muteakk " .. arg .. " 400 " .. " Оскорбление/Унижение. ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести NICK нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /muteakk " .. arg .. " 400 " .. " Оскорбление/Унижение. ")
+		end)
+	end	
 end
 
 function cmd_anm(arg)
-	sampSendChat("/muteakk " .. arg .. " 900 " .. " Неадекватное поведение ")
+	if AdminLevel.v >= 2 then
+		if #arg > 0 then
+			sampSendChat("/muteakk " .. arg .. " 900 " .. " Неадекватное поведение ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести NICK нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /muteakk " .. arg .. " 900 " .. " Неадекватное поведение ")
+		end)
+	end	
 end
 
 function cmd_anm1(arg)
-	sampSendChat("/muteakk " .. arg .. " 2500 " .. " Неадекватное поведение ")
+	if AdminLevel.v >= 2 then
+		if #arg > 0 then
+			sampSendChat("/muteakk " .. arg .. " 2500 " .. " Неадекватное поведение ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести NICK нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /muteakk " .. arg .. " 2500 " .. " Неадекватное поведение ")
+		end)
+	end	
 end
 
 function cmd_anm2(arg)
-	sampSendChat("/muteakk " .. arg .. " 5000 " .. " Неадекватное поведение ")
+	if AdminLevel.v >= 2 then
+		if #arg > 0 then
+			sampSendChat("/muteakk " .. arg .. " 5000 " .. " Неадекватное поведение ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести NICK нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /muteakk " .. arg .. " 5000 " .. " Неадекватное поведение ")
+		end)
+	end	
 end
 
 function cmd_aoa(arg)
-	sampSendChat("/muteakk " .. arg .. " 2500 " .. " Оскорбление/Унижение админа ")
+	if AdminLevel.v >= 2 then
+		if #arg > 0 then
+			sampSendChat("/muteakk " .. arg .. " 2500 " .. " Оскорбление/Унижение администрации ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести NICK нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /muteakk " .. arg .. " 2500 " .. " Оскорбление/Унижение администрации ")
+		end)
+	end	
 end
 
 function cmd_aor(arg)
-	sampSendChat("/muteakk " .. arg .. " 5000 " .. " Оскорбление/Унижение/Упоминание родных ")
+	if AdminLevel.v >= 2 then
+		if #arg > 0 then
+			sampSendChat("/muteakk " .. arg .. " 5000 " .. " Оскорбление/Унижение/Упоминание родных ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести NICK нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /muteakk " .. arg .. " 5000 " .. " Оскорбление/Унижение/Упоминание родных ")
+		end)
+	end	
 end
 
 function cmd_aup(arg)
-	sampSendChat("/muteakk " .. arg .. " 1000 " .. " Упоминание иного проекта ")
+	if AdminLevel.v >= 2 then
+		if #arg > 0 then
+			sampSendChat("/muteakk " .. arg .. " 1000 " .. " Упоминание иного проекта ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести NICK нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /muteakk " .. arg .. " 1000 " .. " Упоминание иного проекта ")
+		end)
+	end	
 end 
 
 function cmd_aia(arg)
-	sampSendChat("/muteakk " .. arg .. " 2500 " .. " Выдача себя за администратора ")
+	if AdminLevel.v >= 2 then
+		if #arg > 0 then
+			sampSendChat("/muteakk " .. arg .. " 2500 " .. " Выдача себя за администратора ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести NICK нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /muteakk " .. arg .. " 2500 " .. " Выдача себя за администратора ")
+		end)
+	end	
 end
 
 function cmd_akl(arg)
-	sampSendChat("/muteakk " .. arg .. " 3000 " .. " Клевета на администрацию ")
+	if AdminLevel.v >= 2 then
+		if #arg > 0 then
+			sampSendChat("/muteakk " .. arg .. " 3000 " .. " Клевета на администрацию ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести NICK нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /muteakk " .. arg .. " 3000 " .. " Клевета на администрацию ")
+		end)
+	end	
 end
 ------- Функции, относящиеся к мутам в оффлайне -------
 
 
 ------- Функции, относящиеся к кикам -------
 function cmd_dj(arg)
-	sampSendChat("/kick " .. arg .. " dm in jail ")
+	if AdminLevel.v >= 3 then
+		if #arg > 0 then
+			sampSendChat("/kick " .. arg .. " dm in jail ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /kick " .. arg .. " dm in jail ")
+		end)
+	end	
 end
 
 function cmd_gnk1(arg)
-	sampSendChat("/kick " .. arg .. " Смените никнейм. 1/3 ")
+	if AdminLevel.v >= 3 then
+		if #arg > 0 then
+			sampSendChat("/kick " .. arg .. " Смените никнейм. 1/3 ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /kick " .. arg .. " Смените никнейм. 1/3 ")
+		end)
+	end	
 end
 
 function cmd_gnk2(arg)
-	sampSendChat("/kick " .. arg .. " Смените никнейм. 2/3 ")
+	if AdminLevel.v >= 3 then
+		if #arg > 0 then
+			sampSendChat("/kick " .. arg .. " Смените никнейм. 2/3 ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /kick " .. arg .. " Смените никнейм. 2/3 ")
+		end)
+	end	
 end
 
 function cmd_gnk3(arg)
-	sampSendChat("/kick " .. arg .. " Смените никнейм. 3/3 ")
+	if AdminLevel.v >= 3 then
+		if #arg > 0 then
+			sampSendChat("/kick " .. arg .. " Смените никнейм. 3/3 ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /kick " .. arg .. " Смените никнейм. 3/3 ")
+		end)
+	end	
 end
 
 function cmd_cafk(arg)
-	sampSendChat("/kick " .. arg .. " AFK in /arena ")
+	if AdminLevel.v >= 3 then
+		if #arg > 0 then
+			sampSendChat("/kick " .. arg .. " AFK in /arena ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /kick " .. arg .. " AFK in /arena ")
+		end)
+	end	
 end
 ------- Функции, относящиеся к кикам -------
 
 
 -------- Функции, относящиеся к банам в оффлайне -----------
 
+function cmd_amenk(arg)
+	if AdminLevel.v >= 7 then
+		if #arg > 0 then
+			sampSendChat("/banakk " .. arg .. " 7 " .. " Ник, содержающий запрещенные слова ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести NICK нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /banakk " .. arg .. " 7 " .. " Ник, содержающий запрещенные слова")
+		end)
+	end	
+end
+
+
 function cmd_ahl(arg)
-	sampSendChat("/offban " .. arg .. " 3 " .. " Оск/Унижение/Мат в хелпере")
-	sampSendChat("/offstats " .. arg)
+	if AdminLevel.v >= 7 then
+		if #arg > 0 then
+			sampSendChat("/offban " .. arg .. " 3 " .. " Оск/Унижение/Мат в хелпере")
+			sampSendChat("/offstats " .. arg)
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести NICK нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /banakk " .. arg .. " 3 " .. " Оск/Унижение/Мат в хелпере")
+		end)
+	end	
 end
 
 function cmd_ahli(arg)
-	sampSendChat("/banip " .. arg .. " 3 " .. " Оск/Унижение/Мат в хелпере")
+	if AdminLevel.v >= 12 then
+		if #arg > 0 then
+			sampSendChat("/banip " .. arg .. " 3 " .. " Оск/Унижение/Мат в хелпере")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести IP нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /banip " .. arg .. " 3 " .. " Оск/Унижение/Мат в хелпере")
+		end)
+	end	
 end
 
 function cmd_aob(arg)
-	sampSendChat("/offban " .. arg .. " 7 " .. " Обход бана ")
-	sampSendChat("/offstats " .. arg)
+	if AdminLevel.v >= 7 then
+		if #arg > 0 then
+			sampSendChat("/offban " .. arg .. " 7 " .. " Обход бана ")
+			sampSendChat("/offstats " .. arg)
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести NICK нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /banakk " .. arg .. " 7 " .. " Обход бана")
+		end)
+	end	
 end
 
 function cmd_apl(arg)
-	sampSendChat("/offban " .. arg .. " 7 " .. " Плагиат никнейма администратора")
+	if AdminLevel.v >= 7 then
+		if #arg > 0 then
+			sampSendChat("/offban " .. arg .. " 7 " .. " Плагиат никнейма администратора")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести NICK нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /banakk " .. arg .. " 7 " .. " Плагиат никнейма администратора")
+		end)
+	end	
 end
 
 function cmd_ach(arg)
-	sampSendChat("/offban " .. arg .. " 7 " .. "  Использование читерского скрипта/ПО ")
-	sampSendChat("/offstats " .. arg)
+	if AdminLevel.v >= 7 then
+		if #arg > 0 then
+			sampSendChat("/offban " .. arg .. " 7 " .. "  Использование читерского скрипта/ПО ")
+			sampSendChat("/offstats " .. arg)
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести NICK нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /banakk " .. arg .. " 7 " .. " Использование читерского скрипта/ПО ")
+		end)
+	end	
 end
 
 function cmd_achi(arg)
-	sampSendChat("/banip " .. arg .. " 7 " .. " ИЧС/ПО (ip) ") 
+	if AdminLevel.v >= 12 then
+		if #arg > 0 then
+			sampSendChat("/banip " .. arg .. " 7 " .. " ИЧС/ПО (ip) ") 
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести IP нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /banip " .. arg .. " 7 " .. " ИЧС/ПО (ip)")
+		end)
+	end	
 end
 
 function cmd_ank(arg)
-	sampSendChat("/banakk " .. arg .. " 7 " .. " Ник, содержащий нецензурщину ")
+	if AdminLevel.v >= 7 then
+		if #arg > 0 then
+			sampSendChat("/banakk " .. arg .. " 7 " .. " Ник, содержащий нецензурщину ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести NICK нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /banakk " .. arg .. " 7 " .. " Ник, содержащий нецензурщину")
+		end)
+	end	
 end
 
 function cmd_agcnk(arg)
-	sampSendChat("/banakk " .. arg .. " 7 " .. " Банда, содержит нецензурщину")
-	sampSendChat("/offstats " .. arg)
+	if AdminLevel.v >= 7 then
+		if #arg > 0 then
+			sampSendChat("/banakk " .. arg .. " 7 " .. " Банда, содержит нецензурщину")
+			sampSendChat("/offstats " .. arg)
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести NICK нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /banakk " .. arg .. " 7 " .. " Банда, содержит нецензурщину")
+		end)
+	end	
 end
 
 function cmd_agcnkip(arg)
-	sampSendChat("/banip " .. arg .. " 7 "  .. " Банда, содержит нецензурщину (ip)")
+	if AdminLevel.v >= 12 then
+		if #arg > 0 then
+			sampSendChat("/banip " .. arg .. " 7 "  .. " Банда, содержит нецензурщину (ip)")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести IP нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /banip " .. arg .. " 7 " .. " Банда, содержащий нецензурщину (ip)")
+		end)
+	end	
 end
 
 function cmd_okpr(arg)
-	sampSendChat("/banakk " .. arg .. " 30 " .. " Оскорбление в сторону проекта. ")
-	sampSendChat("/offstats " .. arg)
+	if AdminLevel.v >= 7 then
+		if #arg > 0 then
+			sampSendChat("/banakk " .. arg .. " 30 " .. " Оскорбление в сторону проекта. ")
+			sampSendChat("/offstats " .. arg)
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести NICK нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /banakk " .. arg .. " 30 " .. " Оскорбление в сторону проекта. ")
+		end)
+	end	
 end
 
 function cmd_okprip(arg)
-	sampSendChat("/banip " .. arg .. " 30 " .. " Оскорбление в сторону проекта. ")
+	if AdminLevel.v >= 12 then
+		if #arg > 0 then
+			sampSendChat("/banip " .. arg .. " 30 " .. " Оскорбление в сторону проекта. ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести IP нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /banip " .. arg .. " 30 " .. " Оскорбление в сторону проекта. ")
+		end)
+	end	
 end
 
 function cmd_svocakk(arg)
-	sampSendChat("/banakk " .. arg .. " 999 " .. " Реклама иного сервера/проекта ")
-	sampSendChat("/offstats " .. arg)
+	if AdminLevel.v >= 7 then
+		if #arg > 0 then
+			sampSendChat("/banakk " .. arg .. " 999 " .. " Реклама иного сервера/проекта ")
+			sampSendChat("/offstats " .. arg)
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести NICK нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /banakk " .. arg .. " 999 " .. " Реклама иного сервера/проекта")
+		end)
+	end	
 end
 
 function cmd_svocip(arg)
-	sampSendChat("/banip " .. arg .. " 999 " .. " Реклама иного сервера/проекта ")
+	if AdminLevel.v >= 12 then
+		if #arg > 0 then
+			sampSendChat("/banip " .. arg .. " 999 " .. " Реклама иного сервера/проекта ")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести IP нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /banip " .. arg .. " 999 " .. " Реклама иного сервера/проекта")
+		end)
+	end	
 end
 
 function cmd_rdsob(arg)
-	sampSendChat("/banakk " .. arg .. " 30 " .. " Обман администрации/игроков")
+	if AdminLevel.v >= 7 then
+		if #arg > 0 then
+			sampSendChat("/banakk " .. arg .. " 30 " .. " Обман администрации/игроков")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести NICK нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /banakk " .. arg .. " 30 " .. " Обман администрации/игроков")
+		end)
+	end	
 end	
 function cmd_rdsip(arg)
-	sampSendChat("/banip " .. arg .. " 30 " .. " Обман администрации/игроков")
+	if AdminLevel.v >= 12 then
+		if #arg > 0 then
+			sampSendChat("/banip " .. arg .. " 30 " .. " Обман администрации/игроков")
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести IP нарушителя! ", -1)
+		end
+	else 
+		lua_thread.create(function()
+		sampAddChatMessage(tag .. " Ваш уровень мал! Отправляю форму.")
+		wait(1000)
+		sampSendChat("/a /banip " .. arg .. " 30 " .. " Обман администрации/игроков")
+		end)
+	end	
 end	
 -------- Функции, относящиеся к банам в оффлайне -----------
 
@@ -2325,7 +3755,12 @@ function cmd_smc(arg)
 end
 
 function cmd_c(arg)
-	sampSendChat("/ans " .. arg .. " Начал(а) работу по вашей жалобе. | Приятной игры на RDS <3")
+	lua_thread.create(function()
+		sampSendChat("/ans " .. arg .. " Начал(а) работу по вашей жалобе. | Приятной игры на RDS <3")
+		wait(1000)
+		sampSetChatInputEnabled(true)
+		sampSetChatInputText("/re " )
+	end)
 end
 
 function cmd_stp(arg)
@@ -2495,6 +3930,11 @@ function cmd_uu(arg)
 	sampSendChat("/ans " .. arg .. " Извиняемся за ошибку, наказание снято. Приятной игры")
 end
 
+function cmd_uj(arg)
+	sampSendChat("/unjail ")
+	sampSendChat("/ans " .. arg .. " Извиняемся за ошибку, наказание снято. Приятной игры")
+end
+
 function cmd_stw(arg)
 	sampSendChat("/setweap " .. arg .. " 38 5000 ")
 end  
@@ -2565,7 +4005,7 @@ function sampev.onServerMessage(color, text)
 	local check_string = string.match(text, "[^%s]+")
 	local check_string_2 = string.match(text, "[^%s]+")
 	local _, check_mat_id, _, check_mat = string.match(text, "(.+)%((.+)%): {(.+)}(.+)")
-	local reasons = {"/mute","/jail","/iban","/ban","/mpwin","/kick","/muteakk","/prisonakk","/banakk"}
+	local reasons = {"/mute","/jail","/iban","/ban","/mpwin","/kick","/muteakk","/prisonakk","/banakk","/aspawn","/banip","/rmute","/unban","/unbanip","/unmute","/unjail"}
 	if lc_text ~= nil then
    		for k, v in ipairs(reasons) do
 			if lc_text:match(v) ~= nil then
@@ -2596,14 +4036,14 @@ function sampev.onServerMessage(color, text)
 
 
 	if setting_items.auto_mute_mat.v then
-		if check_mat ~= nil and check_mat_id ~= nil and not isGamePaused() then
+		if check_mat ~= nil and check_mat_id ~= nil and not isGamePaused() and not isPauseMenuActive() then
 			local string_os = string.split(check_mat, " ")
 			for i, value in ipairs(onscene) do
 				for j, val in ipairs(string_os) do
 					val = val:match("(%P+)")
 					if val ~= nil then
 						if value == string.rlower(val) then
-							sampAddChatMessage(text, color)
+							sampAddChatMessage("{87CEEB}[AutoMute] {FFFF00}" .. text)
 							if not isGamePaused() and not isPauseMenuActive() then
 								sampSendChat("/mute " .. check_mat_id .. " 300 " .. " Нецензурная лексика.")
 								notify.addNotify("{87CEEB}[AdminTool]", 'Обнаружена нецензурная лексика!\nСкрипт выдал мут.\nЗапрещенное слово: {FFFFFF}' .. value .. '\n{FFFFFF}Ник нарушителя: {FFFFFF}' .. sampGetPlayerNickname(tonumber(check_mat_id)), 2, 1, 6)
@@ -2709,10 +4149,13 @@ end
 
 function sampev.onSendChat(message)
 
+
 	local id; trans_cmd = message:match("[^%s]+")
-	if trans_cmd:find("%.(.+)") ~= nil  then
-		trans_cmd = message:match("%.(.+)")
-		sampSendChat("/" .. RusToEng(trans_cmd))
+	if setting_items.translate_cmd.v then
+		if trans_cmd:find("%.(.+)") ~= nil  then
+			trans_cmd = message:match("%.(.+)")
+			sampSendChat("/" .. RusToEng(trans_cmd))
+		end
 	end
 
 end
@@ -3116,6 +4559,7 @@ function imgui.OnDrawFrame()
 			imgui.Text(u8"Помощь по флудам: /toolfd | Помощь по /ans: /toolans")
 			imgui.Text(u8"Нажатие на NumPad0 открывает /ans и первый репорт.")
 			imgui.Text(u8"/u id - размутить игрока; /uu id - размутить и попросить прощение")
+			imgui.Text(u8"/ru id - размут репорта, /uj id - разджайлить игрока")
 			imgui.Text(u8"/stw id - выдать миниган кому-то; /as id - заспавнить игрока")
 			imgui.Text(u8"/wh - включение/выключение ВХ")
 			imgui.Text(u8"/delch - визуальная очистка чата; /cfind - чат-логгер")
@@ -3157,6 +4601,7 @@ function imgui.OnDrawFrame()
 								imgui.Text(u8"/svocakk/ip - бан по акк/ип по рекламе")
 								imgui.Text(u8"/hl - бан за оск в хелпере")
 								imgui.Text(u8"/ob - бан за обход бана")
+								imgui.Text(u8"/menk  - бан за запрет.слова в нике")
 							end
 							imgui.Separator()
 							if imgui.CollapsingHeader(u8"Jail") then  
@@ -3218,6 +4663,7 @@ function imgui.OnDrawFrame()
 								imgui.Text(u8"/aob - бан за обход бана")
 								imgui.Text(u8"/rdsob - бан за обман адм/игроков")
 								imgui.Text(u8"/rdsip - бан по IP за обман адм/игроков")
+								imgui.Text(u8"/amenk - бан за запрет.слова в нике")
 							end
 							imgui.Separator()
 							if imgui.CollapsingHeader(u8"Jail") then  
@@ -3361,7 +4807,7 @@ function imgui.OnDrawFrame()
 				if imgui.Button(u8'Мероприятия "Прятки"') then
 					lua_thread.create(function()
 						setCharCoordinates(PLAYER_PED,-2315,1545,18)
-						wait(1000)
+						wait(2500)
 						sampSendChat("/mess 10 Уважаемые игроки! Проходит мероприятие: Прятки. Желающие /tpmp")
 						sampSendChat("/mp")
 						sampSendDialogResponse(5343, 1, 0)
@@ -3378,7 +4824,7 @@ function imgui.OnDrawFrame()
 				if imgui.Button(u8'Мероприятие "Король дигла"') then
 					lua_thread.create(function()
 						setCharCoordinates(PLAYER_PED,1753,2072,1955)
-						wait(1000)
+						wait(2500)
 						sampSendChat("/mess 10 Уважаемые игроки! Проходит мероприятие: Король Дигла. Желающие /tpmp")
 						sampSendChat("/mp")
 						sampSendDialogResponse(5343, 1, 0)
@@ -3395,7 +4841,7 @@ function imgui.OnDrawFrame()
 				if imgui.Button(u8'Мероприятие "Русская рулетка"') then
 					lua_thread.create(function()
 						setCharCoordinates(PLAYER_PED,1973,-978,1371)
-						wait(1000)
+						wait(2500)
 						sampSendChat("/mess 10 Уважаемые игроки! Проходит мероприятие: Русская рулетка. Желающие /tpmp")
 						sampSendChat("/mp")
 						sampSendDialogResponse(5343, 1, 0)
@@ -3412,7 +4858,7 @@ function imgui.OnDrawFrame()
 				if imgui.Button(u8'Мероприятие "Поливалка"') then
 					lua_thread.create(function()
 						setCharCoordinates(PLAYER_PED,-2304,872,59)
-						wait(1000)
+						wait(2500)
 						sampSendChat("/mess 10 Уважаемые игроки! Проходит мероприятие: Поливалка. Желающие: /tpmp")
 						sampSendChat("/mp")
 						sampSendDialogResponse(5343, 1, 0)
@@ -3430,7 +4876,7 @@ function imgui.OnDrawFrame()
 				if imgui.Button(u8'Мероприятие "Крылья смерти"') then
 					lua_thread.create(function()
 						setCharCoordinates(PLAYER_PED,2027,-2434,13)
-						wait(1000)
+						wait(2500)
 						sampSendChat("/mess 10 Уважаемые игроки! Проходит мероприятие: Крылья смерти. Желающие: /tpmp")
 						sampSendChat("/mp")
 						sampSendDialogResponse(5343, 1, 0)
@@ -3460,7 +4906,7 @@ function imgui.OnDrawFrame()
 				if imgui.Button(u8'Мероприятие "Живи или умри') then  
 					lua_thread.create(function()
 						setCharCoordinates(PLAYER_PED,1547,-1359,329)
-						wait(1000)
+						wait(2500)
 						sampSendChat("/mess 10 Уважаемые игроки! Проходит мероприятие: Живи или умри. Желающие: /tpmp")
 						sampSendChat("/mp")
 						sampSendDialogResponse(5343, 1, 0)
@@ -3479,7 +4925,7 @@ function imgui.OnDrawFrame()
 				if imgui.Button(u8'Мероприятие "Развлечение"') then  
 					lua_thread.create(function()
 						setCharCoordinates(PLAYER_PED,626,-1891,3)
-						wait(1000)
+						wait(2500)
 						sampSendChat("/mess 10 Уважаемые игроки! Проходит мероприятие: Развлечение. Желающие: /tpmp")
 						sampSendChat("/mp")
 						sampSendDialogResponse(5343, 1, 0)
@@ -3950,85 +5396,108 @@ function imgui.OnDrawFrame()
 			-- Блок four_window_state отвечает за интерфейс по /ans
 
 			if five_window_state.v then
+				if AdminLevel.v >= 15 then
+					set_custom_theme()
 
-				set_custom_theme()
+					imgui.SetNextWindowSize(imgui.ImVec2(600, 350), imgui.Cond.FirstUseEver)
+					imgui.SetNextWindowPos(imgui.ImVec2((sw1 / 4.5), sh1 / 4), imgui.Cond.FirstUseEver, imgui.ImVec2(0.5, 0.5))
 
-				imgui.SetNextWindowSize(imgui.ImVec2(600, 350), imgui.Cond.FirstUseEver)
-				imgui.SetNextWindowPos(imgui.ImVec2((sw1 / 4.5), sh1 / 4), imgui.Cond.FirstUseEver, imgui.ImVec2(0.5, 0.5))
+					imgui.ShowCursor = true
+					imgui.LockPlayer = true
 
-				imgui.ShowCursor = true
-				imgui.LockPlayer = true
-
-				imgui.Begin(u8'Панель старших администраторов', five_window_state) 
-				imgui.Text(u8"Данный интерфейс предназначен для обеспечения простой работы..")
-				imgui.Text(u8"..старших администраторов.")
-					imgui.BeginChild('Основание по снятием, восстановлением', imgui.ImVec2(300, 200), true)
-						if imgui.CollapsingHeader(u8"Для снятие администраторов и т.д.") then
-							imgui.Text(u8"Введите ник для того, чтобы снять админа")
-							imgui.InputText(u8'Nick and sniat', text_buffer_sniat)
-							if imgui.Button(u8'Вывод') then 
-								sampSendChat("/makeadmin " .. u8:decode(text_buffer_sniat.v) .. " 0 ")
-								notify.addNotify("{87CEEB}[AdminTool]", "Вы сняли администратора с ником:\n " .. u8:decode(text_buffer_sniat.v) .. "", 2, 1, 6)
+					imgui.Begin(u8'Панель старших администраторов', five_window_state) 
+					imgui.Text(u8"Данный интерфейс предназначен для обеспечения простой работы..")
+					imgui.Text(u8"..старших администраторов.")
+						imgui.BeginChild('Основание по снятием, восстановлением', imgui.ImVec2(300, 200), true)
+							if imgui.CollapsingHeader(u8"Для снятие администраторов и т.д.") then
+								imgui.Text(u8"Введите ник для того, чтобы снять админа")
+								imgui.InputText(u8'Nick and sniat', text_buffer_sniat)
+								if imgui.Button(u8'Вывод') then 
+									sampSendChat("/makeadmin " .. u8:decode(text_buffer_sniat.v) .. " 0 ")
+									notify.addNotify("{87CEEB}[AdminTool]", "Вы сняли администратора с ником:\n " .. u8:decode(text_buffer_sniat.v) .. "", 2, 1, 6)
+								end 
+								imgui.Separator()
+								imgui.Text(u8"Введите ID, чтобы тихо кикнуть адм/игрока")
+								imgui.InputText(u8'ID and kick', text_buffer_kick)
+								if imgui.Button(u8"Кик") then
+									sampSendChat("/skick " .. text_buffer_kick.v)
+									notify.addNotify("{87CEEB}[AdminTool]", "Вы тихо кикнули игрока/адм ID: " .. u8:decode(text_buffer_kick.v) .. "", 2, 1, 6)
+								end
+							end
+							if imgui.CollapsingHeader(u8'Для того, чтобы поставить администратора') then 
+								imgui.Text(u8"Для использование, необходимо выбрать LVL,")
+								imgui.Text(u8"затем ввести ник, нажать на кнопку")
+								imgui.Text(u8"и ему выдается LVL")
+								imgui.PushItemWidth(100)
+								imgui.Combo(u8"Выбор LVL", combo_select, arr_str, #arr_str)
+								imgui.PushItemWidth(175)
+								imgui.InputText(u8"Введите ник", text_buffer_adm)
+								if imgui.Button(u8"Поставить") then 
+									sampSendChat("/makeadmin " .. u8:decode(text_buffer_adm.v) .. " " .. u8:decode(arr_str[combo_select.v + 1]))
+									notify.addNotify("{87CEEB}[AdminTool]", "Вы поставили администратора на LVL:" .. u8:decode(arr_str[combo_select.v +1]) .. "\nNick: " .. u8:decode(text_buffer_adm.v), 2, 1, 6)
+								end	
 							end 
+							if imgui.CollapsingHeader(u8"Разбанить игрока") then  
+								imgui.Text(u8"Чтобы разбанить игрока, введите его ник")
+								imgui.Text(u8"И после этого нажмите на кнопку.")
+								imgui.InputText(u8"Введите ник", text_buffer_ban)
+								if imgui.Button(u8"Разбан") then  
+									sampSendChat("/iunban " .. u8:decode(text_buffer_ban.v))
+									notify.addNotify("{87CEEB}[AdminTool]", "Вы разбанили игрока.\nNick: " .. u8:decode(text_buffer_ban.v), 2, 1, 6)
+								end
+							end
+						imgui.EndChild()
+						imgui.SameLine()
+						imgui.BeginChild('Остальное', imgui.ImVec2(270, 200), true)
+							if imgui.CollapsingHeader(u8"Команды для старших администраторов") then
+								imgui.Text(u8"/al id - флуд про /alogin администратору")
+								imgui.Text(u8"/dpv - проверка на читы")
+								imgui.Text(u8"/arep - призыв админов в /a чат \nдля ответа на репорт")
+							end
 							imgui.Separator()
-							imgui.Text(u8"Введите ID, чтобы тихо кикнуть адм/игрока")
-							imgui.InputText(u8'ID and kick', text_buffer_kick)
-							if imgui.Button(u8"Кик") then
-								sampSendChat("/skick " .. text_buffer_kick.v)
-								notify.addNotify("{87CEEB}[AdminTool]", "Вы тихо кикнули игрока/адм ID: " .. u8:decode(text_buffer_kick.v) .. "", 2, 1, 6)
+							imgui.Text(u8"Актив вспом.команд (/tr, /ears)")
+							if imgui.Button(u8"Клик") then
+								sampSendChat("/tr")
+								sampSendChat("/ears")
+								notify.addNotify("{87CEEB}[AdminTool]", 'Вы включили просмотр /pm, \nи ворование репортов', 2, 1, 6)
 							end
-						end
-						if imgui.CollapsingHeader(u8'Для того, чтобы поставить администратора') then 
-							imgui.Text(u8"Для использование, необходимо выбрать LVL,")
-							imgui.Text(u8"затем ввести ник, нажать на кнопку")
-							imgui.Text(u8"и ему выдается LVL")
-							imgui.PushItemWidth(100)
-							imgui.Combo(u8"Выбор LVL", combo_select, arr_str, #arr_str)
-							imgui.PushItemWidth(175)
-							imgui.InputText(u8"Введите ник", text_buffer_adm)
-							if imgui.Button(u8"Поставить") then 
-								sampSendChat("/makeadmin " .. u8:decode(text_buffer_adm.v) .. " " .. u8:decode(arr_str[combo_select.v + 1]))
-								notify.addNotify("{87CEEB}[AdminTool]", "Вы поставили администратора на LVL:" .. u8:decode(arr_str[combo_select.v +1]) .. "\nNick: " .. u8:decode(text_buffer_adm.v), 2, 1, 6)
-							end	
-						end 
-					imgui.EndChild()
-					imgui.SameLine()
-					imgui.BeginChild('Остальное', imgui.ImVec2(270, 200), true)
-						if imgui.CollapsingHeader(u8"Команды для старших администраторов") then
-							imgui.Text(u8"/al id - флуд про /alogin администратору")
-							imgui.Text(u8"/dpv - проверка на читы")
-							imgui.Text(u8"/arep - призыв админов в /a чат \nдля ответа на репорт")
-						end
-						imgui.Separator()
-						imgui.Text(u8"Актив вспом.команд (/tr, /ears)")
-						if imgui.Button(u8"Клик") then
-							sampSendChat("/tr")
-							sampSendChat("/ears")
-							notify.addNotify("{87CEEB}[AdminTool]", 'Вы включили просмотр /pm, \nи ворование репортов', 2, 1, 6)
-						end
-					imgui.EndChild()
-					imgui.BeginChild('Префиксы', imgui.ImVec2(400, 200), true)
-						if imgui.CollapsingHeader(u8"Ввод цветов для префиксов") then  
-							imgui.InputText(u8"Префикс Мл.Адм", prefix_Madm)
-							imgui.InputText(u8"Префикс Адм", prefix_adm)
-							imgui.InputText(u8"Префикс Ст.Адм", prefix_STadm)
-							imgui.InputText(u8"Префикс ЗГА", prefix_ZGAadm)
-							imgui.InputText(u8"Префикс ГА", prefix_GAadm)
-							if imgui.Button(u8"Сохранить префиксы") then
-								config.setting.prefix_adm = prefix_adm.v
-								config.setting.prefix_Madm = prefix_Madm.v
-								config.setting.prefix_STadm = prefix_STadm.v
-								config.setting.prefix_ZGAadm = prefix_ZGAadm.v
-								config.setting.prefix_GAadm = prefix_GAadm.v
-								inicfg.save(config, directIni)
-								notify.addNotify("{87CEEB}[AdminTool]", 'Сохранение прошло успешно.', 2, 1, 6)
+						imgui.EndChild()
+						imgui.BeginChild('Префиксы', imgui.ImVec2(400, 200), true)
+							if imgui.CollapsingHeader(u8"Ввод цветов для префиксов") then  
+								imgui.InputText(u8"Префикс Мл.Адм", prefix_Madm)
+								imgui.InputText(u8"Префикс Адм", prefix_adm)
+								imgui.InputText(u8"Префикс Ст.Адм", prefix_STadm)
+								imgui.InputText(u8"Префикс ЗГА", prefix_ZGAadm)
+								imgui.InputText(u8"Префикс ГА", prefix_GAadm)
+								if imgui.Button(u8"Сохранить префиксы") then
+									config.setting.prefix_adm = prefix_adm.v
+									config.setting.prefix_Madm = prefix_Madm.v
+									config.setting.prefix_STadm = prefix_STadm.v
+									config.setting.prefix_ZGAadm = prefix_ZGAadm.v
+									config.setting.prefix_GAadm = prefix_GAadm.v
+									inicfg.save(config, directIni)
+									notify.addNotify("{87CEEB}[AdminTool]", 'Сохранение прошло успешно.', 2, 1, 6)
+								end
 							end
-						end
-						imgui.Text(u8"/pradm1 id - префикс Мл.Админ | /pradm2 id - префикс Админ")
-						imgui.Text(u8"/pradm3 id - префикс Ст.Админ | /pradm4 id - префикс ЗГА")
-						imgui.Text(u8"/pradm5 id - префикс ГА")
-					imgui.EndChild()
-				imgui.End()
+							imgui.Text(u8"/pradm1 id - префикс Мл.Админ | /pradm2 id - префикс Админ")
+							imgui.Text(u8"/pradm3 id - префикс Ст.Админ | /pradm4 id - префикс ЗГА")
+							imgui.Text(u8"/pradm5 id - префикс ГА")
+						imgui.EndChild()
+					imgui.End()
+				else
+					imgui.SetNextWindowSize(imgui.ImVec2(600, 350), imgui.Cond.FirstUseEver)
+					imgui.SetNextWindowPos(imgui.ImVec2((sw1 / 4.5), sh1 / 4), imgui.Cond.FirstUseEver, imgui.ImVec2(0.5, 0.5))
+
+					imgui.ShowCursor = true
+					imgui.LockPlayer = true
+					
+					imgui.Begin(u8'Панель старших администраторов', five_window_state) 
+
+
+					imgui.Text(u8"Ваш уровень мал. Панель доступна только старшим администраторам.")
+
+					imgui.End()
+				end
 			end
  			-- Блок five_window_state отвечает за панель старших администраторов
 
@@ -4043,6 +5512,86 @@ function imgui.OnDrawFrame()
 				imgui.LockPlayer = true
 
 				imgui.Begin(u8"Настройки AdminTool", six_window_state)
+				if imgui.CollapsingHeader(u8"Административный уровень") then  
+					if imgui.Combo(u8'Админ уровень', AdminLevel, arr_alvl) then
+							if AdminLevel.v == 0 then
+							config.setting.AdminLevel = AdminLevel.v
+							inicfg.save(config, directIni)
+							end
+							if AdminLevel.v == 1 then
+							config.setting.AdminLevel = AdminLevel.v
+							inicfg.save(config, directIni)
+							end
+							if AdminLevel.v == 2 then
+							config.setting.AdminLevel = AdminLevel.v
+							inicfg.save(config, directIni)
+							end
+							if AdminLevel.v == 3 then
+							config.setting.AdminLevel = AdminLevel.v
+							inicfg.save(config, directIni)
+							end
+							if AdminLevel.v == 4 then
+							config.setting.AdminLevel = AdminLevel.v
+							inicfg.save(config, directIni)
+							end
+							if AdminLevel.v == 5 then
+							config.setting.AdminLevel = AdminLevel.v
+							inicfg.save(config, directIni)
+							end
+							if AdminLevel.v == 6 then
+							config.setting.AdminLevel = AdminLevel.v
+							inicfg.save(config, directIni)
+							end
+							if AdminLevel.v == 7 then
+							config.setting.AdminLevel = AdminLevel.v
+							inicfg.save(config, directIni)
+							end
+							if AdminLevel.v == 8 then
+							config.setting.AdminLevel = AdminLevel.v
+							inicfg.save(config, directIni)
+							end
+							if AdminLevel.v == 9 then
+							config.setting.AdminLevel = AdminLevel.v
+							inicfg.save(config, directIni)
+							end
+							if AdminLevel.v == 10 then
+							config.setting.AdminLevel = AdminLevel.v
+							inicfg.save(config, directIni)
+							end
+							if AdminLevel.v == 11 then
+							config.setting.AdminLevel = AdminLevel.v
+							inicfg.save(config, directIni)
+							end
+							if AdminLevel.v == 12 then
+							config.setting.AdminLevel = AdminLevel.v
+							inicfg.save(config, directIni)
+							end
+							if AdminLevel.v == 13 then
+							config.setting.AdminLevel = AdminLevel.v
+							inicfg.save(config, directIni)
+							end
+							if AdminLevel.v == 14 then
+							config.setting.AdminLevel = AdminLevel.v
+							inicfg.save(config, directIni)
+							end
+							if AdminLevel.v == 15 then
+							config.setting.AdminLevel = AdminLevel.v
+							inicfg.save(config, directIni)
+							end
+							if AdminLevel.v == 16 then
+							config.setting.AdminLevel = AdminLevel.v
+							inicfg.save(config, directIni)
+							end
+							if AdminLevel.v == 17 then
+								config.setting.AdminLevel = AdminLevel.v
+								inicfg.save(config, directIni)
+							end
+							if AdminLevel.v == 18 then
+								config.setting.AdminLevel = AdminLevel.v
+								inicfg.save(config, directIni)
+							end
+					end
+				end
 				imgui.BeginChild('Админчат', imgui.ImVec2(400, 60), true)
 					imgui.Text(u8"Административный чат")
 					imgui.SameLine()
@@ -4074,6 +5623,10 @@ function imgui.OnDrawFrame()
 				imgui.SameLine()
 				imgui.SetCursorPosX(imgui.GetWindowWidth() - 35)
 				imgui.ToggleButton("##5", setting_items.auto_mute_mat)
+				imgui.Text(u8"Перевод команд")
+				imgui.SameLine()
+				imgui.SetCursorPosX(imgui.GetWindowWidth() - 35)
+				imgui.ToggleButton("##6", setting_items.translate_cmd)
 				imgui.Separator()
 					if imgui.Button(u8"Привязка клавиш", btn_size) then  
 						settings_keys.v = not settings_keys.v
@@ -4106,7 +5659,9 @@ function imgui.OnDrawFrame()
 					config.setting.ATAlogin = setting_items.ATAlogin.v
 					config.setting.ranremenu = setting_items.ranremenu.v
 					config.setting.anti_cheat = setting_items.anti_cheat.v
+					config.setting.AdminLevel = AdminLevel.v
 					config.setting.auto_mute_mat = setting_items.auto_mute_mat.v
+					config.setting.translate_cmd = setting_items.translate_cmd.v 
 					config.setting.ATAdminPass = ATAdminPass.v
 					inicfg.save(config, directIni)
 					notify.addNotify("{87CEEB}[AdminTool]", 'Сохранение прошло успешно.', 2, 1, 6)
@@ -4456,6 +6011,16 @@ function imgui.OnDrawFrame()
 						end
 						imgui.SameLine()
 						imgui.TextQuestion("(?)", u8"Показ Reg/Last IP, /offstats\nКликабельно")
+						if imgui.Button(u8"Оружия игрока") then  
+							sampSendChat("/iwep " .. control_recon_playerid)
+						end 
+						imgui.SameLine()
+						imgui.TextQuestion("(?)", u8"Показ ганов игрока, /iwep\nКликабельно")
+						if imgui.Button(u8"Отобрать оружие") then  
+							sampSendChat("/tweap " .. control_recon_playerid)
+						end  
+						imgui.SameLine()
+						imgui.TextQuestion("(?)", u8"/tweap\nКликабельно")
 						imgui.Separator()
 						imgui.Text(u8"Игроки рядом:")
 						local playerid_to_stream = playersToStreamZone()
@@ -4589,4 +6154,17 @@ function imgui.OnDrawFrame()
 				end
 			end
 			
+end
+
+function sampev.onPlayerDeathNotification(killerId, killedId, reason)
+	local kill = ffi.cast('struct stKillInfo*', sampGetKillInfoPtr())
+	local _, myid = sampGetPlayerIdByCharHandle(playerPed)
+
+	local n_killer = ( sampIsPlayerConnected(killerId) or killerId == myid ) and sampGetPlayerNickname(killerId) or nil
+	local n_killed = ( sampIsPlayerConnected(killedId) or killedId == myid ) and sampGetPlayerNickname(killedId) or nil
+	lua_thread.create(function()
+		wait(0)
+		if n_killer then kill.killEntry[4].szKiller = ffi.new('char[25]', ( n_killer .. '[' .. killerId .. ']' ):sub(1, 24) ) end
+		if n_killed then kill.killEntry[4].szVictim = ffi.new('char[25]', ( n_killed .. '[' .. killedId .. ']' ):sub(1, 24) ) end
+	end)
 end
