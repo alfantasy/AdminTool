@@ -350,8 +350,9 @@ function main()
         if atlibs.isKeysDown(atlibs.strToIdKeys(ATMainConfig.keys.OpenReport)) and not sampIsDialogActive() and not sampIsChatInputActive() then  
 			lua_thread.create(function()
 				sampSendChat("/ans ")
-				wait(200)
+
 				sampSendDialogResponse(2348, 1, 0)
+				wait(200)
 			end)
 		end
 
