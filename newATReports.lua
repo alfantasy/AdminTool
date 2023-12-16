@@ -15,6 +15,8 @@ local fai = require "fAwesome5" -- работа с иконками Font Awesome 5
 local fa = require 'faicons' -- работа с иконками Font Awesome 4
 -- ## Регистрация библиотек, плагинов и аддонов ## --
 
+-- ## Коммент ## --
+
 -- ## Регистрация уведомлений ## --
 function showNotification(text)
 	notf.addNotify(ntag, text, 2, 1, 6)
