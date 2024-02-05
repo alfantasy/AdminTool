@@ -4,7 +4,7 @@ script_author('alfantasyz')
 
 -- ## Регистрация библиотек, плагинов и аддонов ## --
 require "lib.moonloader"
-local fflags = require('moonloader').font_flag -- работа с флагами для рендера текста
+local fflags = require("moonloader").font_flag -- работа с флагами для рендера текста
 local dlstatus = require('moonloader').download_status -- работа с скачиванием различных файлов при помощи URL
 local inicfg = require 'inicfg' -- работа с INI файлами
 local sampev = require 'lib.samp.events' -- работа с ивентами и пакетами SAMP
@@ -16,9 +16,11 @@ local scoreboard = import (getWorkingDirectory() .. '\\lib\\scoreboard.lua') -- 
 local notf_res, notf = pcall(import, 'lib/imgui_notf.lua')  -- плагин уведомлений
 local ffi = require 'ffi' -- интеграция кодов, написанных на C++, специальная структурированная библиотека
 
-local events_res, events = pcall(import, "module/plugin/events.lua") -- импорт специального плагина (скрипта), где будет содержаться функции для созданий и работе с мероприятиями
-local other_res, pother = pcall(import, "module/plugins/other.lua") -- импорт специального плагина, где будут содержаться сторонние, НЕЗАВИСИМЫЕ от АТ плагины
-
+local events_res, events = pcall(import, "events.lua") -- импорт специального плагина (скрипта), где будет содержаться функции для созданий и работе с мероприятиями
+local other_res, pother = pcall(import, "module/plugins/other.lua") -- импорт специального плагина (скрипта), где будут содержаться сторонние, НЕЗАВИСИМЫЕ от АТ плагины
+local automute_res, automute = pcall(import, "module/plugins/automute.lua") -- импорт специального плагина (скрипта), где содержаться функции для автомута
+local plugins_main_res, plugin = pcall(import, "module/plugins/plugin.lua") -- импорт специального плагина (скрипта), где содержаться функции для рендера различных строк чата
+ 
 local fai = require "fAwesome5" -- работа с иконками Font Awesome 5
 local fa = require 'faicons' -- работа с иконками Font Awesome 4
 -- ## Регистрация библиотек, плагинов и аддонов ## --
@@ -134,10 +136,14 @@ local configReports = inicfg.load({
 local direct = "AdminTool\\settings.ini"
 local config = inicfg.load({
     main = {
+		aclist_alogin = false,
+		ears_alogin = false,
+		agm_alogin = false,
         push_report = false, 
         auto_login = false, 
         custom_tab = false, 
         render_admins = false,
+		render_admins_imgui = false,
         password = "",
         recon_menu = false, 
         auto_online = false,
@@ -168,11 +174,15 @@ end
 
 local elm = {
     boolean = {
+		aclist_alogin = imgui.ImBool(config.main.aclist_alogin),
+		ears_alogin = imgui.ImBool(config.main.ears_alogin),
+		agm_alogin = imgui.ImBool(config.main.agm_alogin),
         push_report = imgui.ImBool(config.main.push_report),
         auto_login = imgui.ImBool(config.main.auto_login),
         custom_tab = imgui.ImBool(config.main.custom_tab),
         recon_menu = imgui.ImBool(config.main.recon_menu),
         render_admins = imgui.ImBool(config.main.render_admins),
+		render_admins_imgui = imgui.ImBool(config.main.render_admins_imgui),
         auto_online = imgui.ImBool(config.main.auto_online),
     },
     int = {
@@ -204,6 +214,8 @@ local elm = {
 local sw, sh = getScreenResolution()
 local ATMenu = imgui.ImBool(false)
 local ATRecon = imgui.ImBool(false)
+local ATAdmins = imgui.ImBool(false)
+local ATPlayerStream = imgui.ImBool(false)
 local menuSelect = 0 
 local show_password = false
 
@@ -226,8 +238,6 @@ end
 imgui.ToggleButton = require('imgui_addons').ToggleButton
 imgui.Spinner = require('imgui_addons').Spinner
 imgui.BufferingBar = require('imgui_addons').BufferingBar
-imgui.TextQuestion = require('imgui_addons').TextQuestion
-imgui.CenterText = require('imgui_addons').CenterText
 imgui.Tooltip = require('imgui_addons').Tooltip
 
 local colorsImGui = {
@@ -252,7 +262,7 @@ local set_color_float3 = imgui.ImFloat3(1.0, 1.0, 1.0)
 -- ## Блок переменных связанных с MoonImGUI ## --
 
 -- ## Блок переменных связанных с кастомным реконом ## --
-ids_recon = {437, 2056, 144, 146, 141, 2050, 155, 153, 152, 156, 154, 160, 157, 179, 165, 159, 164, 162, 161, 180, 178, 163, 169, 181, 161, 166, 170, 168, 174, 182, 172, 171, 175, 173, 150, 184, 147, 148, 151, 149, 142, 143, 184, 177, 145, 158, 167, 183, 176}
+local ids_recon = {437, 2056, 144, 146, 141, 2050, 155, 153, 152, 156, 154, 160, 157, 179, 165, 159, 164, 162, 161, 180, 178, 163, 169, 181, 161, 166, 170, 168, 174, 182, 172, 171, 175, 173, 150, 184, 147, 148, 151, 149, 142, 143, 184, 177, 145, 158, 167, 183, 176}
 local info_to_player = {}
 local recon_info = { "Здоровье: ", "Броня: ", "ХП машины: ", "Скорость: ", "Пинг: ", "Патроны: ", "Выстрел: ", "Тайминг выстрела: ", "Время в АФК: ", "P.Loss: ", "Уровень VIP: ", "Пассивный режим: ", "Турбо-режим: ", "Коллизия: "}
 local control_to_player = false
@@ -312,29 +322,16 @@ function main()
 
 	-- ## Регистрация WaterMark текста ## --
 
-
-
     -- ## Регистрация основных команд для прямого взаимодействия с АТ ## --
     sampRegisterChatCommand('tool', function()
         ATMenu.v = not ATMenu.v 
         imgui.Process = ATMenu.v
     end)
+	sampRegisterChatCommand('rtl', function()
+		ATPlayerStream.v = not ATPlayerStream.v  
+		imgui.Process = ATPlayerStream.v
+	end)
     -- ## Регистрация основных команд для прямого взаимодействия с АТ ## --
-
-    -- ## Регистрация команд связанных с выдачей наказаний мута ## --
-    sampRegisterChatCommand("fd", cmd_flood)
-    sampRegisterChatCommand("po", cmd_popr)
-    sampRegisterChatCommand("nm", cmd_neadekvat)
-    sampRegisterChatCommand("m", cmd_m)
-    sampRegisterChatCommand("ok", cmd_ok)
-	sampRegisterChatCommand("oa", cmd_oa)
-	sampRegisterChatCommand("kl", cmd_kl)
-	sampRegisterChatCommand("up", cmd_up)
-	sampRegisterChatCommand("or", cmd_or)
-    sampRegisterChatCommand("ia", cmd_ia)
-	sampRegisterChatCommand("rz", cmd_rz)
-	sampRegisterChatCommand("zs", cmd_zs)
-    -- ## Регистрация команд связанных с выдачей наказаний мута ## --
 
     -- ## Регистрация команд связанные с выдачей репорт-наказаний мута ## --
     sampRegisterChatCommand("cp", cmd_cpfd)
@@ -403,7 +400,6 @@ function main()
 
     -- ## Регистрация команд связанные с выдачей наказаний бана ## --
 	sampRegisterChatCommand("pl", cmd_pl)
-	sampRegisterChatCommand("ch", cmd_ch)
 	sampRegisterChatCommand("ob", cmd_ob)
 	sampRegisterChatCommand("hl", cmd_hl)
 	sampRegisterChatCommand("nk", cmd_nk)
@@ -484,6 +480,16 @@ function main()
         if control_spawn and elm.boolean.auto_login.v then  
             wait(10000)
             sampSendChat("/alogin " .. u8:decode(elm.input.password.v))
+			wait(100)
+			if elm.boolean.aclist_alogin.v then  
+				sampSendChat("/aclist")
+			end 
+			if elm.boolean.ears_alogin.v then  
+				sampSendChat("/ears")
+			end  
+			if elm.boolean.agm_alogin.v then  
+				sampSendChat("/agm")
+			end
             control_spawn = false
         end
 
@@ -504,7 +510,7 @@ function main()
             sampSendClickTextdraw(156)
         end
 
-        if atlibs.isKeysDown(atlibs.strToIdKeys("Q")) and ATRecon.v then  
+        if atlibs.isKeysDown(atlibs.strToIdKeys("Q")) and ATRecon.v and control_to_player == true then  
             sampSendChat("/reoff " )
             control_to_player = false
             imgui.ShowCursor = false 
@@ -514,13 +520,31 @@ function main()
             ATMenu.v = not ATMenu.v 
             imgui.Process = ATMenu.v
         end
+		
+		if control_to_player then  
+			load_recon:run()
+			ATRecon.v = true  
+			imgui.Process = true  
+		else 
+			ATRecon.v = false	
+		end
 
-        if not ATMenu.v and not ATRecon.v then  
+		if elm.boolean.render_admins_imgui.v then  
+			ATAdmins.v = true  
+			imgui.ShowCursor = false  
+		end
+
+		if not sampIsPlayerConnected(recon_id) then
+			ATRecon.v = false
+			recon_id = -1
+		end
+
+        if not ATMenu.v and not ATRecon.v and not ATAdmins.v and not ATPlayerStream.v then  
             imgui.Process = false  
             imgui.ShowCursor = false 
         end 
 
-        if sampGetDialogCaption() == "{ff8587}Администрация проекта (онлайн)" and elm.boolean.render_admins.v then 
+        if sampGetDialogCaption() == "{ff8587}Администрация проекта (онлайн)" and (elm.boolean.render_admins.v or elm.boolean.render_admins_imgui.v) then 
 			sampCloseCurrentDialogWithButton(0)
 		end	 
 
@@ -613,6 +637,7 @@ function sampev.onServerMessage(color, text)
 
     if text:find("Игрок не в сети") then  
         control_to_player = false 
+		sampSendChat("/reoff")
         return true
     end
     if text:find("Вы наблюдаете за (.+)") then  
@@ -621,7 +646,7 @@ function sampev.onServerMessage(color, text)
     end
     if text:find("%[A%] Администратор (.+)%[(%d+)%] %(%d+ level%) авторизовался в админ панели") or text:find("%[A%-(%d+)%] (.+) отключился") then 
 		sampAddChatMessage('{8B8B8B}' .. text, -1)
-		if elm.boolean.render_admins.v then 
+		if elm.boolean.render_admins.v or elm.boolean.render_admins_imgui.v then 
 			sampSendChat("/admins ")
 		end	
 	return true 
@@ -630,25 +655,25 @@ function sampev.onServerMessage(color, text)
 		if elm.boolean.auto_login.v then 
         	control_spawn = true
 		end
-    return true
+    	return true
     end
     if text:find("Вы уже авторизованы как администратор") then  
 		if elm.boolean.auto_login.v then 
 			control_spawn = false   
 		end
-    return true
+    	return true
     end
 	if text:find("Необходимо авторизоваться!") then  
 		if elm.boolean.auto_login.v then  
 			control_spawn = true  
 		end  
-	return true  
+		return true  
 	end 
-    if check_string == 'Жалоба' then  
+    if check_string == 'Жалоба' and not isGamePaused() and not isGameWindowForeground() then  
         if elm.boolean.push_report.v then 
             showNotification("Поступил новый репорт.")
         end 
-    return true
+    	return true
     end
 end
 
@@ -767,102 +792,6 @@ function cmd_popr(arg)
         sampAddChatMessage(tag .. " Используйте: /po [IDPlayer] [~Множитель (от 2 до 10)]", -1)
 	end
 end
-
-function cmd_m(arg)
-	if #arg > 0 then
-		sampSendChat("/mute " .. arg .. " 300 " .. " Нецензурная лексика. ")
-	else 
-		sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
-	end
-end
-
-function cmd_ia(arg)
-	if #arg > 0 then
-		sampSendChat("/mute " ..  arg .. " 2500 " .. " Выдача себя за администрацию ")
-	else 
-		sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
-	end
-end
-
-function cmd_kl(arg)
-	if #arg > 0 then
-		sampSendChat("/mute " .. arg .. " 3000 " .. " Клевета на администрацию ")
-	else 
-		sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
-	end
-end
-
-function cmd_oa(arg)
-	if #arg > 0 then
-		sampSendChat("/mute " .. arg .. " 2500 " .. " Оск/Униж.администрации  ")
-	else 
-		sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
-	end
-end
-
-function cmd_ok(arg)
-	if #arg > 0 then
-		sampSendChat("/mute " .. arg .. " 400 " .. " Оскорбление/Унижение. ")
-	else 
-		sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
-	end
-end
-
-function cmd_or(arg)
-	if #arg > 0 then
-		sampSendChat("/mute " .. arg .. " 5000 " .. " Оскорбление/Упоминание родных ")
-	else 
-		sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
-	end
-end
-
-function cmd_neadekvat(arg)
-    if arg:find('(.+) (.+)') then
-        arg1, arg2 = arg:match('(.+) (.+)')
-        if arg2 == '2' then
-		    sampSendChat("/mute " .. arg1 .. " 1800 " .. " Неадекватное поведение x2")
-        elseif arg2 == '3' then  
-            sampSendChat("/mute " .. arg1 .. " 3000 " .. " Неадекватное поведение x3")
-        elseif arg2 == '1' then  
-            sampSendChat("/mute " .. arg1 .. " 900 " .. " Неадекватное поведение")
-        end
-	elseif arg:find('(.+)') then
-        sampSendChat("/mute " .. arg .. " 900 " .. " Неадекватное поведение")
-    else
-        sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
-        sampAddChatMessage(tag .. " Используйте: /nm [IDPlayer] [~Множитель (от 2-3)]", -1)
-	end
-end
-
-function cmd_up(arg)
-	lua_thread.create(function()
-		if #arg > 0 then
-			sampSendChat("/mute " .. arg .. " 1000 " .. " Упоминание сторонних проектов ")
-			wait(1000)
-			sampSendChat("/cc ")
-			sampAddChatMessage(tag .. "Очистка чата связи с выдачей мута.")
-		else 
-			sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
-		end
-	end)
-end
-
-function cmd_rz(arg)
-	if #arg > 0 then
-		sampSendChat("/mute " .. arg .. " 5000 " .. " Розжиг межнац. розни")
-	else 
-		sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
-	end
-end	
-
-function cmd_zs(arg)
-	if #arg > 0 then 
-		sampSendChat("/mute " .. arg .. " 600 " .. " Злоуп.символами ")
-	else 
-		sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
-	end
-end
--- ## Блок функций к выдачи наказаний мута ## --
 
 -- ## Блок функций к выдаче репорт-наказаний мута ## --
 function cmd_rup(arg)
@@ -1424,13 +1353,9 @@ end
 -- ## Блок функций к выдачи наказаний бана ## -- 
 function cmd_hl(arg)
 	if #arg > 0 then
-		lua_thread.create(function()
 		sampSendChat("/ans " .. arg .. " Уважаемый игрок, вы нарушали правила сервера, и если вы..")
-		wait(500)
 		sampSendChat("/ans " .. arg .. " ..не согласны с наказанием, напишите жалобу на форум https://forumrds.ru")
-		wait(500)
 		sampSendChat("/iban " .. arg .. " 3 " .. " Оскорбление/Унижение/Мат в хелпере")
-		end)
 	else 
 		sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)	
 	end
@@ -1438,13 +1363,9 @@ end
 
 function cmd_pl(arg)
 	if #arg > 0 then
-		lua_thread.create(function()
 		sampSendChat("/ans " .. arg .. " Уважаемый игрок, вы нарушали правила сервера, и если вы..")
-		wait(500)
 		sampSendChat("/ans " .. arg .. " ..не согласны с наказанием, напишите жалобу на форум https://forumrds.ru")
-		wait(500)
 		sampSendChat("/ban " .. arg .. " 7 " .. " Плагиат ника администратора ")
-		end)
 	else 
 		sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
 	end
@@ -1452,41 +1373,19 @@ end
 
 function cmd_ob(arg)
 	if #arg > 0 then
-		lua_thread.create(function()
 		sampSendChat("/ans " .. arg .. " Уважаемый игрок, вы нарушали правила сервера, и если вы..")
-		wait(500)
 		sampSendChat("/ans " .. arg .. " ..не согласны с наказанием, напишите жалобу на форум https://forumrds.ru")
-		wait(500)
 		sampSendChat("/iban " .. arg .. " 7 " .. " Обход прошлого бана ")
-		end)
 	else 
 		sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
 	end
 end 	
 
-function cmd_ch(arg)
-	if #arg > 0 then
-		lua_thread.create(function()
-		sampSendChat("/ans " .. arg .. " Уважаемый игрок, вы нарушали правила сервера, и если вы..")
-		wait(500)
-		sampSendChat("/ans " .. arg .. " ..не согласны с наказанием, напишите жалобу на форум https://forumrds.ru")
-		wait(500)
-		sampSendChat("/iban " .. arg .. " 7 " .. " Использование читерского скрипта/ПО. ")
-		end)
-	else 
-		sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
-	end
-end
-
 function cmd_gcnk(arg)
 	if #arg > 0 then
-		lua_thread.create(function()
 		sampSendChat("/ans " .. arg .. " Уважаемый игрок, вы нарушали правила сервера, и если вы..")
-		wait(500)
 		sampSendChat("/ans " .. arg .. " ..не согласны с наказанием, напишите жалобу на форум https://forumrds.ru")
-		wait(500)
 		sampSendChat("/iban " .. arg .. " 7 " .. " Банда, содержащая нецензурную лексину ")
-		end)
 	else 
 		sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
 	end
@@ -1494,13 +1393,9 @@ end
 
 function cmd_menk(arg)
 	if #arg > 0 then
-		lua_thread.create(function()
 		sampSendChat("/ans " .. arg .. " Уважаемый игрок, вы нарушали правила сервера, и если вы..")
-		wait(500)
 		sampSendChat("/ans " .. arg .. " ..не согласны с наказанием, напишите жалобу на форум https://forumrds.ru")
-		wait(500)
 		sampSendChat("/ban " .. arg .. " 7 " .. " Ник, содержающий запрещенные слова ")
-		end)
 	else 
 		sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
 	end
@@ -1508,13 +1403,9 @@ end
 
 function cmd_nk(arg)
 	if #arg > 0 then
-		lua_thread.create(function()
 		sampSendChat("/ans " .. arg .. " Уважаемый игрок, вы нарушали правила сервера, и если вы..")
-		wait(500)
 		sampSendChat("/ans " .. arg .. " ..не согласны с наказанием, напишите жалобу на форум https://forumrds.ru")
-		wait(500)
 		sampSendChat("/ban " .. arg .. " 7 " .. " Ник, содержащий нецензурную лексику ")
-		end)
 	else 
 		sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
 	end
@@ -1522,13 +1413,9 @@ end
 
 function cmd_bnm(arg)
 	if #arg > 0 then
-		lua_thread.create(function()
 		sampSendChat("/ans " .. arg .. " Уважаемый игрок, вы нарушали правила сервера, и если вы..")
-		wait(500)
 		sampSendChat("/ans " .. arg .. " ..не согласны с наказанием, напишите жалобу на форум https://forumrds.ru")
-		wait(500)
 		sampSendChat("/iban " .. arg .. " 7 " .. " Неадекватное поведение")
-		end)
 	else 
 		sampAddChatMessage(tag .. "Вы забыли ввести ID нарушителя! ", -1)
 	end
@@ -1686,7 +1573,7 @@ end
 function cmd_uu(arg)
     lua_thread.create(function()
         sampSendChat("/unmute " .. arg)
-        wait(500)
+        
         sampSendChat("/ans " .. arg .. " Извиняемся за ошибку, наказание снято. Приятной игры")
     end)
 end
@@ -1694,7 +1581,7 @@ end
 function cmd_uj(arg)
     lua_thread.create(function()
         sampSendChat("/unjail " .. arg)
-        wait(500)
+        
         sampSendChat("/ans " .. arg .. " Извиняемся за ошибку, наказание снято. Приятной игры")
     end)
 end
@@ -1710,7 +1597,7 @@ end
 function cmd_ru(arg)
     lua_thread.create(function()
 	    sampSendChat("/rmute " .. arg .. " 5 " .. "  Mistake/Ошибка")
-        wait(500)
+        
 	    sampSendChat("/ans " .. arg .. " Извиняемся за ошибку, наказание снято. Приятной игры.")
     end)
 end
@@ -1751,7 +1638,7 @@ function drawAdmins()
                             text = string.format("%s[%s] | %s уровень | %s выговоров | %s репутации.", admin.nick, admin.id, admin.lvl, admin.vig, admin.rep)
                         end
                         text = text:gsub("\n", "")
-                        renderFontDrawText(render_font, config.colours.render_admins .. text, elm.position.acX, elm.position.acY+(14)*(i+12), 0xFF9999FF)
+                        renderFontDrawText(render_font, config.colours.render_admins .. text, elm.position.acX, elm.position.acY+(18)*(i+13), 0xFF9999FF)
                     end
                 end
             wait(1)
@@ -1809,6 +1696,7 @@ function showCursor(toggle)
 end
 -- ## Блок специальных функций, ответственных за работу прямых задач AT ## -- 
 
+-- ## Активация графического интерфейса ImGUI ## --
 function imgui.OnDrawFrame()
 
     if elm.int.styleImGUI.v == 0 then
@@ -1858,7 +1746,7 @@ function imgui.OnDrawFrame()
 		atlibs.royalblue()
 	end
 
-    if ATMenu.v then  
+    if ATMenu.v then -- основной интерфейс
         
         imgui.SetNextWindowSize(imgui.ImVec2(500, 400), imgui.Cond.FirstUseEver)
         imgui.SetNextWindowPos(imgui.ImVec2((sw / 2), (sh / 2)), imgui.Cond.FirstUseEver, imgui.ImVec2(0.5, 0.5))
@@ -1885,6 +1773,9 @@ function imgui.OnDrawFrame()
 			if imgui.Button(fa.ICON_CALCULATOR, imgui.ImVec2(27,0)) then  
 				menuSelect = 5
 			end; imgui.Tooltip(u8"Биндер ответов для репортов (/ans)")
+			if imgui.Button(fai.ICON_FA_TOOLS, imgui.ImVec2(27,0)) then  
+				menuSelect = 6
+			end; imgui.Tooltip(u8"Дополнительные функции")
             if imgui.Button(fa.ICON_FA_COGS, imgui.ImVec2(27,0)) then  
                 menuSelect = 15 
             end; imgui.Tooltip(u8"Настройки AT")
@@ -1937,6 +1828,20 @@ function imgui.OnDrawFrame()
                         config.main.auto_login = elm.boolean.auto_login.v  
                         ConfigSave()
                     end; imgui.Tooltip(u8"При входе на сервер в течении 15-ти секунд происходит вход под админку.")
+					if imgui.CollapsingHeader(u8'Ввод A.Команд при входе') then 
+						if imgui.ToggleButton('/aclist', elm.boolean.aclist_alogin) then  
+							config.main.aclist_alogin = elm.boolean.aclist_alogin.v  
+							ConfigSave()
+						end  
+						if imgui.ToggleButton('/ears', elm.boolean.ears_alogin) then  
+							config.main.ears_alogin = elm.boolean.ears_alogin.v  
+							ConfigSave()
+						end  
+						if imgui.ToggleButton('/agm', elm.boolean.agm_alogin) then  
+							config.main.agm_alogin = elm.boolean.agm_alogin.v
+							ConfigSave()
+						end  
+					end; imgui.Tooltip(u8"Функция, позволяющая выводить определенные административные команды после входа под админку.")
                     imgui.EndPopup()
                 end
                 if imgui.Button(fa.ICON_USER .. u8" Рендер /admins") then  
@@ -1949,6 +1854,12 @@ function imgui.OnDrawFrame()
                         config.main.render_admins = elm.boolean.render_admins.v 
                         ConfigSave()
                     end  
+					imgui.Text(u8"Включение интерфейсного метода")
+					imgui.SameLine()
+					if imgui.ToggleButton('##Imgui', elm.boolean.render_admins_imgui) then  
+						config.main.render_admins_imgui = elm.boolean.render_admins_imgui.v  
+						ConfigSave()
+					end
                     if imgui.Button(fa.ICON_FA_COGS  .. u8" Изменение позиции рендера") then  
                         render_admin.X = elm.position.acX; render_admin.Y = elm.position.acY
                         render_admin.set_position = true 
@@ -1958,12 +1869,17 @@ function imgui.OnDrawFrame()
                         clr = atlibs.join_argb(0, set_color_float3.v[1] * 255, set_color_float3.v[2] * 255, set_color_float3.v[3] * 255)
                     end
                     if imgui.Button(u8"Сохранить") then  
-                        config.colours.render_admins = ('{%06X}'):format(clr)
+						if clr then 
+                        	config.colours.render_admins = ('{%06X}'):format(clr)
+						end
                         showNotification("Настройки цвета были сохранены.")
                         ConfigSave()
                     end
                     imgui.EndPopup()
                 end 
+				if automute_res then  
+					automute.ActiveAutoMute()
+				end
             imgui.NextColumn()
                 imgui.Text(fa.ICON_BELL .. u8" Увед.репорт"); imgui.Tooltip(u8"Приходит уведомления об пришедшем репорте")
                 imgui.SameLine()
@@ -2266,7 +2182,7 @@ function imgui.OnDrawFrame()
 		
 				imgui.SetCursorPosX((imgui.GetWindowWidth() - 100) / 100)
 				if imgui.Button(u8'Закрыть##bind1', imgui.ImVec2(100,30)) then
-					elm.binder.name.v, elm.binder.text.v, elm.binder.delay.v = '', '', 2500
+					elm.binder.name.v, elm.binder.text.v, elm.binder.delay.v = '', '', "2500"
 					imgui.CloseCurrentPopup()
 				end
 				imgui.SameLine()
@@ -2307,6 +2223,12 @@ function imgui.OnDrawFrame()
 
 		end
 
+		if menuSelect == 6 then  
+			if plugins_main_res then  
+				plugin.ActiveATChat()
+			end
+		end
+
         if menuSelect == 15 then  
             imgui.PushItemWidth(130) if imgui.Combo("##imguiStyle", elm.int.styleImGUI, colorsImGui) then config.main.styleImGUI = elm.int.styleImGUI.v ConfigSave() end imgui.PopItemWidth() imgui.SameLine() imgui.Text(u8" - Выбор темы ") 
             imgui.Separator()
@@ -2327,8 +2249,30 @@ function imgui.OnDrawFrame()
         
         imgui.End()
     end
+
+	if ATAdmins.v then -- рендер /admins в ImGUI
+		imgui.SetNextWindowPos(imgui.ImVec2(sw / 2, sh / 2), imgui.Cond.FirstUseEver, imgui.ImVec2(0.5, 1))
+		imgui.SetNextWindowSize(imgui.ImVec2(500, 500), imgui.Cond.FirstUseEver)
+
+		imgui.Begin("##RenderAdmins", false, imgui.WindowFlags.NoTitleBar + imgui.WindowFlags.NoResize)
+
+			if #admins > 0 then  
+				for i = 1, #admins do 
+					local admin = admins[i]
+					local text  
+					if admin.prefix then  
+						text = string.format("%s[%s] %s | %s уровень | %s выговоров | %s репутации.", admin.nick, admin.id, admin.prefix, admin.lvl, admin.vig, admin.rep)
+					else 
+						text = string.format("%s[%s] | %s уровень | %s выговоров | %s репутации.", admin.nick, admin.id, admin.lvl, admin.vig, admin.rep)
+					end  
+					text = text:gsub("\n", "")
+					imgui.Text(u8(text))
+				end 
+			end
+		imgui.End()
+	end 
     
-    if ATRecon.v then  
+    if ATRecon.v then -- Custom Recon-Menu
         if control_to_player then  
             imgui.SetNextWindowPos(imgui.ImVec2(sw / 2, sh / 1.06), imgui.Cond.FirstUseEver, imgui.ImVec2(0.5, 1))
             imgui.SetNextWindowSize(imgui.ImVec2(580, 65), imgui.Cond.FirstUseEver)
@@ -2523,7 +2467,19 @@ function imgui.OnDrawFrame()
             end
         end 
     end
+	if ATPlayerStream.v then  
+		imgui.SetNextWindowPos(imgui.ImVec2(sh / 2, sw / 2), imgui.Cond.FirstUseEver, imgui.ImVec2(0.5, 0.5))
+		imgui.SetNextWindowSize(imgui.ImVec2(300, 200), imgui.Cond.FirstUseEver)
+
+		imgui.Begin("##Replace", ATPlayerStream, imgui.WindowFlags.NoResize + imgui.WindowFlags.NoCollapse + imgui.WindowFlags.NoTitleBar)
+		if imgui.Button(u8"Игрок наказан") then  
+			
+		end
+		imgui.End()
+	end
 end
+-- ## Активация графического интерфейса ImGUI ## --
+
 
 -- ## Блок отвечающий за привязку стабильного KillChat ## --
 function sampev.onPlayerDeathNotification(killerId, killedId, reason)
@@ -2545,11 +2501,11 @@ end
 -- ## Блок функций, отвечающий за параллельный вывод определенных участков ImGUI вне зависимости от основного фрейма ## --
 function showFlood_ImGUI()
     local colours_mess = [[
-    0 - {FFFFFF}белый, 1 - {000000}черный, 2 - {008000}зеленый, 3 - {80FF00}светло-зеленый
-    4 - {FF0000}красный, 5 - {0000FF}синий, 6 - {FDFF00}желтый, 7 - {FF9000}оранжевый
-    8 - {B313E7}фиолетовый, 9 - {49E789}бирюзовый, 10 - {139BEC}голубой
-    11 - {2C9197}темно-зеленый, 12 - {DDB201}золотой, 13 - {B8B6B6}серый, 14 - {FFEE8A}светло-желтый
-    15 - {FF9DB6}розовый, 16 - {BE8A01}коричневый, 17 - {E6284E}темно-розовый
+    0 - {FFFFFF}белый, {FFFFFF}1 - {000000}черный, {FFFFFF}2 - {008000}зеленый, {FFFFFF}3 - {80FF00}светло-зеленый
+    4 - {FF0000}красный, {FFFFFF}5 - {0000FF}синий, {FFFFFF}6 - {FDFF00}желтый, {FFFFFF}7 - {FF9000}оранжевый
+    8 - {B313E7}фиолетовый, {FFFFFF}9 - {49E789}бирюзовый, {FFFFFF}10 - {139BEC}голубой
+    11 - {2C9197}темно-зеленый, {FFFFFF}12 - {DDB201}золотой, {FFFFFF}13 - {B8B6B6}серый, {FFFFFF}14 - {FFEE8A}светло-желтый
+    15 - {FF9DB6}розовый, {FFFFFF}16 - {BE8A01}коричневый, {FFFFFF}17 - {E6284E}темно-розовый
     ]]
     imgui.Text(u8"Здесь можно использовать флуды в чат /mess для игроков.")
     imgui.Separator()
@@ -2567,556 +2523,382 @@ function showFlood_ImGUI()
     end
     if imgui.BeginPopup('mainFloods') then  
         if imgui.Button(u8'Флуд про репорты') then
-			lua_thread.create(function()
 			sampSendChat("/mess 4 ===================== | Репорты | ====================")
-			wait(500)
 			sampSendChat("/mess 0 Заметили читера или нарушителя?")
-			wait(500)
 			sampSendChat("/mess 4 Вводите /report, пишите туда ID нарушителя/читера!")
-			wait(500)
 			sampSendChat("/mess 0 Наши администраторы ответят вам и разберутся с ними. <3")
-			wait(500)
 			sampSendChat("/mess 4 ===================== | Репорты | ====================")
-			end)
 		end
 		imgui.SameLine()
 		if imgui.Button(u8'Флуд про VIP') then
-			lua_thread.create(function()
 			sampSendChat("/mess 2 ===================== | VIP | ====================")
-			wait(500)
 			sampSendChat("/mess 3 Всегда хотел смотреть на людей свыше?")
-			wait(500)
 			sampSendChat("/mess 2 Тобой управляет зависть? Устрани это с помощью 10к очков.")
-			wait(500)
 			sampSendChat("/mess 3 Вводи команду /sellvip и ты получишь VIP!")
-			wait(500)
 			sampSendChat("/mess 2 ===================== | VIP | ====================")
-			end)
 		end
 		if imgui.Button(u8'Флуд про оплату бизнеса/дома') then
-			lua_thread.create(function()
+			
 			sampSendChat("/mess 5 ===================== | Банк | ====================")
-			wait(500)
 			sampSendChat("/mess 10 Дом или бизнес нужно оплачивать. Как? -> ..")
-			wait(500)
 			sampSendChat("/mess 0 Для этого необходимо, написать /tp, затем Разное -> Банк...")
-			wait(500)
 			sampSendChat("/mess 0 ...после этого пройти в Банк, открыть счет и..")
-			wait(500)
 			sampSendChat("/mess 10 ..и щелкнуть по Оплата дома или Оплата бизнеса. На этом все.")
-			wait(500)
 			sampSendChat("/mess 5 ===================== | Банк | ====================")
-			end)
 		end
 		if imgui.Button(u8'Флуд про /dt 0-990 (режим тренировки)') then
-			lua_thread.create(function()
+			
 			sampSendChat("/mess 6 =================== | Виртуальный мир | ==================")
-			wait(500)
 			sampSendChat("/mess 0 Перестрелки умотала? Обыденный ДМ, вечная стрельба..")
-			wait(500)
 			sampSendChat("/mess 0 Тебе хочется отдохнуть? Это можно исправить! <3")
-			wait(500)
 			sampSendChat("/mess 0 Скорее вводи /dt 0-990. Число - это виртуальный мир.")
-			wait(500)
 			sampSendChat("/mess 0 Не забудьте сообщить друзьям свой мир. Удачной игры. :3")
-			wait(500)
 			sampSendChat("/mess 6 =================== | Виртуальный мир  | ==================")
-			end)
+			
 		end
 		if imgui.Button(u8'Флуд про /storm') then
-			lua_thread.create(function()
+			
 			sampSendChat("/mess 2 ===================== | Шторм | ====================")
-			wait(500)
 			sampSendChat("/mess 3 Всегда хотели заработать рубли ? У вас есть возможность!")
-			wait(500)
 			sampSendChat("/mess 2 Вводи команду /storm , после чего подойтите к NPC ... ")
-			wait(500)
 			sampSendChat("/mess 3 ...нажмите присоединится к штурму.")
-			wait(500)
 			sampSendChat("/mess 2 Когда наберётся нужное количиство игроков штурм начнётся.")
-			wait(500)
 			sampSendChat("/mess 2 ===================== | Шторм | ====================")
-			end)
+			
 		end
 		if imgui.Button(u8'Флуд про /arena') then
-			lua_thread.create(function()
+			
 			sampSendChat("/mess 7 ===================== | Арена | ====================")
-			wait(500)
 			sampSendChat("/mess 0 Хочешь испытать свои навыки в стрельбе?")
-			wait(500)
 			sampSendChat("/mess 7 Скорее вводи /arena, выбери свое поле боя.")
-			wait(500)
 			sampSendChat("/mess 0 Перестреляй всех, победи их. Покажи, кто умеет показать себя. <3")
-			wait(500)
 			sampSendChat("/mess 7 ===================== | Арена | ====================")
-			end)
+			
 		end
 		imgui.SameLine()
 		if imgui.Button(u8'Флуд про VK group') then
-			lua_thread.create(function()
+			
 			sampSendChat("/mess 15 ===================== | ВКонтакте | ====================")
-			wait(500)
 			sampSendChat("/mess 0 Всегда хотел поучаствовать в конкурсе?")
-			wait(500)
 			sampSendChat("/mess 15 В твоей голове появились мысли, как улучшить сервер?")
-			wait(500)
 			sampSendChat("/mess 0 Заходи в нашу группу ВКонтакте: https://vk.com/dmdriftgta")
-			wait(500)
 			sampSendChat("/mess 15 ===================== | ВКонтакте | ====================")
-			end)
+			
 		end
 		if imgui.Button(u8'Флуд про автосалон') then
-			lua_thread.create(function()
+			
 			sampSendChat("/mess 12 ===================== | Автосалон | ====================")
-			wait(500)
 			sampSendChat("/mess 0 У тебя появились коины? Ты хочешь личную тачку?")
-			wait(500)
 			sampSendChat("/mess 12 Вводи команду /tp -> Разное -> Автосалоны")
-			wait(500)
 			sampSendChat("/mess 0 Выбирай нужный автосалон, купи машину за RDS коины. И катайся :3")
-			wait(500)
 			sampSendChat("/mess 12 ===================== | Автосалон | ====================")
-			end)
+			
 		end
 		if imgui.Button(u8'Флуд про сайт RDS') then
-			lua_thread.create(function()
+			
 			sampSendChat("/mess 8 ===================== | Донат | ====================")
-			wait(500)
 			sampSendChat("/mess 15 Хочешь задонатить на свой любимый сервер RDS? :> ")
-			wait(500)
 			sampSendChat("/mess 15 Ты это можешь сделать с радостью! Сайт: myrds.ru :3 ")
-			wait(500)
 			sampSendChat("/mess 15 И через основателя: @empirerosso")
-			wait(500)
 			sampSendChat("/mess 8 ===================== | Донат | ====================")
-			end)
+			
 		end
 		imgui.SameLine()
 		if imgui.Button(u8'Флуд про /gw') then
-			lua_thread.create(function()
+			
 			sampSendChat("/mess 10 ===================== | Capture | ====================")
-			wait(500)
 			sampSendChat("/mess 5 Тебе нравится играть за банды в GTA:SA? Они тут тоже есть! :>")
-			wait(500)
 			sampSendChat("/mess 5 Сделай это с помощью /gw, едь на территорию с друзьями")
-			wait(500)
 			sampSendChat("/mess 5 Чтобы начать воевать за территорию, введи команду /capture XD")
-			wait(500)
 			sampSendChat("/mess 10 ===================== | Capture | ====================")
-			end)
+			
 		end
 		if imgui.Button(u8"Флуд про группу Сейчас на RDS") then
-			lua_thread.create(function()
+			
 			sampSendChat("/mess 2 ================== | Свободная группа RDS | =================")
-			wait(500)
 			sampSendChat("/mess 11 Давно хотели скинуть свои скрины, и показать другим?")
-			wait(500)
 			sampSendChat("/mess 2 Попробовать продать что-нибудь, но в игре никто не отзывается?")
-			wait(500)
 			sampSendChat("/mess 11 Вы можете посетить свободную группу: https://vk.com/freerds")
-			wait(500)
 			sampSendChat("/mess 2 ================== | Свободная группа RDS | =================")
-			end)
+			
 		end
 		if imgui.Button(u8"Флуд про /gangwar") then 
-			lua_thread.create(function()
+			
 			sampSendChat("/mess 16 ===================== | Сражения | ====================")
-			wait(500)
 			sampSendChat("/mess 13 Хотели сразиться с другими бандами? Выпустить гнев?")
-			wait(500)
 			sampSendChat("/mess 16 Вы можете себе это позволить! Можете побороть другие банды")
-			wait(500)
 			sampSendChat("/mess 13 Команда /gangwar, выбираете территорию и сражаетесь за неё.")
-			wait(500)
 			sampSendChat("/mess 16 ===================== | Сражения | ====================")
-			end)
+			
 		end 
 		imgui.SameLine()
 		if imgui.Button(u8"Флуд про работы") then
-			lua_thread.create(function()
+			
 			sampSendChat("/mess 14 ===================== | Работы | ====================")
-			wait(500)
 			sampSendChat("/mess 13 Не хватает денег на оружие? Не хватает на машинку?")
-			wait(500)
 			sampSendChat("/mess 13 Ради наших ДМеров и дрифтеров, придуманы работы для деньжат")
-			wait(500)
 			sampSendChat("/mess 13 Черный день открыт, переходи /tp -> Работы")
-			wait(500)
 			sampSendChat("/mess 14 ===================== | Работы | ====================")
-			end)
+			
 		end
 		if imgui.Button(u8"Флуд о моде") then  
-			lua_thread.create(function()
+			
 			sampSendChat("/mess 13 ===================== | Мод RDS | ====================")
-			wait(500)
 			sampSendChat("/mess 0 Посвящаем вас в мод RDS. Прежде всего, мы Drift Server")
-			wait(500)
 			sampSendChat("/mess 13 Также у нас есть дополнения, это GangWar, DM с элементами RPG")
-			wait(500)
 			sampSendChat("/mess 0 Большинство команд и все остальное указано в /help")
-			wait(500)
 			sampSendChat("/mess 13 ===================== | Мод RDS | ====================")
-			end)
+			
 		end
 		imgui.SameLine()
 		if imgui.Button(u8'Флуд про /trade') then
-			lua_thread.create(function()
+			
 			sampSendChat("/mess 9 ===================== | Трейд | ====================")
-			wait(500)
 			sampSendChat("/mess 3 Хотите разные аксессуары, а долго играть не хочется и есть вирты/очки/коины/рубли?")
-			wait(500)
 			sampSendChat("/mess 9 Введите /trade, подойдите к занятой лавки, спросите у человека и купите предмет.")
-			wait(500)
 			sampSendChat("/mess 3 Также, справа от лавок есть NPC Арман, у него также можно что-то взять.")
-			wait(500)
 			sampSendChat("/mess 9 ===================== | Трейд | ====================")
-			end)
+			
 		end
 		if imgui.Button(u8'Флуд про форум') then 
-			lua_thread.create(function()
+			
 			sampSendChat("/mess 4 ===================== | Форум | ====================")
-			wait(500)
 			sampSendChat('/mess 0 Есть жалобы на игроков/админов? Есть вопросы? Хотите играть с телефона?')
-			wait(500)
 			sampSendChat('/mess 4 У нас есть форум - https://forumrds.ru. Там есть полезная инфа :D')
-			wait(500)
 			sampSendChat('/mess 0 Кроме этого, там есть курилка и галерея. Веселитесь, игроки <3')
-			wait(500)
 			sampSendChat("/mess 4 ===================== | Форум  | ====================")
-			end)
+			
 		end	
 		if imgui.Button(u8'Флуд про набор адм') then 
-			lua_thread.create(function()
+			
 			sampSendChat("/mess 15 ===================== | Набор | ====================")
-			wait(500)
 			sampSendChat('/mess 17 Дорогие игроки! Вы знаете правила нашего проекта?')
-			wait(500)
 			sampSendChat('/mess 15 Если вы когда-то хотели стать админом, то это ваш шанс!')
-			wait(500)
 			sampSendChat('/mess 17 Уже на форуме открыты заявки! Успейте подать: https://forumrds.ru')
-			wait(500)
 			sampSendChat("/mess 15 ===================== | Набор | ====================")
-			end)
+			
 		end
 		if imgui.Button(u8'Спавн каров на 15 секунд') then
-			lua_thread.create(function()
+			
 			sampSendChat("/mess 14 Уважаемые игроки. Сейчас будет респавн всего серверного транспорта")
-			wait(500)
 			sampSendChat("/mess 14 Займите водительские места, и продолжайте дрифтить, наши любимые :3")
-			wait(500)
 			sampSendChat("/delcarall ")
-            wait(500)
 			sampSendChat("/spawncars 15 ")
 			showNotification("Респавн т/с начался")
-			end)
+			
 		end
 	    if imgui.Button(u8'Квесты') then
-			lua_thread.create(function()
+			
 		    sampSendChat("/mess 8 =================| Квесты NPC |=================")
-			wait(500)
 		    sampSendChat("/mess 0 Не можете найти NPC которые дают квесты? :D")
-			wait(500)
 		    sampSendChat("/mess 0 И так где же их найти , - ALT(/mm) - Телепорты - ...")
-			wait(500)
 		    sampSendChat("/mess 0 ...Василий Андроид, Бродяга Диман, и на каждом спавне...")
-			wait(500)
 		    sampSendChat("/mess 0 ...NPC Кейн. Приятной игры на RDS <3")
-			wait(500)
 		    sampSendChat("/mess 8 =================| Квесты NPC |=================")
-			end)
+			
 		end	
 	    imgui.EndPopup()
     end
     if imgui.BeginPopup('FloodsGangWar') then  
         if imgui.Button(u8"Aztecas vs Ballas") then  
-			lua_thread.create(function()
+			
 			sampSendChat("/mess 13 •------------------- GangWar -------------------•")
-			wait(500)
 			sampSendChat("/mess 3 Игра -  GangWar: /gw")
-			wait(500)
 			sampSendChat("/mess 0 Varios Los Aztecas vs East Side Ballas ")
-			wait(500)
 			sampSendChat("/mess 0 Помогите своим братьям, заходите через /gw за любимую банду")
-			wait(500)
 			sampSendChat("/mess 3 Игра - GangWar: /gw")
-			wait(500)
 			sampSendChat("/mess 13 •------------------- GangWar -------------------•")
-			end)
+			
 		end
 		imgui.SameLine()
 		if imgui.Button(u8"Aztecas vs Groove") then  
-			lua_thread.create(function()
+			
 			sampSendChat("/mess 13 •------------------- GangWar -------------------•")
-			wait(500)
 			sampSendChat("/mess 2 Игра -  GangWar: /gw")
-			wait(500)
 			sampSendChat("/mess 0 Varios Los Aztecas vs Groove Street ")
-			wait(500)
 			sampSendChat("/mess 0 Помогите своим братьям, заходите через /gw за любимую банду")
-			wait(500)
 			sampSendChat("/mess 2 Игра - GangWar: /gw")
-			wait(500)
 			sampSendChat("/mess 13 •------------------- GangWar -------------------•")
-			end)
+			
 		end
 		if imgui.Button(u8"Aztecas vs Vagos") then  
-			lua_thread.create(function()
+			
 			sampSendChat("/mess 13 •------------------- GangWar -------------------•")
-			wait(500)
 			sampSendChat("/mess 4 Игра -  GangWar: /gw")
-			wait(500)
 			sampSendChat("/mess 0 Varios Los Aztecas vs Los Santos Vagos ")
-			wait(500)
 			sampSendChat("/mess 0 Помогите своим братьям, заходите через /gw за любимую банду")
-			wait(500)
 			sampSendChat("/mess 4 Игра - GangWar: /gw")
-			wait(500)
 			sampSendChat("/mess 13 •------------------- GangWar -------------------•")
-			end)
+			
 		end
 		imgui.SameLine()
 		if imgui.Button(u8"Aztecas vs Rifa") then  
-			lua_thread.create(function()
+			
 			sampSendChat("/mess 13 •------------------- GangWar -------------------•")
-			wait(500)
 			sampSendChat("/mess 5 Игра -  GangWar: /gw")
-			wait(500)
 			sampSendChat("/mess 0 Varios Los Aztecas vs The Rifa ")
-			wait(500)
 			sampSendChat("/mess 0 Помогите своим братьям, заходите через /gw за любимую банду")
-			wait(500)
 			sampSendChat("/mess 5 Игра - GangWar: /gw")
-			wait(500)
 			sampSendChat("/mess 13 •------------------- GangWar -------------------•")
-			end)
+			
 		end
 		if imgui.Button(u8"Ballas vs Groove") then  
-			lua_thread.create(function()
+			
 			sampSendChat("/mess 13 •------------------- GangWar -------------------•")
-			wait(500)
 			sampSendChat("/mess 6 Игра -  GangWar: /gw")
-			wait(500)
 			sampSendChat("/mess 0 East Side Ballas vs Groove Street  ")
-			wait(500)
 			sampSendChat("/mess 0 Помогите своим братьям, заходите через /gw за любимую банду")
-			wait(500)
 			sampSendChat("/mess 6 Игра - GangWar: /gw")
-			wait(500)
 			sampSendChat("/mess 13 •------------------- GangWar -------------------•")
-			end)
+			
 		end
 		imgui.SameLine()
 		if imgui.Button(u8"Ballas vs Rifa") then  
-			lua_thread.create(function()
+			
 			sampSendChat("/mess 13 •------------------- GangWar -------------------•")
-			wait(500)
 			sampSendChat("/mess 7 Игра -  GangWar: /gw")
-			wait(500)
 			sampSendChat("/mess 0 East Side Ballas vs The Rifa ")
-			wait(500)
 			sampSendChat("/mess 0 Помогите своим братьям, заходите через /gw за любимую банду")
-			wait(500)
 			sampSendChat("/mess 7 Игра - GangWar: /gw")
-			wait(500)
 			sampSendChat("/mess 13 •------------------- GangWar -------------------•")
-			end)
+			
 		end
 		if imgui.Button(u8"Groove vs Rifa") then  
-			lua_thread.create(function()
+			
 			sampSendChat("/mess 13 •------------------- GangWar -------------------•")
-			wait(500)
 			sampSendChat("/mess 8 Игра -  GangWar: /gw")
-			wait(500)
 			sampSendChat("/mess 0 Groove Street  vs The Rifa ")
-			wait(500)
 			sampSendChat("/mess 0 Помогите своим братьям, заходите через /gw за любимую банду")
-			wait(500)
 			sampSendChat("/mess 8 Игра - GangWar: /gw")
-			wait(500)
 			sampSendChat("/mess 13 •------------------- GangWar -------------------•")
-			end)
+			
 		end
 		imgui.SameLine()
 		if imgui.Button(u8"Groove vs Vagos") then  
-			lua_thread.create(function()
+			
 			sampSendChat("/mess 13 •------------------- GangWar -------------------•")
-			wait(500)
 			sampSendChat("/mess 9 Игра -  GangWar: /gw")
-			wait(500)
 			sampSendChat("/mess 0 Groove Street vs Los Santos Vagos ")
-			wait(500)
 			sampSendChat("/mess 0 Помогите своим братьям, заходите через /gw за любимую банду")
-			wait(500)
 			sampSendChat("/mess 9 Игра - GangWar: /gw")
-			wait(500)
 			sampSendChat("/mess 13 •------------------- GangWar -------------------•")
-			end)
+			
 		end
 		if imgui.Button(u8"Vagos vs Rifa") then  
-			lua_thread.create(function()
+			
 			sampSendChat("/mess 13 •------------------- GangWar -------------------•")
-			wait(500)
 			sampSendChat("/mess 10 Игра -  GangWar: /gw")
-			wait(500)
 			sampSendChat("/mess 0 Los Santos Vagos vs The Rifa ")
-			wait(500)
 			sampSendChat("/mess 0 Помогите своим братьям, заходите через /gw за любимую банду")
-			wait(500)
 			sampSendChat("/mess 10 Игра - GangWar: /gw")
-			wait(500)
 			sampSendChat("/mess 13 •------------------- GangWar -------------------•")
-			end)
+			
 		end
 		imgui.SameLine()
 		if imgui.Button(u8"Ballas vs Vagos") then  
-			lua_thread.create(function()
+			
 			sampSendChat("/mess 13 •------------------- GangWar -------------------•")
-			wait(500)
 			sampSendChat("/mess 11 Игра -  GangWar: /gw")
-			wait(500)
 			sampSendChat("/mess 0 East Side Ballas vs Los Santos Vagos ")
-			wait(500)
 			sampSendChat("/mess 0 Помогите своим братьям, заходите через /gw за любимую банду")
-			wait(500)
 			sampSendChat("/mess 11 Игра - GangWar: /gw")
-			wait(500)
 			sampSendChat("/mess 13 •------------------- GangWar -------------------•")
-			end)
+			
 		end
         imgui.EndPopup()
     end
     if imgui.BeginPopup('FloodsJoinMP') then  
         if imgui.Button(u8'Мероприятие "Дерби" ') then 
-			lua_thread.create(function()
+			
 			sampSendChat("/mess 8 ===================| [Event-Game-RDS] |==================")
-			wait(500)
 			sampSendChat("/mess 0 [MP-/join] Проводится мероприятие «Дерби»! Желающим: /derby")
-			wait(500)
 			sampSendChat("/mess 0 [MP-/join] Проводится мероприятие «Дерби»! Желающим: /derby")
-			wait(500)
 			sampSendChat("/mess 8 ===================| [Event-Game-RDS] |==================")
-			end)
+			
 		end	
 		if imgui.Button(u8'Мероприятие "Паркур" ') then 
-			lua_thread.create(function()
+			
 			sampSendChat("/mess 10 ===================| [Event-Game-RDS] |==================")
-			wait(500)
 			sampSendChat("/mess 0 [MP-/join] Проводится мероприятие «Паркур»! Желающим: /parkour")
-			wait(500)
 			sampSendChat("/mess 0 [MP-/join] Проводится мероприятие «Паркур»! Желающим: /parkour")
-			wait(500)
 			sampSendChat("/mess 10 ===================| [Event-Game-RDS] |==================")
-			end)
+			
 		end	
 		if imgui.Button(u8'Мероприятие "PUBG" ') then 
-			lua_thread.create(function()
+			
 			sampSendChat("/mess 9 ===================| [Event-Game-RDS] |==================")
-			wait(500)
 			sampSendChat("/mess 0 [MP-/join] Проводится мероприятие «PUBG»! Желающим: /pubg")
-			wait(500)
 			sampSendChat("/mess 0 [MP-/join] Проводится мероприятие «PUBG»! Желающим: /pubg")
-			wait(500)
 			sampSendChat("/mess 9 ===================| [Event-Game-RDS] |==================")
-			end)
+			
 		end	
 		if imgui.Button(u8'Мероприятие "DAMAGE DM" ') then 
-			lua_thread.create(function()
+			
 			sampSendChat("/mess 4 ===================| [Event-Game-RDS] |==================")
-			wait(500)
 			sampSendChat("/mess 0 [MP-/join] Проводится мероприятие «DAMAGE DEATHMATCH»! Желающим: /damagedm")
-			wait(500)
 			sampSendChat("/mess 0 [MP-/join] Проводится мероприятие «DAMAGE DEATHMATCH»! Желающим: /damagedm")
-			wait(500)
 			sampSendChat("/mess 4 ===================| [Event-Game-RDS] |==================")
-			end)
+			
 		end	
 		if imgui.Button(u8'Мероприятие "KILL DM" ') then 
-			lua_thread.create(function()
+			
 			sampSendChat("/mess 17 ===================| [Event-Game-RDS] |==================")
-			wait(500)
 			sampSendChat("/mess 0 [MP-/join] Проводится мероприятие «KILL DEATHMATCH»! Желающим: /killdm")
-			wait(500)
 			sampSendChat("/mess 0 [MP-/join] Проводится мероприятие «KILL DEATHMATCH»! Желающим: /killdm")
-			wait(500)
 			sampSendChat("/mess 17 ===================| [Event-Game-RDS] |==================")
-			end)
+			
 		end	
 		if imgui.Button(u8'Мероприятие "Дрифт гонки" ') then 
-			lua_thread.create(function()
+			
 			sampSendChat("/mess 7 ===================| [Event-Game-RDS] |==================")
-			wait(500)
 			sampSendChat("/mess 0 [MP-/join] Проводится мероприятие «Дрифт гонки»! Желающим: /drace")
-			wait(500)
 			sampSendChat("/mess 0 [MP-/join] Проводится мероприятие «Дрифт гонки»! Желающим: /drace")
-			wait(500)
 			sampSendChat("/mess 7 ===================| [Event-Game-RDS] |==================")
-			end)
+			
 		end	
 		if imgui.Button(u8'Мероприятие "PaintBall" ') then 
-			lua_thread.create(function()
+			
 			sampSendChat("/mess 12 ===================| [Event-Game-RDS] |==================")
-			wait(500)
 			sampSendChat("/mess 0 [MP-/join] Проводится мероприятие «PaintBall»! Желающим: /paintball")
-			wait(500)
 			sampSendChat("/mess 0 [MP-/join] Проводится мероприятие «PaintBall»! Желающим: /paintball")
-			wait(500)
 			sampSendChat("/mess 12 ===================| [Event-Game-RDS] |==================")
-			end)
+			
 		end	
 		if imgui.Button(u8'Мероприятие "Зомби против людей" ') then 
-			lua_thread.create(function()
+			
 			sampSendChat("/mess 13 ===================| [Event-Game-RDS] |==================")
-			wait(500)
 			sampSendChat("/mess 0 [MP-/join] Проводится мероприятие «Зомби против людей»! Желающим: /zombie")
-			wait(500)
 			sampSendChat("/mess 0 [MP-/join] Проводится мероприятие «Зомби против людей»! Желающим: /zombie")
-			wait(500)
 			sampSendChat("/mess 13 ===================| [Event-Game-RDS] |==================")
-			end)
+			
 		end	
 		if imgui.Button(u8'Мероприятие "Новогодняя сказка" ') then 
-			lua_thread.create(function()
+			
 			sampSendChat("/mess 3 ===================| [Event-Game-RDS] |==================")
-			wait(500)
 			sampSendChat("/mess 0 [MP-/join] Проводится мероприятие «Новогодняя сказка»! Желающим: /ny")
-			wait(500)
 			sampSendChat("/mess 0 [MP-/join] Проводится мероприятие «Новогодняя сказка»! Желающим: /ny")
-			wait(500)
 			sampSendChat("/mess 3 ===================| [Event-Game-RDS] |==================")
-			end)
+			
 		end	
 		if imgui.Button(u8'Мероприятие "Capture Blocks" ') then 
-			lua_thread.create(function()
+			
 			sampSendChat("/mess 16 ===================| [Event-Game-RDS] |==================")
-			wait(500)
 			sampSendChat("/mess 0 [MP-/join] Проводится мероприятие «Capture Blocks»! Желающим: /join -> 12")
-			wait(500)
 			sampSendChat("/mess 0 [MP-/join] Проводится мероприятие «Capture Blocks»! Желающим: /join -> 12")
-			wait(500)
 			sampSendChat("/mess 16 ===================| [Event-Game-RDS] |==================")
-			end)
+			
 		end	
 		if imgui.Button(u8'Мероприятие "Прятки" ') then 
-			lua_thread.create(function()
 			sampSendChat("/mess 11 ===================| [Event-Game-RDS] |==================")
-			wait(500)
 			sampSendChat("/mess 0 [MP-/join] Проводится мероприятие «Прятки»! Желающим: /join -> 10 «Прятки»")
-			wait(500)
 			sampSendChat("/mess 0 [MP-/join] Проводится мероприятие «Прятки»! Желающим: /join -> 10 «Прятки»")
-			wait(500)
 			sampSendChat("/mess 11 ===================| [Event-Game-RDS] |==================")
-			end)
 		end	
 		if imgui.Button(u8'Мероприятие "Догонялки" ') then 
-			lua_thread.create(function()
 			sampSendChat("/mess 3 ===================| [Event-Game-RDS] |==================")
-			wait(500)
 			sampSendChat("/mess 0 [MP-/join] Проводится мероприятие «Догонялки»! Желающим: /catchup")
-			wait(500)
 			sampSendChat("/mess 0 [MP-/join] Проводится мероприятие «Догонялки»! Желающим: /catchup")
-			wait(500)
 			sampSendChat("/mess 3 ===================| [Event-Game-RDS] |==================")
-			end)
 		end
         imgui.EndPopup()
     end

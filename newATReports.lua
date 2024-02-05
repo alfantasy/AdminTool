@@ -87,11 +87,7 @@ function imgui.BeforeDrawFrame()
 	end	
 end
 
-imgui.ToggleButton = require('imgui_addons').ToggleButton
-imgui.Spinner = require('imgui_addons').Spinner
-imgui.BufferingBar = require('imgui_addons').BufferingBar
-imgui.TextQuestion = require('imgui_addons').TextQuestion
-imgui.CenterText = require('imgui_addons').CenterText
+imgui.ToClipboard = require('imgui_addons').ToClipboard
 imgui.Tooltip = require('imgui_addons').Tooltip
 -- ## Блок переменных связанных с MoonImGUI ## --
 
@@ -991,7 +987,9 @@ function imgui.OnDrawFrame()
 
         if elements.select_menu == 0 then
             if (nick_rep and pid_rep and rep_text) then  
-                imgui.Text(u8"Жалоба от: " .. nick_rep .. "[" .. pid_rep .. "]")
+				imgui.Text(u8"Жалоба от: "); imgui.SameLine()
+                imgui.Text(nick_rep); imgui.ToClipboard(nick_rep); imgui.SameLine();
+				imgui.Text("[" .. pid_rep .. "]"); imgui.ToClipboard(pid_rep)
                 imgui.Separator()
                 imgui.Text(u8(u8:decode(rep_text)))
                 imgui.Separator()
@@ -1002,19 +1000,17 @@ function imgui.OnDrawFrame()
             imgui.SameLine()
             if imgui.Button(fa.ICON_REFRESH .. ("##RefreshText//RemoveText")) then  
                 elements.text.v = "" 
-            end	
-            imgui.SameLine()
-            imgui.Tooltip(u8"Ставит рандомный цвет перед ответом.")
+            end; imgui.Tooltip(u8"Обновляет/Удаляет содержимое текстового поля сразу.")
             if #elements.text.v > 0 then  
                 imgui.SameLine()
                 if imgui.Button(fa.ICON_FA_SAVE .. "##SaveReport") then  
                     imgui.OpenPopup('Binder')
                 end  
-            end
+            end; imgui.Tooltip(u8"Открывает сохранение ответа. \nВ окне будет необходимо подтверждение.")
             imgui.SameLine()
             if imgui.Button(fa.ICON_FA_TEXT_HEIGHT .. ("##SendColor")) then  
                 elements.text.v = color()
-            end
+			end; imgui.Tooltip(u8"Ставит рандомный цвет перед ответом.")
             imgui.Separator()
             if imgui.Button(fa.ICON_FA_EYE .. u8" Работа по жб") then  
 				lua_thread.create(function()
@@ -1136,7 +1132,7 @@ function imgui.OnDrawFrame()
 					sampSendDialogResponse(2350, 1, 0)
 					wait(200)
 					if elements.prefix_answer.v then 
-						local settext = '{FFFFFF}' .. elements.text.v .. config.main.prefix_for_answer
+						local settext = '{FFFFFF}' .. elements.text.v .. ' ' .. color() .. config.main.prefix_for_answer
 						sampSendDialogResponse(2351, 1, 0, u8:decode(settext))	
 					else 
 						local settext = '{FFFFFF}' .. elements.text.v
@@ -1144,8 +1140,9 @@ function imgui.OnDrawFrame()
 					end
 					wait(500)
 					sampCloseCurrentDialogWithButton(13)
+					wait(500)
+					elements.text.v = " "
 				end)
-                elements.text.v = " "
                 ATReportShow.v = false
             end  
             imgui.SameLine()
