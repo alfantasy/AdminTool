@@ -2,6 +2,7 @@ script_name('AdminTool')
 script_description('Специальный административный скрипт для сервера Russian Drift Server в SA:MP')
 script_author('alfantasyz')
 
+-- хуй пизда сковорода
 -- ## Регистрация библиотек, плагинов и аддонов ## --
 require "lib.moonloader"
 local fflags = require("moonloader").font_flag -- работа с флагами для рендера текста
