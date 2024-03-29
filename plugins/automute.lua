@@ -51,7 +51,12 @@ local elements = {
         automute_osk = imgui.ImBool(config.settings.automute_osk),
         automute_rod = imgui.ImBool(config.settings.automute_rod),
         automute_upom = imgui.ImBool(config.settings.automute_upom),
-    }
+    },
+    imgui = {
+        selectable = 0,
+        stream = imgui.ImBuffer(65536),
+        input_word = imgui.ImBuffer(500),
+    },
 }
 
 function save() 
@@ -80,6 +85,10 @@ local control_onscene_mat = false -- контролирование сцены автомута "Нецензурная
 local control_onscene_osk = false -- контролирование сцены автомута "Оскорбление/унижение"
 local control_onscene_upom = false -- контролирование сцены автомута "Упоминание стор.проектов"
 local control_onscene_rod = false -- контролирование сцены автомута "Оскорбление родных"
+
+local russian_characters = {
+    [168] = 'Ё', [184] = 'ё', [192] = 'А', [193] = 'Б', [194] = 'В', [195] = 'Г', [196] = 'Д', [197] = 'Е', [198] = 'Ж', [199] = 'З', [200] = 'И', [201] = 'Й', [202] = 'К', [203] = 'Л', [204] = 'М', [205] = 'Н', [206] = 'О', [207] = 'П', [208] = 'Р', [209] = 'С', [210] = 'Т', [211] = 'У', [212] = 'Ф', [213] = 'Х', [214] = 'Ц', [215] = 'Ч', [216] = 'Ш', [217] = 'Щ', [218] = 'Ъ', [219] = 'Ы', [220] = 'Ь', [221] = 'Э', [222] = 'Ю', [223] = 'Я', [224] = 'а', [225] = 'б', [226] = 'в', [227] = 'г', [228] = 'д', [229] = 'е', [230] = 'ж', [231] = 'з', [232] = 'и', [233] = 'й', [234] = 'к', [235] = 'л', [236] = 'м', [237] = 'н', [238] = 'о', [239] = 'п', [240] = 'р', [241] = 'с', [242] = 'т', [243] = 'у', [244] = 'ф', [245] = 'х', [246] = 'ц', [247] = 'ч', [248] = 'ш', [249] = 'щ', [250] = 'ъ', [251] = 'ы', [252] = 'ь', [253] = 'э', [254] = 'ю', [255] = 'я',
+} 
 
 -- ## Функция, позволяющая правильно распределять слова и искать полноценные совпадения ## -- 
 function checkMessage(msg, arg) -- под аргументом воспринимается номер нужного mainstream (от 1 до 4); Где 1 - мат, 2 - оск, 3 - упом.стор.проектов, 4 - оск род
@@ -176,28 +185,36 @@ function sampev.onServerMessage(color, text)
             local rod_text, _ = checkMessage(check_text, 4)
             if mat_text and elements.settings.automute_mat.v then  
                 sampAddChatMessage(tag .. " ======================= | [AT] Automute-Stream | ================== ")
-                sampAddChatMessage(tag .. " | Мут ID[" .. check_id .. "] за msg: " .. check_text, -1)
+                sampAddChatMessage('                                                                            ')
+                sampAddChatMessage(tag .. " | Мут " .. check_nick .. "[" .. check_id .. "] за msg: " .. check_text, -1)
+                sampAddChatMessage('                                                                            ')
                 sampAddChatMessage(tag .. " ======================= | [AT] Automute-Stream | ================== ")
                 sampSendChat("/mute " .. check_id .. " 300 Нецензурная лексика")
                 showNotification("Нарушитель: " .. check_nick .. "[" .. check_id .. "] \n Замучен за 'мат'. \n Его текст: " .. check_text)
             end
             if osk_text and elements.settings.automute_osk.v then  
                 sampAddChatMessage(tag .. " ======================= | [AT] Automute-Stream | ================== ")
-                sampAddChatMessage(tag .. " | Мут ID[" .. check_id .. "] за msg: " .. check_text, -1)
+                sampAddChatMessage('                                                                            ')
+                sampAddChatMessage(tag .. " | Мут " .. check_nick .. "[" .. check_id .. "] за msg: " .. check_text, -1)
+                sampAddChatMessage('                                                                            ')
                 sampAddChatMessage(tag .. " ======================= | [AT] Automute-Stream | ================== ")
                 sampSendChat("/mute " .. check_id .. " 400 Оск/Униж.")
                 showNotification("Нарушитель: " .. check_nick .. "[" .. check_id .. "] \n Замучен за 'Оскорбление/Унижение'. \n Его текст: " .. check_text)
             end
             if upom_text and elements.settings.automute_upom.v then  
                 sampAddChatMessage(tag .. " ======================= | [AT] Automute-Stream | ================== ")
-                sampAddChatMessage(tag .. " | Мут ID[" .. check_id .. "] за msg: " .. check_text, -1)
+                sampAddChatMessage('                                                                            ')
+                sampAddChatMessage(tag .. " | Мут " .. check_nick .. "[" .. check_id .. "] за msg: " .. check_text, -1)
+                sampAddChatMessage('                                                                            ')
                 sampAddChatMessage(tag .. " ======================= | [AT] Automute-Stream | ================== ")
                 sampSendChat("/mute " .. check_id .. " 1000 Упом.стор.проектов")
                 showNotification("Нарушитель: " .. check_nick .. "[" .. check_id .. "] \n Замучен за 'Упом.стор.проектов'. \n Его текст: " .. check_text)
             end
             if rod_text and elements.settings.automute_rod.v then  
                 sampAddChatMessage(tag .. " ======================= | [AT] Automute-Stream | ================== ")
-                sampAddChatMessage(tag .. " | Мут ID[" .. check_id .. "] за msg: " .. check_text, -1)
+                sampAddChatMessage('                                                                            ')
+                sampAddChatMessage(tag .. " | Мут " .. check_nick .. "[" .. check_id .. "] за msg: " .. check_text, -1)
+                sampAddChatMessage('                                                                            ')
                 sampAddChatMessage(tag .. " ======================= | [AT] Automute-Stream | ================== ")
                 sampSendChat("/mute " .. check_id .. " 5000 Оск/Униж. родных")
                 showNotification("Нарушитель: " .. check_nick .. "[" .. check_id .. "] \n Замучен за 'Оскорбление/Унижение родных'. \n Его текст: " .. check_text)
@@ -217,68 +234,68 @@ function main()
         createDirectory(directoryAM)
     end
 
-    local file_read, file_line = io.open(getWorkingDirectory() .. "\\config\\AdminTool\\AutoMute\\mat.txt", "r"), -1
-    if file_read ~= nil then  
-        file_read:seek("set", 0)
-        for line in file_read:lines() do  
-            onscene_mat[file_line] = line  
-            file_line = file_line + 1 
+    local file_read_mat, file_line_mat = io.open(getWorkingDirectory() .. "\\config\\AdminTool\\AutoMute\\mat.txt", "r"), -1
+    if file_read_mat ~= nil then  
+        file_read_mat:seek("set", 0)
+        for line in file_read_mat:lines() do  
+            onscene_mat[file_line_mat] = line  
+            file_line_mat = file_line_mat + 1 
         end  
-        file_read:close()  
+        file_read_mat:close()  
     else
-        file_read, file_line = io.open(directoryAM.."\\mat.txt", 'w'), 1
+        file_read_mat, file_line_mat = io.open(directoryAM.."\\mat.txt", 'w'), 1
         for _, v in ipairs(onscene_mat) do  
-            file_read:write(v .. "\n")
+            file_read_mat:write(v .. "\n")
         end 
-        file_read:close()
+        file_read_mat:close()
     end
 
-    local file_read, file_line = io.open(directoryAM.."\\osk.txt", 'r'), 1
-    if file_read ~= nil then  
-        file_read:seek("set", 0)
-        for line in file_read:lines() do  
-            onscene_osk[file_line] = line  
-            file_line = file_line + 1 
+    local file_read_osk, file_line_osk = io.open(directoryAM.."\\osk.txt", 'r'), 1
+    if file_read_osk ~= nil then  
+        file_read_osk:seek("set", 0)
+        for line in file_read_osk:lines() do  
+            onscene_osk[file_line_osk] = line  
+            file_line_osk = file_line_osk + 1 
         end  
-        file_read:close()  
+        file_read_osk:close()  
     else 
-        file_read, file_line = io.open(directoryAM.."\\osk.txt", 'w'), 1
+        file_read_osk, file_line_osk = io.open(directoryAM.."\\osk.txt", 'w'), 1
         for _, v in ipairs(onscene_osk) do  
-            file_read:write(v .. "\n")
+            file_read_osk:write(v .. "\n")
         end 
-        file_read:close()
+        file_read_osk:close()
     end
 
-    local file_read, file_line = io.open(directoryAM.."\\rod.txt", 'r'), 1
-    if file_read ~= nil then  
-        file_read:seek("set", 0)
-        for line in file_read:lines() do  
-            onscene_rod[file_line] = line  
-            file_line = file_line + 1 
+    local file_read_rod, file_line_rod = io.open(directoryAM.."\\rod.txt", 'r'), 1
+    if file_read_rod ~= nil then  
+        file_read_rod:seek("set", 0)
+        for line in file_read_rod:lines() do  
+            onscene_rod[file_line_rod] = line  
+            file_line_rod = file_line_rod + 1 
         end  
-        file_read:close()  
+        file_read_rod:close()  
     else
-        file_read, file_line = io.open(directoryAM.."\\rod.txt", 'w'), 1
+        file_read_rod, file_line_rod = io.open(directoryAM.."\\rod.txt", 'w'), 1
         for _, v in ipairs(onscene_rod) do  
-            file_read:write(v .. "\n")
+            file_read_rod:write(v .. "\n")
         end 
-        file_read:close()
+        file_read_rod:close()
     end
 
-    local file_read, file_line = io.open(directoryAM.."\\upom.txt", 'r'), 1
-    if file_read ~= nil then  
-        file_read:seek("set", 0)
-        for line in file_read:lines() do  
-            onscene_upom[file_line] = line  
-            file_line = file_line + 1 
+    local file_read_upom, file_line_upom = io.open(directoryAM.."\\upom.txt", 'r'), 1
+    if file_read_upom ~= nil then  
+        file_read_upom:seek("set", 0)
+        for line in file_read_upom:lines() do  
+            onscene_upom[file_line_upom] = line  
+            file_line_upom = file_line_upom + 1 
         end  
-        file_read:close()  
+        file_read_upom:close()  
     else 
-        file_read, file_line = io.open(directoryAM.."\\upom.txt", 'w'), 1
+        file_read_upom, file_line_upom = io.open(directoryAM.."\\upom.txt", 'w'), 1
         for _, v in ipairs(onscene_upom) do  
-            file_read:write(v .. "\n")
+            file_read_upom:write(v .. "\n")
         end 
-        file_read:close()
+        file_read_upom:close()
     end
     -- ## Блок проверки на нахождение нужных файлов в рабочей папке ## --
 
@@ -468,7 +485,53 @@ function delete_mat(param)
         sampAddChatMessage(tag .. " Слова \"" .. atlibs.string_rlower(param) .. "\" нет в списке нецензурщины.")
     end
 end
+
+function string.rlower(s)
+    s = s:lower()
+    local strlen = s:len()
+    if strlen == 0 then return s end
+    s = s:lower()
+    local output = ''
+    for i = 1, strlen do
+        local ch = s:byte(i)
+        if ch >= 192 and ch <= 223 then -- upper russian characters
+            output = output .. russian_characters[ch + 32]
+        elseif ch == 168 then -- Ё
+            output = output .. russian_characters[184]
+        else
+            output = output .. string.char(ch)
+        end
+    end
+    return output
+end
 -- ## Блок функций, отвечающий на введенные в блоке регистра команды. Применяется к автомуту ## --
+
+-- ## Блок функций, отвечающий за чтение файлов автомута для ввода необходимых слов ## --
+function check_files_automute(param) 
+    if param == "mat" then  
+        local file_check = assert(io.open(getWorkingDirectory() .. '\\config\\AdminTool\\AutoMute\\mat.txt', 'r'))
+        local t = file_check:read("*all")
+        file_check:close()
+            return t
+    elseif param == "osk" then  
+        local file_check = assert(io.open(getWorkingDirectory() .. '\\config\\AdminTool\\AutoMute\\osk.txt', 'r'))
+        local t = file_check:read("*all")
+        file_check:close()     
+            return t   
+    elseif param == "oskrod" then  
+        local file_check = assert(io.open(getWorkingDirectory() .. '\\config\\AdminTool\\AutoMute\\rod.txt', 'r'))
+        local t = file_check:read("*all")
+        file_check:close()        
+            return t
+    elseif param == "upomproject" then  
+        local file_check = assert(io.open(getWorkingDirectory() .. '\\config\\AdminTool\\AutoMute\\upom.txt', 'r'))
+        local t = file_check:read("*all")
+        file_check:close()        
+            return t        
+    end
+end
+-- ## Блок функций, отвечающий за чтение файлов автомута для ввода необходимых слов ## --
+
 
 -- ## Блок функций-экспорта для интеграции их в основной скрипт ## --
 function EXPORTS.ActiveAutoMute()
@@ -492,6 +555,121 @@ function EXPORTS.ActiveAutoMute()
             config.settings.automute_rod = elements.settings.automute_rod.v  
             save()  
         end
+        imgui.EndPopup()
+    end
+end
+
+function EXPORTS.ReadWriteAM()
+    if imgui.Button(u8"Редакция файлов автомута") then  
+        imgui.OpenPopup('ReadWriteAutoMuteFiles')
+    end 
+    if imgui.BeginPopupModal('ReadWriteAutoMuteFiles', false, imgui.WindowFlags.NoTitleBar + imgui.WindowFlags.NoResize) then  
+        imgui.BeginChild('##MenuRWAMF', imgui.ImVec2(165, 400), true)
+            imgui.Text(u8"Ниже представлен список файлов \nв виде кнопок.\nДля выбора файла, \nнажмите на кнопку.")
+            imgui.Text('')
+            imgui.Separator()
+            if imgui.Button(u8"Нецензурная лексика") then  
+                elements.imgui.selectable = 1
+            end  
+            if imgui.Button(u8"Оскорбление/Унижение") then  
+                elements.imgui.selectable = 2
+            end  
+            if imgui.Button(u8"Упом.стор.проектов") then  
+                elements.imgui.selectable = 3
+            end 
+            if imgui.Button(u8"Оскорбление родных") then  
+                elements.imgui.selectable = 4
+            end
+            imgui.SetCursorPosY(imgui.GetWindowHeight() - 25)
+            if imgui.Button(u8"Закрыть редактор") then  
+                imgui.CloseCurrentPopup()
+            end
+        imgui.EndChild()
+        imgui.SameLine()
+        imgui.BeginChild('##WindowRWAMF', imgui.ImVec2(500, 400), true)
+            if elements.imgui.selectable == 0 then  
+                imgui.Text(u8"Редактируйте файлы аккуратно. \nКаждое Вами введенное слово будет фиксироваться в файле при сохранении.")
+                imgui.Text(u8"На данный момент ни один файл не приведен в чтение.")
+            end  
+            if elements.imgui.selectable == 1 then  
+                imgui.Text(u8"Для добавления/удаление слов, используйте поле ввода ниже")
+                imgui.InputText("##InputWord", elements.imgui.input_word)
+                imgui.SameLine()
+                if imgui.Button(fa.ICON_REFRESH) then  
+                    elements.imgui.input_word.v = ""
+                end  
+                if #elements.imgui.input_word.v > 0 then
+                    if imgui.Button(u8"Добавить") then  
+                        save_mat(u8:decode(elements.imgui.input_word.v))
+                    end  
+                    if imgui.Button(u8"Удалить") then  
+                        delete_mat(u8:decode(elements.imgui.input_word.v))
+                    end
+                end
+                imgui.Separator()
+                elements.imgui.stream.v = check_files_automute("mat")
+                for line in elements.imgui.stream.v:gmatch("[^\r\n]+") do  
+                    imgui.Text(u8(line))
+                end
+            end 
+            if elements.imgui.selectable == 2 then  
+                imgui.Text(u8"Для добавления/удаление слов, используйте поле ввода ниже")
+                imgui.InputText("##InputWord", elements.imgui.input_word)
+                imgui.SameLine()
+                if imgui.Button(fa.ICON_REFRESH) then  
+                    elements.imgui.input_word.v = ""
+                end  
+                if imgui.Button(u8"Добавить") then  
+                    save_osk(u8:decode(elements.imgui.input_word.v))
+                end  
+                if imgui.Button(u8"Удалить") then  
+                    delete_osk(u8:decode(elements.imgui.input_word.v))
+                end
+                imgui.Separator()
+                elements.imgui.stream.v = check_files_automute("osk")
+                for line in elements.imgui.stream.v:gmatch("[^\r\n]+") do  
+                    imgui.Text(u8(line))
+                end
+            end 
+            if elements.imgui.selectable == 3 then  
+                imgui.Text(u8"Для добавления/удаление слов, используйте поле ввода ниже")
+                imgui.InputText("##InputWord", elements.imgui.input_word)
+                imgui.SameLine()
+                if imgui.Button(fa.ICON_REFRESH) then  
+                    elements.imgui.input_word.v = ""
+                end  
+                if imgui.Button(u8"Добавить") then  
+                    save_upom(u8:decode(elements.imgui.input_word.v))
+                end  
+                if imgui.Button(u8"Удалить") then  
+                    delete_upom(u8:decode(elements.imgui.input_word.v))
+                end
+                imgui.Separator()
+                elements.imgui.stream.v = check_files_automute("upomproject")
+                for line in elements.imgui.stream.v:gmatch("[^\r\n]+") do  
+                    imgui.Text(u8(line))
+                end
+            end  
+            if elements.imgui.selectable == 4 then  
+                imgui.Text(u8"Для добавления/удаление слов, используйте поле ввода ниже")
+                imgui.InputText("##InputWord", elements.imgui.input_word)
+                imgui.SameLine()
+                if imgui.Button(fa.ICON_REFRESH) then  
+                    elements.imgui.input_word.v = ""
+                end  
+                if imgui.Button(u8"Добавить") then  
+                    save_rod(u8:decode(elements.imgui.input_word.v))
+                end  
+                if imgui.Button(u8"Удалить") then  
+                    delete_rod(u8:decode(elements.imgui.input_word.v))
+                end
+                imgui.Separator()
+                elements.imgui.stream.v = check_files_automute("oskrod")
+                for line in elements.imgui.stream.v:gmatch("[^\r\n]+") do  
+                    imgui.Text(u8(line))
+                end
+            end
+        imgui.EndChild()
         imgui.EndPopup()
     end
 end
