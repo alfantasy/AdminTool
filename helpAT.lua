@@ -8,10 +8,13 @@ local encoding = require 'encoding' -- дешифровка форматов
 local inicfg = require 'inicfg' -- работа с ini
 local sampev = require "lib.samp.events" -- подключение основных библиотек, связанные с потокам пакетов ивентов SA:MP, и их прямое соединение с LUA
 local memory = require "memory" -- библиотека, отвечающие за чтение памяти, и её факторы
+local atlibs = require 'libsfor' -- библиотека для работы с АТ
 local tab_board	=  import ('lib/scoreboard.lua') -- регистр для scoreboard
 encoding.default = 'CP1251' -- смена кодировки на CP1251
 u8 = encoding.UTF8
 script_properties('work-in-pause')
+
+local ease = require('ease')
 
 local window_main = imgui.ImBool(false)
 local window_key = imgui.ImBool(false)
@@ -671,6 +674,8 @@ local punishments = {
 	}
 }
 
+local thread_pos, value_pos = _, 0
+
 local commands = {
 
 				-- ## Команды для выдачи бана ## --
@@ -1272,6 +1277,15 @@ function onScriptTerminate(script, quitGame)
 	end
 end
 
+local TextDrawStream = {} -- создание стрим-массива для внедрения туда известного диапазона значений TextDraw серверного рекона.
+local TextDrawStream_Text = {'STATS', 'MUTE', 'KICK', 'BAN', 'JAIL', 'CLOSE'} -- занесение базовых значений внутри блоков рекона.
+local info_to_player = { }
+local refresh_button_textdraw = 0
+local info_textdraw_recon = 0
+for i = 186, 250 do  
+	table.insert(TextDrawStream, i, #TextDrawStream+1) -- занесение значений цикла For от последних известных значений.
+end
+
 function main()
 	if not isSampLoaded() or not isSampfuncsLoaded() then return end
 	while not isSampAvailable() do wait(100) end
@@ -1511,6 +1525,9 @@ function main()
 	sampRegisterChatCommand("newindow", function()
 		window_new.v = not window_new.v  
 		imgui.Process = window_new.v
+		thread_pos = ease(-100, 0, nil, 1.0, "inOutSize", function(v)
+			value_pos = v
+		end)
 	end)
 	sampRegisterChatCommand("dsorry", function()
 		sampSendChat("/mess 10 Происходит тестирование админ-скрипта AdminTool!")
@@ -1541,6 +1558,26 @@ function main()
 	--	sampAddChatMessage(text,-1)
 	--end)
 
+	sampRegisterChatCommand("offcursor", function()
+		imgui.ShowCursor = false  
+	end)
+
+	-- thFadeImgui = lua_thread.create_suspended(function(delay)
+	-- 	step = 0
+	-- 	while true do  
+	-- 		imgui.PushStyleVar(imgui.StyleVar.Alpha, step) 
+	-- 		if step == 0 then  
+	-- 			step = step + 0.1 
+	-- 		end  
+	-- 		if step > 0 then  
+	-- 			break
+	-- 		end
+	-- 		wait(delay)
+	-- 		imgui.PopItemWidth(1)
+	-- 	end
+	-- end)
+
+
 	sampRegisterChatCommand("iddialog", iddialog)
 
 	local fonte = renderCreateFont("Arial", 8, 5) --creating font
@@ -1548,6 +1585,12 @@ function main()
 	------------------ Показ запуска скрипта, указ автора и функций -------------------------
 	sampAddChatMessage(tag .. 'Script for develop is initialized. ', -1)
 	------------------ Показ запуска скрипта, указ автора и функций -------------------------
+
+	sampRegisterChatCommand('debugrecon', function()
+		for key, v in pairs(info_to_player) do 
+			print(v) 
+		end
+	end)
 
 	while true do
 
@@ -1572,7 +1615,10 @@ function main()
 			end
 		end
 
-		if not window_main.v and not login_admintool.v and not window_key.v and not window_new.v then imgui.Process = false imgui.ShowCursor = false end
+		if not window_main.v and not login_admintool.v and not window_key.v and not window_new.v then 
+			imgui.Process = false 
+			imgui.ShowCursor = false
+		 end
 
 		if sampIsChatInputActive() then
 			if sampGetChatInputText():find("/") == 1 then
@@ -1616,10 +1662,49 @@ function join_argb(a, r, g, b)
     return argb
 end
 
-function sampev.onShowTextDraw(id, data)
-	if id == 0 then  
-		return false  
-	end
+-- function sampev.onShowTextDraw(id, data)
+-- 	-- sampAddChatMessage(tag .. ' Перехват информации о текущих запущенных TextDraw в момент фрейма. Смотрите в консоли.', -1)
+-- 	-- print('ID TextDraw: ' .. id)
+-- 	-- print('Text: ' .. data.text)
+-- 	-- print('Position: ' .. data.position, -1)
+-- 	-- print('ModelID: ' .. data.modelId)
+-- 	-- print('Line Width: ' .. data.lineWidth)
+-- 	-- print('Line Height: ' .. data.lineHeight)
+-- 	-- print('Letter Width: ' .. data.letterWidth)
+-- 	-- print('Letter Height: ' .. data.letterHeight)
+-- 	-- print('Flags: ' .. data.flags)
+-- 	-- print('Style: ' .. data.style)
+-- 	-- sampAddChatMessage(tag .. ' Завершаю перехват TextDraw', -1)
+-- 	if data.text:find('~g~::Health:~n~') then  
+-- 		return false  
+-- 	end
+-- 	if data.text:find('REFRESH') then  
+-- 		refresh_button_textdraw = id 
+-- 		sampAddChatMessage(tag .. 'Нынешний ID Refresh: ' .. refresh_button_textdraw, -1) 
+-- 		return false
+-- 	end
+-- 	for _, v in pairs(TextDrawStream_Text) do  
+-- 		if data.text:find(v) then  
+-- 			return false  
+-- 		end  
+-- 	end
+-- 	if data.text:find('(%d+) : (%d+)') then  
+-- 		info_textdraw_recon = id
+-- 		sampAddChatMessage(tag .. ' Нашел текстдрав с приблизительным значением: ' .. info_textdraw_recon, -1)  
+-- 		return false
+-- 	end
+-- 	if data.text:find('(%d+)') then  
+-- 		sampAddChatMessage(tag .. ' Последний TextDraw найден: ' .. id, -1)
+-- 	end
+-- 	if TextDrawStream[id] then 
+-- 		return false 
+-- 	end
+-- end
+
+function sampev.onTextDrawSetString(id, text) 
+    if id == info_textdraw_recon then  
+        info_to_player = atlibs.textSplit(text, "~n~")
+    end
 end
 
 function reconnect(param)
@@ -1643,6 +1728,7 @@ end
 
 function imgui.OnDrawFrame()
 
+	royalblue()
 
 	if login_admintool.v then  
 
@@ -1678,6 +1764,7 @@ function imgui.OnDrawFrame()
 		imgui.SetNextWindowSize(imgui.ImVec2(580, 300), imgui.Cond.FirstUseEver)
 
 		imgui.ShowCursor = true
+		-- thFadeImgui:run(50)
 		imgui.Begin(u8" Window Help AT ", window_main) 
 		imgui.BeginChild('##Special', imgui.ImVec2(120, 265), true)
 			if imgui.Button(u8"Проверки") then  
@@ -1748,14 +1835,15 @@ function imgui.OnDrawFrame()
 	end
 	if window_new.v then  
 
-		royalblue()
-
 		imgui.SetNextWindowPos(imgui.ImVec2(sw / 2, sh / 2), imgui.Cond.FirstUseEver, imgui.ImVec2(0.5, 0.5))
 		imgui.SetNextWindowSize(imgui.ImVec2(600, 400), imgui.Cond.FirstUseEver)
 
 		imgui.ShowCursor = true
 
 		imgui.Begin(" New Window AT", window_new, imgui.WindowFlags.NoResize + imgui.WindowFlags.NoCollapse)
+
+			imgui.SetWindowPos(" New Window AT", imgui.ImVec2(sw/2-imgui.GetWindowSize().x/2+value_pos, sh / 2-imgui.GetWindowSize().y/2))
+
 			imgui.BeginChild('##Menu', imgui.ImVec2(120, 290), true)
 				if imgui.Button(fai.ICON_FA_HOME .. u8" Приветствие", imgui.ImVec2(110, 0)) then  
 					window_menu = 0 
@@ -1860,17 +1948,17 @@ function imgui.OnDrawFrame()
 	-- end	
 end
 
-function apply_custom_style()
-    imgui.SwitchContext()
-    local style = imgui.GetStyle()
-    local colors = style.Colors
-    local clr = imgui.Col
-    local ImVec4 = imgui.ImVec4
-    colors[clr.FrameBg]                = ImVec4(0.48, 0.23, 0.16, 0.54) -- R, G, B, A
-    colors[clr.FrameBgHovered]         = ImVec4(0.98, 0.43, 0.26, 0.40) -- R, G, B, A
-    colors[clr.FrameBgActive]          = ImVec4(0.98, 0.43, 0.26, 0.67) -- R, G, B, A
-end
-apply_custom_style()
+-- function apply_custom_style()
+--     imgui.SwitchContext()
+--     local style = imgui.GetStyle()
+--     local colors = style.Colors
+--     local clr = imgui.Col
+--     local ImVec4 = imgui.ImVec4
+--     colors[clr.FrameBg]                = ImVec4(0.48, 0.23, 0.16, 0.54) -- R, G, B, A
+--     colors[clr.FrameBgHovered]         = ImVec4(0.98, 0.43, 0.26, 0.40) -- R, G, B, A
+--     colors[clr.FrameBgActive]          = ImVec4(0.98, 0.43, 0.26, 0.67) -- R, G, B, A
+-- end
+-- apply_custom_style()
 
 function royalblue()
 	imgui.SwitchContext()

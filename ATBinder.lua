@@ -75,7 +75,7 @@ function main()
     
     sampfuncsLog(log .. " Проводится инициализация биндера и регистрация команд. \nВ случае, если почему-то команда не зарегистрировалась, перезагрузите скрипты.")
 
-    sampAddChatMessage(tag .. " Инициализация биндера. Регистрирую команды.")
+    sampAddChatMessage(tag .. "Инициализация биндера. Регистрирую команды.", -1)
 
     waiting_function = lua_thread.create_suspended(InjectWaitFunction)
 
@@ -190,7 +190,7 @@ function imgui.OnDrawFrame()
         imgui.EndMenuBar()
 
         if menuSelect == 0 then
-            imgui.Text(u8"Данное окно является биндером команд. Вы сможете добавить все свои необходимые команды, \nили даже забиндить команды AT на свои собственные.")
+            imgui.Text(u8"Данное окно является биндером команд. Вы сможете добавить все свои необходимые команды.")
             imgui.Text(u8"Это вспомогательный скрипт, работающее отдельно от пакета АТ.\nОбновляется отдельно, но есть возможность обновлять и в основном скрипте.")
             imgui.Text(u8"Ввод команд осуществляется с легкостью и ненужно никаких особенных знаний.")
             imgui.Text(u8"Интерфейс довольно прост, интуитивно понятен и описан.")
@@ -231,7 +231,7 @@ function imgui.OnDrawFrame()
                     end
                     imgui.SameLine()
                     if imgui.Button(fai.ICON_FA_TRASH.."##"..key, imgui.ImVec2(27,0)) then 
-                        sampAddChatMessage(tag .. 'Команда "' ..u8:decode(configB.bind_name[key]).. '" удалена.') 
+                        sampAddChatMessage(tag .. 'Команда "' ..u8:decode(configB.bind_name[key]).. '" удалена.', -1) 
                         table.remove(configB.bind_name, key)
                         table.remove(configB.bind_int, key)
                         table.remove(configB.bind_delay, key)
@@ -277,7 +277,7 @@ function imgui.OnDrawFrame()
                             table.insert(configB.bind_delay, elements.buff.delay.v)
                             table.insert(configB.bind_argument, elements.buff.argument.v)
                             if inicfg.save(configB, directIni) then  
-                                sampAddChatMessage(tag .. 'Команда "' ..u8:decode(elements.buff.name.v).. '" создана.')
+                                sampAddChatMessage(tag .. 'Команда "' ..u8:decode(elements.buff.name.v).. '" создана.', -1)
                                 elements.buff.name.v, elements.buff.int.v, elements.buff.delay.v, elements.buff.argument.v = "", "", "0", false
                             end
                             elements.boolean.CreateOrEditCommand = false  
@@ -292,7 +292,7 @@ function imgui.OnDrawFrame()
                             table.remove(configB.bind_delay, getpos + 1)
                             table.remove(configB.bind_argument, getpos + 1)
                             if inicfg.save(configB, directIni) then  
-                                sampAddChatMessage(tag .. 'Команда "' ..u8:decode(elements.buff.name.v).. '" отредактирована.')
+                                sampAddChatMessage(tag .. 'Команда "' ..u8:decode(elements.buff.name.v).. '" отредактирована.', -1)
                                 elements.buff.name.v, elements.buff.int.v, elements.buff.delay.v, elements.buff.argument.v = "", "", "0", false
                             end  
                             EditOldBind = false

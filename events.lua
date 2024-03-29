@@ -286,6 +286,7 @@ function imgui.OnDrawFrame()
             imgui.PopItemWidth()
             if imgui.Button(u8"Вывод правил") then  
                 text = atlibs.string_split(elements.buffers.rules.v:gsub("\n", "~"), "~")
+                Stream_Text = text
                 for _, i in pairs(text) do  
                     sampSendChat("/mess " .. u8:decode(i))
                 end
@@ -301,7 +302,7 @@ function imgui.OnDrawFrame()
             if imgui.Button(u8"Начать МП") then  
                 lua_thread.create(function()
                     sampSendChat("/mp")
-                    sampSendDialogResponse(5343, 1, 14)
+                    sampSendDialogResponse(5343, 1, 15)
                     wait(1)
                     sampSendDialogResponse(16069, 1, 1)
                     if #elements.buffers.dt_vt.v > 0 then  
@@ -369,7 +370,7 @@ function imgui.OnDrawFrame()
                             Stream_Text = atlibs.string_split(BinderMPcfg.bind_text[key_bind], "~")
                             wait(500)
                             sampSendChat("/mp")
-                            sampSendDialogResponse(5343, 1, 14)
+                            sampSendDialogResponse(5343, 1, 15)
                             wait(1)
                             sampSendDialogResponse(16069, 1, 1)
                             sampSendDialogResponse(16070, 1, 0, BinderMPcfg.bind_vdt[key_bind])

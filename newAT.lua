@@ -1,10 +1,9 @@
-script_name('AdminTool')
-script_description('Специальный административный скрипт для сервера Russian Drift Server в SA:MP')
-script_author('alfantasyz')
+script_name('AdminTool') -- имя скрипта
+script_description('Специальный административный скрипт для сервера Russian Drift Server в SA:MP') -- описание
+script_author('alfantasyz') -- автор
 
--- хуй пизда сковорода
 -- ## Регистрация библиотек, плагинов и аддонов ## --
-require "lib.moonloader"
+require "lib.moonloader" -- интеграция основных функций.
 local fflags = require("moonloader").font_flag -- работа с флагами для рендера текста
 local dlstatus = require('moonloader').download_status -- работа с скачиванием различных файлов при помощи URL
 local inicfg = require 'inicfg' -- работа с INI файлами
@@ -134,6 +133,13 @@ local configReports = inicfg.load({
     bind_delay = {},
 }, directReports)
 
+local directIniText = 'AdminTool\\texts.ini'
+local configText = inicfg.load({
+	flood_text = {},
+	flood_name = {},
+}, directIniText)
+inicfg.save(configText, directIniText)
+
 local direct = "AdminTool\\settings.ini"
 local config = inicfg.load({
     main = {
@@ -143,7 +149,6 @@ local config = inicfg.load({
         push_report = false, 
         auto_login = false, 
         custom_tab = false, 
-        render_admins = false,
 		render_admins_imgui = false,
         password = "",
         recon_menu = false, 
@@ -169,8 +174,14 @@ local config = inicfg.load({
 }, direct)
 inicfg.save(config, direct)
 
+function TextSave()
+	inicfg.save(configText, directIniText)
+	return true
+end
+
 function ConfigSave()
     inicfg.save(config, direct)
+	return true
 end
 
 local elm = {
@@ -182,7 +193,6 @@ local elm = {
         auto_login = imgui.ImBool(config.main.auto_login),
         custom_tab = imgui.ImBool(config.main.custom_tab),
         recon_menu = imgui.ImBool(config.main.recon_menu),
-        render_admins = imgui.ImBool(config.main.render_admins),
 		render_admins_imgui = imgui.ImBool(config.main.render_admins_imgui),
         auto_online = imgui.ImBool(config.main.auto_online),
     },
@@ -196,10 +206,16 @@ local elm = {
         set_time_punish_in_recon = imgui.ImBuffer(100),
     },
 	binder = {
-		prefix = imgui.ImBuffer(256),
-		name = imgui.ImBuffer(256),
-		text = imgui.ImBuffer(65536),
-		delay = imgui.ImBuffer(2500),
+		reports = {
+			prefix = imgui.ImBuffer(256),
+			name = imgui.ImBuffer(256),
+			text = imgui.ImBuffer(65536),
+			delay = imgui.ImBuffer(2500),
+		},
+		flood = {
+			text = imgui.ImBuffer(65536),
+			name = imgui.ImBuffer(256),
+		},
 	},
     position = {
         reX = config.position.reX, 
@@ -263,7 +279,13 @@ local set_color_float3 = imgui.ImFloat3(1.0, 1.0, 1.0)
 -- ## Блок переменных связанных с MoonImGUI ## --
 
 -- ## Блок переменных связанных с кастомным реконом ## --
-local ids_recon = {437, 2056, 144, 146, 141, 2050, 155, 153, 152, 156, 154, 160, 157, 179, 165, 159, 164, 162, 161, 180, 178, 163, 169, 181, 161, 166, 170, 168, 174, 182, 172, 171, 175, 173, 150, 184, 147, 148, 151, 149, 142, 143, 184, 177, 145, 158, 167, 183, 176}
+local ids_recon = {}
+local text_recon = {'STATS', 'MUTE', 'KICK', 'BAN', 'JAIL', 'CLOSE'}
+for i = 186, 250 do 
+	table.insert(ids_recon, i, #ids_recon+1) 
+end
+local refresh_button_textdraw = 0
+local info_textdraw_recon = 0
 local info_to_player = {}
 local recon_info = { "Здоровье: ", "Броня: ", "ХП машины: ", "Скорость: ", "Пинг: ", "Патроны: ", "Выстрел: ", "Тайминг выстрела: ", "Время в АФК: ", "P.Loss: ", "Уровень VIP: ", "Пассивный режим: ", "Турбо-режим: ", "Коллизия: "}
 local control_to_player = false
@@ -301,12 +323,10 @@ function main()
     
     -- ## Регистрация потоков ## --
     load_recon = lua_thread.create_suspended(loadRecon)
-    draw_admins = lua_thread.create_suspended(drawAdmins)
     send_online = lua_thread.create_suspended(drawOnline)
     -- ## Регистрация потоков ## --
 
     -- ## Запуск потоков ## -- 
-    draw_admins:run()
     send_online:run()
     -- ## Запуск потоков ## -- 
 
@@ -478,7 +498,7 @@ function main()
         wait(0)
         imgui.Process = true 
 
-        if control_spawn and elm.boolean.auto_login.v then  
+        if control_spawn and elm.boolean.auto_login.v and not sampIsDialogActive() then  
             wait(10000)
             sampSendChat("/alogin " .. u8:decode(elm.input.password.v))
 			wait(100)
@@ -508,7 +528,7 @@ function main()
         end
 
         if atlibs.isKeysDown(atlibs.strToIdKeys("R")) and ATRecon.v then
-            sampSendClickTextdraw(156)
+            sampSendClickTextdraw(refresh_button_textdraw)
         end
 
         if atlibs.isKeysDown(atlibs.strToIdKeys("Q")) and ATRecon.v and control_to_player == true then  
@@ -521,18 +541,12 @@ function main()
             ATMenu.v = not ATMenu.v 
             imgui.Process = ATMenu.v
         end
-		
-		if control_to_player then  
-			load_recon:run()
-			ATRecon.v = true  
-			imgui.Process = true  
-		else 
-			ATRecon.v = false	
-		end
 
 		if elm.boolean.render_admins_imgui.v then  
 			ATAdmins.v = true  
-			imgui.ShowCursor = false  
+			if not control_to_player then  
+				imgui.ShowCursor = false  
+			end
 		end
 
 		if not sampIsPlayerConnected(recon_id) then
@@ -545,13 +559,11 @@ function main()
             imgui.ShowCursor = false 
         end 
 
-        if sampGetDialogCaption() == "{ff8587}Администрация проекта (онлайн)" and (elm.boolean.render_admins.v or elm.boolean.render_admins_imgui.v) then 
+        if sampGetDialogCaption() == "{ff8587}Администрация проекта (онлайн)" and (elm.boolean.render_admins_imgui.v) then 
 			sampCloseCurrentDialogWithButton(0)
 		end	 
 
-        if render_admin.set_position then  
-            change_position_admins()
-        end
+        change_position_admins()
 
         if elm.position.change_recon then  
             change_position_recon() 
@@ -561,18 +573,17 @@ end
 
 -- ## Блок рендерных функций, изменение их позиций и вывод ## -- 
 function change_position_admins()
-	if isKeyJustPressed(VK_RBUTTON) then
-		elm.position.acX = render_admin.X
-		elm.position.acY = render_admin.Y
-		render_admin.set_position = false
-	elseif isKeyJustPressed(VK_LBUTTON) then
-		render_admin.set_position = false
-		config.position.acX = elm.position.acX
-		config.position.acY = elm.position.acY
-		ConfigSave()
-		showNotification("Настройки сохранены успешно")
-	else
-		elm.position.acX, elm.position.acY = getCursorPos()
+	if render_admin.set_position then  
+		showCursor(true, false)
+		local X, Y = getCursorPos()
+		elm.position.acX, elm.position.acY = X, Y
+		if isKeyJustPressed(49) then  
+			showCursor(false, false)
+			showNotification("Положение окна сохранено!")
+			render_admin.set_position = false 
+			config.position.acX, config.position.acY = elm.position.acX, elm.position.acY
+			ConfigSave()
+		end  
 	end
 end
 -- ## Блок рендерных функций, изменение их позиций и вывод ## -- 
@@ -593,7 +604,7 @@ function sampev.onShowDialog(id, style, title, button1, button2, text)
 		return false
     end
 
-	if elm.boolean.render_admins.v then 
+	if elm.boolean.render_admins_imgui.v then 
 		if id == 0 and title:find("Администрация проекта") then
 			admins = {}
 			local j = 0
@@ -602,28 +613,65 @@ function sampev.onShowDialog(id, style, title, button1, button2, text)
 				local s = text:sub(i, i)
 				if s == "\n" then 
 					local line = text:sub(j, i)
-					line = line:gsub("{......}", "")
-					if line:match("(.+)%((%d+)%) %((.+)%)") then
-						local nick, id, prefix, lvl, vig, rep = line:match("(.+)%((%d+)%) %((.+)%) | Уровень: (%d+) | Выговоры: (%d+) из 3 | Репутация: (%d+)")
-						local admin = {
-							nick = nick,
-							id = id,
-							prefix = prefix,
-							lvl = lvl,
-							vig = vig,
-							rep = rep
-						}
-						table.insert(admins, admin)
-					else
-						local nick, id, lvl, vig, rep = line:match("(.+)%((%d+)%) | Уровень: (%d+) | Выговоры: (%d+) из 3 | Репутация: (%d+)")
-						local admin = {
-							nick = nick,
-							id = id,
-							lvl = lvl,
-							vig = vig,
-							rep = rep
-						}
-						table.insert(admins, admin)
+					if line:find('(.+)%((%d+)%) %(%{(%x+)%}(.+)%)') then
+						--sampAddChatMessage(nick .. " " .. id .. " " .. "{" .. color_prefix .. "}" .. " " .. prefix .. " " .. lvl_adm .. " " .. vig .. " " .. rep .. " " .. afk, -1)
+						if line:find("AFK:") then
+							local color_prefix, prefix = line:match('%(%{(%x+)%}(.+)%)')
+							line = line:gsub("{......}", "")
+							local nick, id, _, lvl, vig, rep, afk = line:match('(.+)%((%d+)%) %((.+)%) | Уровень: (%d+) | Выговоры: (%d+) из 3 | Репутация: (%d+) | AFK: (.+)')
+							local admin = {
+								nick = nick, 
+								id = id, 
+								color_prefix = color_prefix, 
+								prefix = prefix, 
+								lvl = lvl,
+								vig = vig, 
+								rep = rep,
+								afk = afk
+							}
+							sampAddChatMessage(nick .. " " .. id .. " " .. "{" .. color_prefix .. "}" .. " " .. prefix .. " " .. lvl .. " " .. vig .. " " .. rep .. " " .. afk, -1)
+							-- sampAddChatMessage(nick .. id .. prefix .. lvl .. afk)
+							table.insert(admins, admin)
+						else
+							local color_prefix, prefix = line:match('%(%{(%x+)%}(.+)%)')
+							line = line:gsub("{......}", "")
+							local nick, id, _, lvl, vig, rep = line:match("(.+)%((%d+)%) %((.+)%) | Уровень: (%d+) | Выговоры: (%d+) из 3 | Репутация: (%d+)")
+							local admin = {
+								nick = nick, 
+								id = id, 
+								color_prefix = color_prefix, 
+								prefix = prefix, 
+								lvl = lvl,
+								rep = rep
+							}
+							sampAddChatMessage(nick .. " " .. id .. " " .. "{" .. color_prefix .. "}" .. " " .. prefix .. " " .. lvl .. " " .. vig .. " " .. rep, -1)
+							-- sampAddChatMessage(nick .. id .. prefix .. lvl)
+							table.insert(admins, admin)
+						end
+					else 
+						line = line:gsub("{......}", "")
+						if line:find("AFK: (.+)") then
+							local nick, id, lvl, vig, rep, afk = line:match("(.+)%((%d+)%) | Уровень: (%d+) | Выговоры: (%d+) из 3 | Репутация: (%d+) | AFK: (.+)")
+							local admin = {
+								nick = nick,
+								id = id,
+								lvl = lvl,
+								vig = vig,
+								rep = rep,
+								afk = afk
+							}
+							table.insert(admins, admin)
+						else 
+							local nick, id, lvl, vig, rep = line:match("(.+)%((%d+)%) | Уровень: (%d+) | Выговоры: (%d+) из 3 | Репутация: (%d+)")
+							local admin = {
+								nick = nick,
+								id = id,
+								lvl = lvl,
+								vig = vig,
+								rep = rep
+							}
+							table.insert(admins, admin)
+						end
 					end
 					j = i
 				end
@@ -638,16 +686,13 @@ function sampev.onServerMessage(color, text)
 
     if text:find("Игрок не в сети") then  
         control_to_player = false 
+		ATRecon.v = false
 		sampSendChat("/reoff")
-        return true
-    end
-    if text:find("Вы наблюдаете за (.+)") then  
-        control_to_player = true 
         return true
     end
     if text:find("%[A%] Администратор (.+)%[(%d+)%] %(%d+ level%) авторизовался в админ панели") or text:find("%[A%-(%d+)%] (.+) отключился") then 
 		sampAddChatMessage('{8B8B8B}' .. text, -1)
-		if elm.boolean.render_admins.v or elm.boolean.render_admins_imgui.v then 
+		if elm.boolean.render_admins_imgui.v then 
 			sampSendChat("/admins ")
 		end	
 	return true 
@@ -678,10 +723,14 @@ function sampev.onServerMessage(color, text)
     end
 end
 
-function sampev.onTextDrawSetString(id, text) 
-    if id == 2056 and elm.boolean.recon_menu.v then  
-        info_to_player = atlibs.textSplit(text, "~n~")
-    end
+function sampev.onDisplayGameText(style, time, text)
+	if text == "~w~RECON ~r~OFF" and elm.boolean.recon_menu.v then  
+		control_to_player = false
+        ATRecon.v = false  
+        imgui.Process = ATRecon.v
+        imgui.ShowCursor = false  
+        recon_id = -1
+	end
 end
 
 function playersToStreamZone()
@@ -699,11 +748,36 @@ end
 
 function sampev.onShowTextDraw(id, data)
     if elm.boolean.recon_menu.v then 
-        for _, i in pairs(ids_recon) do  
-            if id == i then  
-                return false  
-            end 
-        end
+		if data.text:find('~g~::Health:~n~') then  
+			return false
+		end
+		if data.text:find('REFRESH') then  
+			refresh_button_textdraw = id  
+			return false  
+		end
+		if data.text:find('(%d+) : (%d+)') then  
+			info_textdraw_recon = id  
+			return false
+		end
+		for _, v in pairs(text_recon) do  
+			if data.text:find(v) then  
+				return false  
+			end 
+		end
+		if data.text:find("(%d+)") then  
+			if id >= 2052 then  
+				return false  
+			end  
+		end
+		if ids_recon[id] then  
+			return false 
+		end
+    end
+end
+
+function sampev.onTextDrawSetString(id, text) 
+    if id == info_textdraw_recon and elm.boolean.recon_menu.v then  
+        info_to_player = atlibs.textSplit(text, "~n~")
     end
 end
 
@@ -1606,7 +1680,7 @@ end
 
 -- ## Блок функций связанных с реконом ## --
 function loadRecon() 
-    wait(3000)
+    wait(1000)
     accept_load_recon = true
 end
 
@@ -1626,38 +1700,18 @@ end
 -- ## Блок функций связанных с реконом ## --
 
 -- ## Регистрация рендера. Показ его. ## --
-function drawAdmins()
-    if elm.boolean.render_admins.v then  
-        while true do
-                if #admins > 0 then
-                    for i = 1, #admins do
-                        local admin = admins[i]
-                        local text
-                        if admin.prefix then
-                            text = string.format("%s[%s] %s | %s уровень | %s выговоров | %s репутации.", admin.nick, admin.id, admin.prefix, admin.lvl, admin.vig, admin.rep)
-                        else
-                            text = string.format("%s[%s] | %s уровень | %s выговоров | %s репутации.", admin.nick, admin.id, admin.lvl, admin.vig, admin.rep)
-                        end
-                        text = text:gsub("\n", "")
-                        renderFontDrawText(render_font, config.colours.render_admins .. text, elm.position.acX, elm.position.acY+(18)*(i+13), 0xFF9999FF)
-                    end
-                end
-            wait(1)
-        end
-    end
-end
 -- ## Регистрация рендера. Показ его. ## --
 
 local WelcomeText = [[
-    Доброго времени суток. Спасибо за установку данного скрипта! 
-	{00BFFF}AdminTool [AT] {FFFFFF}предназначен для того, чтобы упростить работу администрации.
-	Свои предложения по поводу обновлений можно написать в группу VK:
-	https://vk.com/infsy
-	Автор данного скрипта: Егор Федосеев, VK: {00BFFF}https://vk.com/alfantasy
+Доброго времени суток. Спасибо за установку данного скрипта! 
+{00BFFF}AdminTool [AT] {FFFFFF}предназначен для того, чтобы упростить работу администрации.
+Свои предложения по поводу обновлений можно написать в группу VK:
+https://vk.com/infsy
+Автор данного скрипта: Егор Федосеев, VK: {00BFFF}https://vk.com/alfantasy
 
-    Приятной работы. 
+Приятной работы. 
 
-    (!) Сверху расположено меню для навигации.
+(!) Сверху расположено меню для навигации.
 ]]
 
 -- ## Блок специальных функций, ответственных за работу прямых задач AT ## -- 
@@ -1768,6 +1822,9 @@ function imgui.OnDrawFrame()
             if imgui.Button(fai.ICON_FA_BAN, imgui.ImVec2(27,0)) then  
                 menuSelect = 3
             end; imgui.Tooltip(u8"Команды выдачи наказаний")
+			if imgui.Button(fai.ICON_FA_LIST_OL, imgui.ImVec2(27,0)) then  
+				menuSelect = 7 
+			end; imgui.Tooltip(u8'Административная статистика')
             if imgui.Button(fai.ICON_FA_TH_LIST, imgui.ImVec2(27,0)) then  
                 menuSelect = 4 
             end; imgui.Tooltip(u8"Использование флудов АТ")
@@ -1849,12 +1906,6 @@ function imgui.OnDrawFrame()
                     imgui.OpenPopup('RenderAdmins')
                 end  
                 if imgui.BeginPopup('RenderAdmins') then  
-                    imgui.Text(u8"Включение функции рендера")
-                    imgui.SameLine()
-                    if imgui.ToggleButton('##OnRenderAdmins', elm.boolean.render_admins) then  
-                        config.main.render_admins = elm.boolean.render_admins.v 
-                        ConfigSave()
-                    end  
 					imgui.Text(u8"Включение интерфейсного метода")
 					imgui.SameLine()
 					if imgui.ToggleButton('##Imgui', elm.boolean.render_admins_imgui) then  
@@ -1862,7 +1913,7 @@ function imgui.OnDrawFrame()
 						ConfigSave()
 					end
                     if imgui.Button(fa.ICON_FA_COGS  .. u8" Изменение позиции рендера") then  
-                        render_admin.X = elm.position.acX; render_admin.Y = elm.position.acY
+						showNotification('Для сохранения позиции окна, \nнажмите цифру на клавитуре <1>')
                         render_admin.set_position = true 
                     end
                     imgui.Text(u8"Редакция цвета для вывода /admins: ")
@@ -1895,6 +1946,7 @@ function imgui.OnDrawFrame()
                     ConfigSave()
                     send_online:run()
                 end
+				plugin.ActiveForms()
             imgui.NextColumn()
                 imgui.Text(fa.ICON_OBJECT_GROUP .. u8" Кастомный TAB"); imgui.Tooltip(u8"Кастомный TAB, написанный на базе ImGUI.")
                 imgui.SameLine()
@@ -2151,9 +2203,9 @@ function imgui.OnDrawFrame()
 						EditOldBind = true
 						getpos = key_bind
 						local returnwrapped = tostring(configReports.bind_text[key_bind]):gsub('~', '\n')
-						elm.binder.text.v = returnwrapped
-						elm.binder.name.v = tostring(configReports.bind_name[key_bind])
-						elm.binder.delay.v = tostring(configReports.bind_delay[key_bind])
+						elm.binder.reports.text.v = returnwrapped
+						elm.binder.reports.name.v = tostring(configReports.bind_name[key_bind])
+						elm.binder.reports.delay.v = tostring(configReports.bind_delay[key_bind])
 						imgui.OpenPopup(u8'OpenBinderReports')
 					end 
 					imgui.SameLine()
@@ -2172,45 +2224,45 @@ function imgui.OnDrawFrame()
 				imgui.BeginChild("##EditBinder", imgui.ImVec2(600, 225), true)
 				imgui.Text(u8'Название бинда:'); imgui.SameLine()
 				imgui.PushItemWidth(130)
-				imgui.InputText("##binder_name", elm.binder.name)
+				imgui.InputText("##binder_name", elm.binder.reports.name)
 				imgui.PopItemWidth()
 				imgui.PushItemWidth(100)
 				imgui.Separator()
 				imgui.Text(u8'Текст бинда:')
 				imgui.PushItemWidth(300)
-				imgui.InputTextMultiline("##BinderS", elm.binder.text, imgui.ImVec2(-1, 110))
+				imgui.InputTextMultiline("##BinderS", elm.binder.reports.text, imgui.ImVec2(-1, 110))
 				imgui.PopItemWidth()
 		
 				imgui.SetCursorPosX((imgui.GetWindowWidth() - 100) / 100)
 				if imgui.Button(u8'Закрыть##bind1', imgui.ImVec2(100,30)) then
-					elm.binder.name.v, elm.binder.text.v, elm.binder.delay.v = '', '', "2500"
+					elm.binder.reports.name.v, elm.binder.reports.text.v, elm.binder.reports.delay.v = '', '', "2500"
 					imgui.CloseCurrentPopup()
 				end
 				imgui.SameLine()
-				if #elm.binder.name.v > 0 and #elm.binder.text.v > 0 then
+				if #elm.binder.reports.name.v > 0 and #elm.binder.reports.text.v > 0 then
 					imgui.SetCursorPosX((imgui.GetWindowWidth() - 100) / 1.01)
 					if imgui.Button(u8'Сохранить##bind1', imgui.ImVec2(100,30)) then
 						if not EditOldBind then
-							local refresh_text = elm.binder.text.v:gsub("\n", "~")
-							table.insert(configReports.bind_name, elm.binder.name.v)
+							local refresh_text = elm.binder.reports.text.v:gsub("\n", "~")
+							table.insert(configReports.bind_name, elm.binder.reports.name.v)
 							table.insert(configReports.bind_text, refresh_text)
-							table.insert(configReports.bind_delay, elm.binder.delay.v)
+							table.insert(configReports.bind_delay, elm.binder.reports.delay.v)
 							if inicfg.save(configReports, directReports) then
-								sampAddChatMessage(tag .. 'Бинд "' ..u8:decode(elm.binder.name.v).. '" успешно создан!', -1)
-								elm.binder.name.v, elm.binder.text.v, elm.binder.delay.v = '', '', "0"
+								sampAddChatMessage(tag .. 'Бинд "' ..u8:decode(elm.binder.reports.name.v).. '" успешно создан!', -1)
+								elm.binder.reports.name.v, elm.binder.reports.text.v, elm.binder.reports.delay.v = '', '', "0"
 							end
 								imgui.CloseCurrentPopup()
 							else
-								local refresh_text = elm.binder.text.v:gsub("\n", "~")
-								table.insert(configReports.bind_name, getpos, elm.binder.name.v)
+								local refresh_text = elm.binder.reports.text.v:gsub("\n", "~")
+								table.insert(configReports.bind_name, getpos, elm.binder.reports.name.v)
 								table.insert(configReports.bind_text, getpos, refresh_text)
-								table.insert(configReports.bind_delay, getpos, elm.binder.delay.v)
+								table.insert(configReports.bind_delay, getpos, elm.binder.reports.delay.v)
 								table.remove(configReports.bind_name, getpos + 1)
 								table.remove(configReports.bind_text, getpos + 1)
 								table.remove(configReports.bind_delay, getpos + 1)
 							if inicfg.save(configReports, directReports) then
-								sampAddChatMessage(tag .. 'Бинд "' ..u8:decode(elm.binder.name.v).. '" успешно отредактирован!', -1)
-								elm.binder.name.v, elm.binder.text.v, elm.binder.delay.v = '', '', "0"
+								sampAddChatMessage(tag .. 'Бинд "' ..u8:decode(elm.binder.reports.name.v).. '" успешно отредактирован!', -1)
+								elm.binder.reports.name.v, elm.binder.reports.text.v, elm.binder.reports.delay.v = '', '', "0"
 							end
 							EditOldBind = false
 							imgui.CloseCurrentPopup()
@@ -2230,6 +2282,12 @@ function imgui.OnDrawFrame()
 			end
 		end
 
+		if menuSelect == 7 then  
+			if plugins_main_res then  
+				plugin.AdminStateMenu()
+			end  
+		end
+
         if menuSelect == 15 then  
             imgui.PushItemWidth(130) if imgui.Combo("##imguiStyle", elm.int.styleImGUI, colorsImGui) then config.main.styleImGUI = elm.int.styleImGUI.v ConfigSave() end imgui.PopItemWidth() imgui.SameLine() imgui.Text(u8" - Выбор темы ") 
             imgui.Separator()
@@ -2239,12 +2297,15 @@ function imgui.OnDrawFrame()
                 config.main.font = elm.int.font.v 
                 ConfigSave()
             end; imgui.PopItemWidth(); imgui.SameLine(); imgui.Text(u8" - Редакция размера шрифта рендеров"); imgui.Tooltip(u8"Меняет шрифт на всех рендерах текста для фактического удобства.")
-			elm.binder.prefix.v = configReports.main.prefix_for_answer 
+			elm.binder.reports.prefix.v = configReports.main.prefix_for_answer 
 			imgui.Separator()
 			imgui.Text(u8"Префикс для ответа в /ans: ")
-			if imgui.InputText("##EditPrefixForAnswer", elm.binder.prefix) then  
-				configReports.main.prefix_for_answer = elm.binder.prefix.v  
+			if imgui.InputText("##EditPrefixForAnswer", elm.binder.reports.prefix) then  
+				configReports.main.prefix_for_answer = elm.binder.reports.prefix.v  
 				inicfg.save(configReports, directReports)
+			end
+			if automute_res then  
+				automute.ReadWriteAM()
 			end
         end
         
@@ -2252,22 +2313,29 @@ function imgui.OnDrawFrame()
     end
 
 	if ATAdmins.v then -- рендер /admins в ImGUI
-		imgui.SetNextWindowPos(imgui.ImVec2(sw / 2, sh / 2), imgui.Cond.FirstUseEver, imgui.ImVec2(0.5, 1))
-		imgui.SetNextWindowSize(imgui.ImVec2(500, 500), imgui.Cond.FirstUseEver)
+		imgui.SetNextWindowPos(imgui.ImVec2(elm.position.acX, elm.position.acY), imgui.Cond.FirsUseEver, imgui.ImVec2(0.5, 1))
 
-		imgui.Begin("##RenderAdmins", false, imgui.WindowFlags.NoTitleBar + imgui.WindowFlags.NoResize)
+		imgui.Begin("##RenderAdmins", false, imgui.WindowFlags.NoTitleBar + imgui.WindowFlags.AlwaysAutoResize)
 
 			if #admins > 0 then  
 				for i = 1, #admins do 
 					local admin = admins[i]
 					local text  
 					if admin.prefix then  
-						text = string.format("%s[%s] %s | %s уровень | %s выговоров | %s репутации.", admin.nick, admin.id, admin.prefix, admin.lvl, admin.vig, admin.rep)
+						if admin.afk then
+							text = string.format("%s[%s] {%s}%s | A-%s | AFK: %s ", admin.nick, admin.id, admin.color_prefix, admin.prefix, admin.lvl, admin.afk)
+						else 
+							text = string.format("%s[%s] {%s}%s | A-%s", admin.nick, admin.id, admin.color_prefix, admin.prefix, admin.lvl)							
+						end
 					else 
-						text = string.format("%s[%s] | %s уровень | %s выговоров | %s репутации.", admin.nick, admin.id, admin.lvl, admin.vig, admin.rep)
+						if admin.afk then
+							text = string.format("%s[%s] | A-%s | AFK: %s", admin.nick, admin.id, admin.lvl, admin.afk)
+						else
+							text = string.format("%s[%s] | A-%s", admin.nick, admin.id, admin.lvl)
+						end
 					end  
 					text = text:gsub("\n", "")
-					imgui.Text(u8(text))
+					atlibs.imgui_TextColoredRGB(text)
 				end 
 			end
 		imgui.End()
@@ -2296,7 +2364,7 @@ function imgui.OnDrawFrame()
             end 
             imgui.SameLine()
             if imgui.Button(u8"Обновить") then  
-                sampSendClickTextdraw(156)
+                sampSendClickTextdraw(refresh_button_textdraw)
             end
             imgui.SameLine()
             if imgui.Button(u8"Слапнуть") then  
@@ -2363,7 +2431,11 @@ function imgui.OnDrawFrame()
                             imgui.PopStyleVar(1)
                         imgui.EndMenuBar()
                             if select_recon == 0 then 
-                                recon_nick = sampGetPlayerNickname(recon_id)
+								if not sampIsPlayerConnected(recon_id) then
+                                	recon_nick = '-'
+								else 
+									recon_nick = sampGetPlayerNickname(recon_id)
+								end
                                 imgui.Text(u8"Игрок: ")
                                 imgui.Text(recon_nick)
                                 if imgui.IsItemClicked() then  
@@ -2516,12 +2588,18 @@ function showFlood_ImGUI()
     if imgui.Button(u8"Основные флуды") then  
         imgui.OpenPopup('mainFloods')
     end
+	imgui.SameLine()
     if imgui.Button(u8"Флуд об GangWar") then  
         imgui.OpenPopup('FloodsGangWar')
     end 
+	imgui.SameLine()
     if imgui.Button(u8"Мероприятия /join") then  
         imgui.OpenPopup('FloodsJoinMP')
     end
+	imgui.SameLine()
+	if imgui.Button(u8'Свои флуды') then  
+		imgui.OpenPopup('CustomsFloods')
+	end
     if imgui.BeginPopup('mainFloods') then  
         if imgui.Button(u8'Флуд про репорты') then
 			sampSendChat("/mess 4 ===================== | Репорты | ====================")
@@ -2903,5 +2981,98 @@ function showFlood_ImGUI()
 		end
         imgui.EndPopup()
     end
+	if imgui.BeginPopup('CustomsFloods') then  
+		if #configText.flood_name > 0 then  
+			for key, name in pairs(configText.flood_name) do 
+				if imgui.Button(name .. '##'..key) then  
+					ActivateFlood(key) 
+				end  
+				imgui.SameLine()
+				if imgui.Button(fai.ICON_FA_EDIT .. '##'..key..'CreatorFlood') then  
+					EditOldBind = true  
+					getpos = key 
+					local returnwrapped = tostring(configText.flood_text[key]):gsub('~', '\n')
+					elm.binder.flood.text.v = returnwrapped
+					elm.binder.flood.name.v = tostring(configText.flood_name[key])
+					imgui.OpenPopup('CreateFloodFrame')
+				end 
+				imgui.SameLine()
+				if imgui.Button(fai.ICON_FA_TRASH .. '##'..key..'CreatorFlood') then  
+					sampAddChatMessage(tag .. 'Бинд "' .. u8:decode(configText.flood_name[key])..'" удален!', -1)
+					table.remove(configText.flood_name, key)
+					table.remove(configText.flood_text, key) 
+					TextSave()
+				end
+			end 
+			imgui.Separator()
+			if imgui.Button(u8'Создать флуд') then  
+				imgui.OpenPopup('CreateFloodFrame')
+			end
+		else 
+			imgui.Text(u8'Здесь пусто. Нет флудов. Создайте лучше <3') 
+			if imgui.Button(u8'Создать флуд') then  
+				imgui.OpenPopup('CreateFloodFrame')
+			end
+		end
+		if imgui.BeginPopupModal('CreateFloodFrame', false, imgui.WindowFlags.NoTitleBar + imgui.WindowFlags.NoResize + imgui.WindowFlags.AlwaysAutoResize) then  
+			imgui.BeginChild('##FloodCreateOrEdit', imgui.ImVec2(600, 225), true)
+				imgui.Text(u8'Название флуда:'); imgui.SameLine(); imgui.PushItemWidth(130)
+				imgui.InputText('##Flood_Name', elm.binder.flood.name)
+				imgui.PopItemWidth(); imgui.PushItemWidth(100); imgui.Separator()
+				imgui.Text(u8'Текст бинда:'); imgui.PushItemWidth(300)
+				imgui.InputTextMultiline('##Flood_Text',elm.binder.flood.text, imgui.ImVec2(-1, 110))
+				imgui.PopItemWidth()
+				imgui.SetCursorPosX((imgui.GetWindowWidth() - 100) / 100)
+				if imgui.Button(u8'Закрыть##FloodCreator', imgui.ImVec2(100,30)) then  
+					elm.binder.flood.name.v, elm.binder.flood.text.v = '', ''
+					imgui.CloseCurrentPopup()
+				end  
+				imgui.SameLine()
+				if #elm.binder.flood.name.v > 0 and #elm.binder.flood.text.v > 0 then  
+					imgui.SetCursorPosX((imgui.GetWindowWidth() - 100) / 1.01)
+					if imgui.Button(u8"Сохранить##FloodCreator", imgui.ImVec2(100,30)) then  
+						if not EditOldBind then  
+							local refresh_text = elm.binder.flood.text.v:gsub('\n', "~")
+							table.insert(configText.flood_name, elm.binder.flood.name.v)
+							table.insert(configText.flood_text, refresh_text)
+							if TextSave() then 
+								sampAddChatMessage(tag .. 'Флуд "' .. u8:decode(elm.binder.flood.name.v) .. '" успешно создан!', -1)
+								elm.binder.flood.name.v, elm.binder.flood.text.v = '', ''
+							end  
+							imgui.CloseCurrentPopup()
+						else 
+							local refresh_text = elm.binder.flood.text.v:gsub('\n', "~")
+							table.insert(configText.flood_name, getpos, elm.binder.flood.name.v)
+							table.insert(configText.flood_text, getpos, refresh_text)
+							table.remove(configText.flood_name, getpos + 1)
+							table.remove(configText.flood_text, getpos + 1)
+							if TextSave() then  
+								sampAddChatMessage(tag .. 'Флуд "' .. u8:decode(elm.binder.flood.name.v) .. '" успешно отредактирован!', -1)
+								elm.binder.flood.name.v, elm.binder.flood.text.v = '', ''
+							end 
+							EditOldBind = false 
+							imgui.CloseCurrentPopup()
+						end 
+					end
+				end
+			imgui.EndChild()
+			imgui.EndPopup()
+		end
+		imgui.EndPopup()
+	end
 end
 -- ## Блок функций, отвечающий за параллельный вывод определенных участков ImGUI вне зависимости от основного фрейма ## --
+
+-- ## Блок активирующихся функций в процессе скрипта и различных взаимодействий с ним ## --
+function ActivateFlood(num)
+	lua_thread.create(function()
+		if num ~= -1 then  
+			for stream_text_flood in configText.flood_text[num]:gmatch('[^~]+') do  
+				sampSendChat('/mess ' .. u8:decode(tostring(stream_text_flood))) 
+				--sampAddChatMessage('/mess ' .. u8:decode(tostring(stream_text_flood)), -1)
+			end  
+			num = -1
+		end
+	end)
+end
+-- ## Блок активирующихся функций в процессе скрипта и различных взаимодействий с ним ## --
