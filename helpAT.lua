@@ -1290,38 +1290,38 @@ function main()
 	if not isSampLoaded() or not isSampfuncsLoaded() then return end
 	while not isSampAvailable() do wait(100) end
 
-	for key in pairs(commands) do  
-		sampRegisterChatCommand(key, function(arg)
-			reason_send = nil  
-			time_send = nil
-			if #arg > 0 then  
-				if commands[key].cmd == "/iban" or commands[key].cmd == "/ban" then
-					sampSendChat("/ans " .. arg .. " ”важаемый игрок, вы нарушали правила сервера, и если вы..")
-					sampSendChat("/ans " .. arg .. " ..не согласны с наказанием, напишите жалобу на форум https://forumrds.ru")
-					sampSendChat(commands[key].cmd .. " " .. arg .. " " .. commands[key].time .. " " .. commands[key].reason)
-				end
-				if commands[key].cmd == "/mute" then  
-					if #nick_mute_frame > 0 then 
-						for i, v in pairs(nick_mute_frame) do  
-							if commands[key].reason == reason_mute_frame[i] then  
-								if v == sampGetPlayerNickname(arg) then  
-									reason_send = reason_mute_frame[i]
-									time_send = time_mute_frame[i]
-								end  
-							end  
-						end
-					end
-					if time_send and reason_send then  
-						sampSendChat(commands[key].cmd .. " " .. arg .. " " .. time_send .. " " .. reason_send)
-					else 
-						sampSendChat(commands[key].cmd .. " " .. arg .. " " .. commands[key].time .. " " .. commands[key].reason)
-					end
-				end
-			else 
-				sampAddChatMessage(tag .. "¬ы забыли ввести ID/Nick нарушител€! ", -1)
-			end
-		end)
-	end
+	-- for key in pairs(commands) do  
+	-- 	sampRegisterChatCommand(key, function(arg)
+	-- 		reason_send = nil  
+	-- 		time_send = nil
+	-- 		if #arg > 0 then  
+	-- 			if commands[key].cmd == "/iban" or commands[key].cmd == "/ban" then
+	-- 				sampSendChat("/ans " .. arg .. " ”важаемый игрок, вы нарушали правила сервера, и если вы..")
+	-- 				sampSendChat("/ans " .. arg .. " ..не согласны с наказанием, напишите жалобу на форум https://forumrds.ru")
+	-- 				sampSendChat(commands[key].cmd .. " " .. arg .. " " .. commands[key].time .. " " .. commands[key].reason)
+	-- 			end
+	-- 			if commands[key].cmd == "/mute" then  
+	-- 				if #nick_mute_frame > 0 then 
+	-- 					for i, v in pairs(nick_mute_frame) do  
+	-- 						if commands[key].reason == reason_mute_frame[i] then  
+	-- 							if v == sampGetPlayerNickname(arg) then  
+	-- 								reason_send = reason_mute_frame[i]
+	-- 								time_send = time_mute_frame[i]
+	-- 							end  
+	-- 						end  
+	-- 					end
+	-- 				end
+	-- 				if time_send and reason_send then  
+	-- 					sampSendChat(commands[key].cmd .. " " .. arg .. " " .. time_send .. " " .. reason_send)
+	-- 				else 
+	-- 					sampSendChat(commands[key].cmd .. " " .. arg .. " " .. commands[key].time .. " " .. commands[key].reason)
+	-- 				end
+	-- 			end
+	-- 		else 
+	-- 			sampAddChatMessage(tag .. "¬ы забыли ввести ID/Nick нарушител€! ", -1)
+	-- 		end
+	-- 	end)
+	-- end
 
 	-- local file = io.open(getWorkingDirectory() .. "\\config\\AdminTool\\Special\\table.json", "r")
 	-- a = file:read("*a")

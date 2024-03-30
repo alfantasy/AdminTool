@@ -20,6 +20,7 @@ local events_res, events = pcall(import, "events.lua") -- импорт специального пл
 local other_res, pother = pcall(import, "module/plugins/other.lua") -- импорт специального плагина (скрипта), где будут содержаться сторонние, НЕЗАВИСИМЫЕ от АТ плагины
 local automute_res, automute = pcall(import, "module/plugins/automute.lua") -- импорт специального плагина (скрипта), где содержаться функции для автомута
 local plugins_main_res, plugin = pcall(import, "module/plugins/plugin.lua") -- импорт специального плагина (скрипта), где содержаться функции для рендера различных строк чата
+local adminstate_res, admst = pcall(import, 'module/adminstate.lua') -- импорт специального плагина (скрипта), где содержится сбор административной статистики.
  
 local fai = require "fAwesome5" -- работа с иконками Font Awesome 5
 local fa = require 'faicons' -- работа с иконками Font Awesome 4
@@ -514,7 +515,7 @@ function main()
             control_spawn = false
         end
 
-        if isKeyJustPressed(VK_RBUTTON) and not sampIsChatInputActive() and not sampIsDialogActive() and control_to_player then
+        if isKeyJustPressed(VK_RBUTTON) and not sampIsChatInputActive() and not sampIsDialogActive() and control_to_player and ATRecon.v then
 			imgui.ShowCursor = not imgui.ShowCursor
 			wait(600)
         end
@@ -2284,7 +2285,7 @@ function imgui.OnDrawFrame()
 
 		if menuSelect == 7 then  
 			if plugins_main_res then  
-				plugin.AdminStateMenu()
+				admst.AdminStateMenu()
 			end  
 		end
 
