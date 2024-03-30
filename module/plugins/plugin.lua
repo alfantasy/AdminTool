@@ -40,7 +40,6 @@ local config = inicfg.load({
         adminchat = false,
         auto_adminforms = false,
         imgui_adminchat = false, 
-        admin_state = false,
     },
     achat = {
         X = 48,
@@ -55,58 +54,8 @@ local config = inicfg.load({
 		Y_imgui = 298,
         iFont = 10,
     },
-    adminstate = {
-        show_transparency = false,
-        color_nick_id = "{FFFFFF}",
-        color_time = "{FFFFFF}",
-        color_online_day = "{FFFFFF}",
-        color_online_now = "{FFFFFF}",
-        color_afk_day = "{FFFFFF}",
-        color_afk_now = "{FFFFFF}",
-        color_ans_day = "{FFFFFF}",
-        color_ans_now = "{FFFFFF}",
-        color_mute_day = "{FFFFFF}",
-        color_mute_now = "{FFFFFF}",
-        color_kick_day = "{FFFFFF}",
-        color_kick_now = "{FFFFFF}",
-        color_jail_day = "{FFFFFF}",
-        color_jail_now = "{FFFFFF}",
-        color_ban_day = "{FFFFFF}",
-        color_ban_now = "{FFFFFF}",
-
-        show_mute_day = false,
-        show_mute_now = false,
-        show_report_day = false,
-        show_report_now = false,
-        show_jail_day = false,
-        show_jail_now = false,
-        show_ban_day = false,
-        show_ban_now = false,
-        show_kick_day = false,
-        show_kick_now = false,
-        show_online_day = false,
-        show_online_now = false,
-        show_afk_day = false,
-        show_afk_now = false,
-        show_nick_id = false, 
-        show_time = false,
-
-        dayReport = 0,
-        dayTime = 1,
-        today = os.date("%a"),
-        online = 0,
-        afk = 0,
-        full = 0,
-        dayMute = 0,
-        dayJail = 0,
-        dayBan = 0,
-        dayKick = 0,
-
-        posX = 0,
-        posY = 0,
-    },
 }, directIni)
-
+inicfg.save(config, directIni)
 function save() 
     inicfg.save(config, directIni)
 end
@@ -117,62 +66,11 @@ local elements = {
         adminforms = imgui.ImBool(config.settings.adminforms),
         auto_adminforms = imgui.ImBool(config.settings.auto_adminforms),
         imgui_adminchat = imgui.ImBool(config.settings.imgui_adminchat),
-        adminstate = imgui.ImBool(config.settings.admin_state)
     },
     int = {
         adminFont = imgui.ImInt(config.achat.Font),
         imguiFont = imgui.ImInt(config.achat.iFont),
-    },
-    admin_state = {
-        color_nick_id = imgui.ImBuffer(tostring(config.adminstate.color_nick_id), 50),
-        color_time = imgui.ImBuffer(tostring(config.adminstate.color_time), 50),
-        color_online_day = imgui.ImBuffer(tostring(config.adminstate.color_online_day), 50),
-        color_online_now = imgui.ImBuffer(tostring(config.adminstate.color_online_now), 50),
-        color_afk_day = imgui.ImBuffer(tostring(config.adminstate.color_afk_day), 50),
-        color_afk_now = imgui.ImBuffer(tostring(config.adminstate.color_afk_now), 50),
-        color_ans_day = imgui.ImBuffer(tostring(config.adminstate.color_ans_day), 50),
-        color_ans_day = imgui.ImBuffer(tostring(config.adminstate.color_ans_now), 50),
-        color_mute_day = imgui.ImBuffer(tostring(config.adminstate.olor_mute_day), 50),
-        color_mute_now = imgui.ImBuffer(tostring(config.adminstate.color_mute_now), 50),
-        color_kick_day = imgui.ImBuffer(tostring(config.adminstate.color_kick_day), 50),
-        color_kick_now = imgui.ImBuffer(tostring(config.adminstate.ccolor_kick_now), 50),
-        color_jail_day = imgui.ImBuffer(tostring(config.adminstate.color_jail_day), 50),
-        color_jail_now = imgui.ImBuffer(tostring(config.adminstate.color_jail_now), 50),
-        color_ban_day = imgui.ImBuffer(tostring(config.adminstate.color_ban_day), 50),
-        color_ban_now = imgui.ImBuffer(tostring(config.adminstate.color_ban_now), 50),
-
-        show_mute_day = imgui.ImBool(config.adminstate.show_mute_day), 
-        show_mute_now = imgui.ImBool(config.adminstate.show_mute_now),
-        show_ban_day = imgui.ImBool(config.adminstate.show_ban_day), 
-        show_ban_now = imgui.ImBool(config.adminstate.show_ban_now),
-        show_jail_day = imgui.ImBool(config.adminstate.show_jail_day), 
-        show_jail_now = imgui.ImBool(config.adminstate.show_jail_now),
-        show_kick_day = imgui.ImBool(config.adminstate.show_kick_day), 
-        show_kick_now = imgui.ImBool(config.adminstate.show_kick_now),
-        show_nick_id = imgui.ImBool(config.adminstate.show_nick_id), 
-        show_afk_day = imgui.ImBool(config.adminstate.show_afk_day), 
-        show_afk_now = imgui.ImBool(config.adminstate.show_afk_now),
-        show_online_day = imgui.ImBool(config.adminstate.show_online_day), 
-        show_online_now = imgui.ImBool(config.adminstate.show_online_now),
-        show_report_day = imgui.ImBool(config.adminstate.show_report_day), 
-        show_report_now = imgui.ImBool(config.adminstate.show_report_now),
-        show_time = imgui.ImBool(config.adminstate.show_time),
-        show_transparency = imgui.ImBool(config.adminstate.show_transparency),
-    },
-}
-
-local varstate = {
-    sessionOnline = imgui.ImInt(0),
-    sessionAfk = imgui.ImInt(0),
-    sessionFull = imgui.ImInt(0),
-    dayFull = imgui.ImInt(config.adminstate.full),
-    nowTime = os.date("%H:%M:%S", os.time()),
-    LReport = 0,
-    LMute = 0,
-    LBan = 0,
-    LKick = 0,
-    LJail = 0,
-    changePosition = false,
+    }
 }
 
 local every_settings = {
@@ -260,78 +158,11 @@ local reasons = {
 }
 -- ## Переменные, необходимые для правильной работы функций, работающих на основе ивента перехвата сообщений ## --
 
--- ## Функции, захватывающие определенные значения пакетов ## --
-function getMyId()
-    local result, id = sampGetPlayerIdByCharHandle(playerPed)
-    if result then
-        return id
-    end
-end
-
-function getMyNick()
-    local result, id = sampGetPlayerIdByCharHandle(playerPed)
-    if result then
-        local nick = sampGetPlayerNickname(id)
-        return nick
-    end
-end
-
--- ## Функции, захватывающие определенные значения пакетов ## --
-
 function sampev.onServerMessage(color, text)
 
     lc_lvl, lc_adm, lc_color, lc_nick, lc_id, lc_text = text:match("%[A%-(%d+)%] %((.+){(.+)}%) (.+)%[(%d+)%]: {FFFFFF}(.+)")
 
     local check_string = string.match(text, "[^%s]+")
-
-    if elements.boolean.adminstate.v then 
-        if text:find('%[.*%] '..getMyNick()..'%['..getMyId()..'%] ответил (.*)%[(%d+)%]: (.*)') then 
-            config.adminstate.dayReport = config.adminstate.dayReport + 1
-            varstate.LReport = varstate.LReport + 1
-            save()
-            return true
-        end	
-
-        if text:find("Администратор .+ заткнул%(.+%) игрока .+ на .+ секунд. Причина: .+") then  
-            amd_nick = text:match('Администратор (.+) заткнул%(.+%) игрока .+ на .+ секунд. Причина: .+') 
-            if amd_nick:find(getMyNick()) then
-                config.adminstate.dayMute = config.adminstate.dayMute + 1 
-                varstate.LMute = varstate.LMute + 1 
-                save()
-            end
-            return true 
-        end 
-
-        if text:find("Администратор .+ посадил%(.+%) игрока .+ в тюрьму на .+ секунд. Причина: .+") then  
-            amd_nick = text:match('Администратор (.+) посадил%(.+%) игрока .+ в тюрьму на .+ секунд. Причина: .+') 
-            if amd_nick:find(getMyNick()) then
-                config.adminstate.dayJail = config.adminstate.dayJail + 1 
-                varstate.LJail = varstate.LJail + 1 
-                save()
-            end 
-            return true 
-        end 
-        
-        if text:find("Администратор .+ забанил%(.+%) игрока .+ на .+ дней. Причина: .+") then  
-            amd_nick = text:match('Администратор (.+) забанил%(.+%) игрока .+ на .+ дней. Причина: .+') 
-            if amd_nick:find(getMyNick()) then
-                config.adminstate.dayBan = config.adminstate.dayBan + 1 
-                varstate.LBan = varstate.LBan + 1 
-                save()
-            end  
-            return true 
-        end 
-
-        if text:find("Администратор .+ кикнул игрока .+. Причина: .+") then  
-            amd_nick = text:match('Администратор (.+) кикнул игрока .+. Причина: .+') 
-            if amd_nick:find(getMyNick()) then
-                config.adminstate.dayKick = config.adminstate.dayKick + 1 
-                varstate.LKick = varstate.LKick + 1 
-                save()
-            end 
-            return true 
-        end 
-    end
 
     -- ## Работа с административными формами ## --
     if not isGamePaused() and not isPauseMenuActive() and isGameWindowForeground() then
@@ -462,9 +293,8 @@ function main()
     while not isSampAvailable() do wait(0) end
     
     admin_chat = lua_thread.create_suspended(drawAdminChat)
-    lua_thread.create(time)
 
-    sampfuncsLog(log .. " Инициализация дополнительного скрипта, выполняющего определенные вспомогательные функции, работающие вместе с АТ. \n Для правильной интеграции данного плагина проверьте его нахождение в сборке, в папке moonloader -> module ->  plugins -> plugin.lua")
+    sampfuncsLog(log .. "Инициализация дополнительного скрипта, выполняющего определенные вспомогательные функции, работающие вместе с АТ. \n Для правильной интеграции данного плагина проверьте его нахождение в сборке, в папке moonloader -> module ->  plugins -> plugin.lua")
 
     -- ## Запуск временных функций, запущенных для фрейма бесконечного цикла ## --
     admin_chat:run()
@@ -474,32 +304,10 @@ function main()
     loadAC()
     -- ## Выполнение загрузочных функций для конфигураций ## --
 
-    -- ## Сброс значений статы при наступлении следующего дня ## --
-    if config.adminstate.today ~= os.date("%a") then 
-		config.adminstate.today = os.date("%a")
-		config.adminstate.online = 0
-        config.adminstate.full = 0
-		config.adminstate.afk = 0
-		config.adminstate.dayReport = 0
-        config.adminstate.dayKick = 0 
-        config.adminstate.dayBan = 0  
-        config.adminstate.dayJail = 0 
-        config.adminstate.dayMute = 0 
-	  	varstate.dayFull.v = 0
-		save()
-    end
-    -- ## Сброс значений статы при наступлении следующего дня ## --
-
     while true do
         wait(0)
 
         imgui.Process = true
-
-        if not elements.boolean.adminstate.v then  
-            elements.boolean.adminstate.v = false  
-            imgui.ShowCursor = false  
-            imgui.Process = false  
-        end
 
         if every_settings.no_saved_ac.pos then  
             CPosition_Render()
@@ -511,7 +319,6 @@ function main()
         end
 
         CPosition_ImGUI()
-        Position_AdminState()
     end
 end
 
@@ -534,20 +341,6 @@ function CPosition_Render()
     else 
         every_settings.admin_chat.X, every_settings.admin_chat.Y = getCursorPos()
         saveAC()
-    end
-end
-
-function Position_AdminState()
-    if varstate.changePosition then  
-        showCursor(true, false)
-        local mouseX, mouseY = getCursorPos()
-        config.adminstate.posX, config.adminstate.posY = mouseX, mouseY
-        if isKeyJustPressed(49) then
-            showCursor(false, false)
-            showNotification("Успешно сохранено")
-            varstate.changePosition = false
-            save()
-        end
     end
 end
 
@@ -604,33 +397,6 @@ function drawAdminChat()
 			end
             wait(1)
 		end
-    end
-end
-
-function get_clock(time)
-    local timezone_offset = 86400 - os.date('%H', 0) * 3600
-    if tonumber(time) >= 86400 then onDay = true else onDay = false end
-    return os.date((onDay and math.floor(time / 86400)..'д ' or '')..'%H:%M:%S', time + timezone_offset)
-end
-
-function time()
-	startTime = os.time()
-    while true do
-        wait(1000)
-        varstate.nowTime = os.date("%H:%M:%S", os.time()) 
-        if sampGetGamestate() == 3 then 								
-	        			
-	        varstate.sessionOnline.v = varstate.sessionOnline.v + 1 							
-	        varstate.sessionFull.v = os.time() - startTime 					
-	        varstate.sessionAfk.v = varstate.sessionFull.v - varstate.sessionOnline.v		
-			
-			config.adminstate.online = config.adminstate.online + 1 				
-	        config.adminstate.full = varstate.dayFull.v + varstate.sessionFull.v 						
-			config.adminstate.afk = config.adminstate.full - config.adminstate.online
-
-	    else
-	    	startTime = startTime + 1
-	    end
     end
 end
 
@@ -747,24 +513,4 @@ function EXPORTS.ActiveForms()
         config.settings.auto_adminforms = elements.boolean.auto_adminforms.v  
         save() 
     end; imgui.Tooltip(u8'Позволяет автоматически принимать формы от администраторов.\nПри включении данного параметра автоматически активируются административные формы с автопринятием.')
-end
-
-function EXPORTS.AdminStateMenu()
-    imgui.Text(fa.ICON_ADDRESS_BOOK .. u8' Включение админ-статистики') 
-    imgui.SameLine()
-    if imgui.ToggleButton('##AdminStateVariable', elements.boolean.adminstate) then  
-        config.settings.admin_state = elements.boolean.adminstate.v  
-        save() 
-    end
-    imgui.SameLine(); imgui.SetCursorPosX(imgui.GetWindowWidth() - 250);
-    if imgui.Button(fa.ICON_FA_COGS .. u8'Изменение позиции окна') then 
-        varstate.changePosition = true 
-        sampAddChatMessage(tag .. ' Чтобы подтвердить сохранение - нажмите <1>')
-    end
-    if imgui.Checkbox(u8'Прозрачное окно', elements.admin_state.show_transparency) then  
-        config.admin_state.show_transparency = elements.admin_state.show_transparency.v  
-        save() 
-    end 
-    imgui.Separator()
-    imgui.Text(u8'Возле каждого из значений есть блок текста, в него можно внести текст формата {RRGGBB}')
 end
