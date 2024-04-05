@@ -108,6 +108,7 @@ end
 
 -- ## Регистрация ссылок для GitHub, переменных для обновления ## --
 local urls = {
+	['updater'] = 'https://raw.githubusercontent.com/alfantasy/AdminTool/main/updateAT.ini',
 	["main"] = "https://raw.githubusercontent.com/alfantasy/AdminTool/main/AdminTool.lua",
 	["pluginsAT"] = "https://raw.githubusercontent.com/alfantasy/AdminTool/main/module/plugins/plugin.lua",
 	["otherAT"] = "https://raw.githubusercontent.com/alfantasy/AdminTool/main/module/plugins/other.lua",
@@ -118,13 +119,14 @@ local urls = {
 	['notf'] = "https://raw.githubusercontent.com/alfantasy/AdminTool/main/lib/imgui_notf.lua",
 	['addons'] = "https://raw.githubusercontent.com/alfantasy/AdminTool/main/lib/imgui_addons.lua",
 	['scoreboard'] = "https://raw.githubusercontent.com/alfantasy/AdminTool/main/lib/scoreboard.lua",
-	['answers'] = "",
-	['commands'] = "",
-	['chatlogger'] = "",
-	['events'] = "",
+	['answers'] = "https://raw.githubusercontent.com/alfantasy/AdminTool/main/QAnswer.lua",
+	['commands'] = "https://raw.githubusercontent.com/alfantasy/AdminTool/main/resource/commands.lua",
+	['chatlogger'] = "https://raw.githubusercontent.com/alfantasy/AdminTool/main/chat-logger.lua",
+	['events'] = "https://raw.githubusercontent.com/alfantasy/AdminTool/main/ATEvents.lua",
 }
 
 local paths = {
+	['updater'] = getWorkingDirectory() .. "/updateAT.ini",
 	["main"] = getWorkingDirectory() .. "/AdminTool.lua",
 	["pluginsAT"] = getWorkingDirectory() .. "/module/plugins/plugin.lua",
 	["otherAT"] = getWorkingDirectory() .. "/module/plugins/other.lua",
@@ -141,6 +143,24 @@ local paths = {
 	['events'] = getWorkingDirectory() .. '/ATEvents.lua',
 }
 
+local upd_upvalue = {
+	main = imgui.ImBool(false),
+	pluginsAT = imgui.ImBool(false),
+	otherAT = imgui.ImBool(false),
+	libs = imgui.ImBool(false),
+	adminstate = imgui.ImBool(false),
+	binder = imgui.ImBool(false),
+	renders = imgui.ImBool(false),
+	notf = imgui.ImBool(false),
+	addons = imgui.ImBool(false),
+	scoreboard = imgui.ImBool(false),
+	answers = imgui.ImBool(false),
+	commands = imgui.ImBool(false),
+	chatlogger = imgui.ImBool(false),
+	events = imgui.ImBool(false),
+} 
+
+local script_stream = 1
 local script_version_text = "14.0"
 -- ## Регистрация ссылок для GitHub, переменных для обновления ## --
 
@@ -166,6 +186,7 @@ inicfg.save(configText, directIniText)
 local direct = "AdminTool\\settings.ini"
 local config = inicfg.load({
     main = {
+		autoupdate = false,
 		aclist_alogin = false,
 		ears_alogin = false,
 		agm_alogin = false,
@@ -233,6 +254,7 @@ end
 
 local elm = {
     boolean = {
+		autoupdate = imgui.ImBool(config.main.autoupdate),
 		aclist_alogin = imgui.ImBool(config.main.aclist_alogin),
 		ears_alogin = imgui.ImBool(config.main.ears_alogin),
 		agm_alogin = imgui.ImBool(config.main.agm_alogin),
@@ -386,6 +408,42 @@ local multiply_punish_frame = {}
 
 function main()
     while not isSampAvailable() do wait(0) end
+
+	downloadUrlToFile(urls['updater'], paths['updater'], function(id, status)
+		upd = inicfg.load(nil, paths['updater'])
+		if status == dlstatus.STATUS_ENDDOWNLOADDATA then  
+			if tonumber(upd.info.version) > script_stream then  
+				if elm.boolean.autoupdate.v then  
+					if notf_res then  
+						showNotification('У Вас установлена неактуальная версия. Начинаем автообновление.')
+					end
+					sampAddChatMessage(tag .. 'Доступно обновление. AT начинает автообновление!', -1)
+					sampAddChatMessage(tag .. 'Просьба, не взаимодействуйте с игрой, пока AT не завершит обновление', -1)
+					for i, v in pairs(urls) do  
+						downloadUrlToFile(v, paths[i], function(id,status)
+							if status == dlstatus.STATUS_ENDDOWNLOADDATA then  
+								sampfuncsLog(log .. 'Файл успешно скачен. Игнорируйте данное сообщение :D')
+							end
+						end)
+					end
+					sampAddChatMessage(tag .. 'Пакет AdminTool успешно обновлен. Перезагружаем скрипты.')
+					if notf_res then  
+						showNotification('Пакет AdminTool обновлен.\nПерезагружаем скрипты.')
+					end  
+					reloadScripts()
+				else 
+					sampAddChatMessage(tag .. 'Доступно обновление. Если автообновление выключено, обновитесь в Настройках (/tool -> Настройки)')
+				end 
+			else 
+				if notf_res then  
+					showNotification('У Вас установлена актуальная версия. \nВерсия: ' .. script_version_text)
+				else 
+					sampfuncsLog(log .. 'Проблема с системой уведомлений. Установите систему через Настройки.')
+					sampAddChatMessage(tag .. 'Установлена актуальная версия. Обновление не требуется.')
+				end 
+			end 
+		end
+	end)
     
 	other_res = elm.settings_start.others.v 
 	automute_res = elm.settings_start.automute.v  
@@ -438,6 +496,16 @@ function main()
         ATMenu.v = not ATMenu.v 
         imgui.Process = ATMenu.v
     end)
+
+	sampRegisterChatCommand('check', function()
+		for i, param in pairs(upd_upvalue) do  
+			if param.v then  
+				if paths[i] then  
+					sampAddChatMessage("Наименование: " .. i .. ' | Параметр: ' .. tostring(param.v), -1)
+				end
+			end
+		end
+	end)
     -- ## Регистрация основных команд для прямого взаимодействия с АТ ## --
 
 	-- ## Регистрация команд для выдачи наказаний ## --
@@ -1894,12 +1962,21 @@ function imgui.OnDrawFrame()
 				config.access.scaning = elm.boolean.access_scan.v  
 				ConfigSave()
 			end
+			imgui.Separator()
+			imgui.Text(u8'Автообновление AdminTool')
+			imgui.SameLine()
+			if imgui.ToggleButton('##AutoUpdateAT', elm.boolean.autoupdate) then  
+				config.main.autoupdate = elm.boolean.autoupdate.v  
+				ConfigSave()
+			end
+			imgui.Separator()
 			if automute_res then  
 				automute.ReadWriteAM()
 			end
 			if imgui.Button(fai.ICON_FA_UPLOAD .. u8" Обновление AdminTool") then  
 				imgui.OpenPopup('Update AT')
 			end
+			imgui.SameLine()
 			if imgui.Button(fai.ICON_FA_FILE_CODE .. u8" Настройки запуска") then  
 				imgui.OpenPopup('Settings Start')
 			end
@@ -1928,12 +2005,47 @@ function imgui.OnDrawFrame()
 			end
 			if imgui.BeginPopupModal('Update AT', false, imgui.WindowFlags.NoResize + imgui.WindowFlags.AlwaysAutoResize) then  
 				imgui.BeginChild('##FrameUpdateAdminTool', imgui.ImVec2(400, 200), true)
+				imgui.Checkbox(u8'Основной скрипт', upd_upvalue.main) 
+				imgui.Checkbox(u8'Основной скрипт вспомогательных функций', upd_upvalue.pluginsAT)
+				imgui.Checkbox(u8'Скрипт отдельных функций', upd_upvalue.otherAT)
+				imgui.Checkbox(u8'Библиотека AdminTool', upd_upvalue.libs)
+				imgui.Checkbox(u8'Административная статистика', upd_upvalue.adminstate)
+				imgui.Checkbox(u8'Биндер', upd_upvalue.binder)
+				imgui.Checkbox(u8'Скрипт рендера отд.строк чата', upd_upvalue.renders)
+				imgui.Checkbox(u8'Система уведомлений', upd_upvalue.notf)
+				imgui.Checkbox(u8'Аддоны интерфейса', upd_upvalue.addons)
+				imgui.Checkbox(u8'Сторонняя статистика', upd_upvalue.scoreboard)
+				imgui.Checkbox(u8'Скрипт для ответов на репорты', upd_upvalue.answers)
+				imgui.Checkbox(u8'Список команд', upd_upvalue.commands)
+				imgui.Checkbox(u8'Чат-логгер', upd_upvalue.chatlogger)
+				imgui.Checkbox(u8'Система мероприятий', upd_upvalue.events)
 				imgui.EndChild()
 				if imgui.Button(u8'Обновить выбранное') then  
-
+					for i, param in pairs(upd_upvalue) do  
+						if param.v then  
+							if paths[i] then  
+								downloadUrlToFile(urls[i], paths[i], function(id, status)
+									if status == dlstatus.STATUS_ENDDOWNLOADDATA then  
+										sampfuncsLog(log .. 'Файл скачен')
+									end
+								end)
+							end 
+						end 
+					end  
+					sampAddChatMessage(tag .. 'Перезагружаем скрипты', -1)
+					reloadScripts()
 				end
 				imgui.SameLine()
 				if imgui.Button(u8'Обновить все') then  
+					for i, v in pairs(urls) do  
+						downloadUrlToFile(v, paths[i], function(id,status)
+							if status == dlstatus.STATUS_ENDDOWNLOADDATA then  
+								sampfuncsLog(log .. 'Файл успешно скачен. Игнорируйте данное сообщение :D')
+							end
+						end)
+					end
+					sampAddChatMessage(tag .. 'Пакет AdminTool успешно обновлен. Перезагружаем скрипты.')
+					reloadScripts()
 				end
 				imgui.SameLine()
 				imgui.SetCursorPosX(350)
@@ -1964,7 +2076,7 @@ function imgui.OnDrawFrame()
 				if imgui.Checkbox(u8'Скрипт отдельных функций', elm.settings_start.others) then  
 					config.settings_start.others = elm.settings_start.others.v  
 					ConfigSave()
-				end; imgui.Tooltip(u8'Скрипт в себя включает:\n1. Перевод команд\n2. InputHelper')
+				end; imgui.Tooltip(u8'Скрипт в себя включает:\n1. Перевод команд\n2. InputHelper\n3. WallHack \n4. BulletTrack')
 				imgui.EndChild()
 				if imgui.Button(u8'Перезагрузить скрипты') then  
 					reloadScripts()
