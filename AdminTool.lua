@@ -715,7 +715,7 @@ function main()
 			wait(600)
         end
 
-		if atlibs.isKeysJustPressed(atlibs.strToIdKeys(config.keys.GiveOnline)) and not sampIsChatInputActive() and not sampIsDialogActive() and not ATmenu.v then 
+		if atlibs.isKeysJustPressed(atlibs.strToIdKeys(config.keys.GiveOnline)) and not sampIsChatInputActive() and not sampIsDialogActive() and not ATMenu.v then 
 			sampSendChat("/online")
 			wait(100)
 			local c = math.floor(sampGetPlayerCount(false) / 10)
