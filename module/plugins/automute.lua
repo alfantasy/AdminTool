@@ -128,6 +128,8 @@ function checkMessage(msg, arg) -- под аргументом воспринимается номер нужного m
 end 
 -- ## Блок переменных, отвечающих за работу автомута и интеграции сцен ## --
 
+local number_report, nick_rep, id_rep, text_rep 
+
 function sampev.onServerMessage(color, text)
 
     local check_nick, check_id, basic_color, check_text = string.match(text, "(.+)%((.+)%): {(.+)}(.+)") -- захват основной строчки чата и разбития её на объекты
@@ -135,7 +137,7 @@ function sampev.onServerMessage(color, text)
     -- ## Автомут, чей mainframe - репорты ## --
     if not isGamePaused() and not isPauseMenuActive() and isGameWindowForeground() then  
         if text:find("Жалоба (.+) | {AFAFAF}(.+)%[(%d+)%]: (.+)") then  
-            local number_report, nick_rep, id_rep, text_rep = text:match("Жалоба (.+) | {AFAFAF}(.+)%[(%d+)%]: (.+)") 
+            number_report, nick_rep, id_rep, text_rep = text:match("Жалоба (.+) | {AFAFAF}(.+)%[(%d+)%]: (.+)") 
             sampAddChatMessage(tag .. "Пришел репорт " .. number_report .. " от " .. nick_rep .. "[" .. id_rep .. "]: " .. text_rep, -1)
             if elements.settings.automute_mat.v or elements.settings.automute_osk.v or elements.settings.automute_rod.v or elements.settings.automute_rod.v then  
                 local mat_text, _ = checkMessage(text_rep, 1)
@@ -672,5 +674,13 @@ function EXPORTS.ReadWriteAM()
         imgui.EndChild()
         imgui.EndPopup()
     end
+end
+
+function EXPORTS.OffScript()
+    thisScript():unload()
+end
+
+function EXPORTS.ExportReport()
+    return number_report, nick_rep, id_rep, text_rep 
 end
 -- ## Блок функций-экспорта для интеграции их в основной скрипт ## --

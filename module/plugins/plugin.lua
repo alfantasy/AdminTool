@@ -500,12 +500,12 @@ function EXPORTS.ActiveATChat()
 end
 
 function EXPORTS.ActiveForms()
-    imgui.Text(fai.ICON_FA_UNDO .. u8" Админ.формы")
+    imgui.Text(fai.ICON_FA_UNDO .. u8" Админ.формы"); imgui.Tooltip(u8'Позволяет принимать формы на выдачу наказаний от администраторов.')
     imgui.SameLine()
     if imgui.ToggleButton('##AdminForms', elements.boolean.adminforms) then  
         config.settings.adminforms = elements.boolean.adminforms.v 
         save() 
-    end; imgui.Tooltip(u8'Позволяет принимать формы на выдачу наказаний от администраторов.')
+    end
     imgui.SameLine()
     if imgui.Checkbox('##AutoForms', elements.boolean.auto_adminforms) then  
         elements.boolean.adminforms.v = elements.boolean.auto_adminforms.v 
@@ -513,4 +513,8 @@ function EXPORTS.ActiveForms()
         config.settings.auto_adminforms = elements.boolean.auto_adminforms.v  
         save() 
     end; imgui.Tooltip(u8'Позволяет автоматически принимать формы от администраторов.\nПри включении данного параметра автоматически активируются административные формы с автопринятием.')
+end
+
+function EXPORTS.OffScript()
+    thisScript():unload()
 end
