@@ -22,6 +22,7 @@ local directIni = "AdminTool\\binsettings.ini"
 
 local configB = inicfg.load({
     bind_name = {},
+    bind_keys = {},
     bind_int = {},
     bind_delay = {},
     bind_argument = {},
@@ -37,6 +38,7 @@ local elements = {
     buff = {
         name = imgui.ImBuffer(256),
         int = imgui.ImBuffer(65536),
+        keys = imgui.ImBuffer(256),
         delay = imgui.ImBuffer(2500),
         argument = imgui.ImBool(false),
     },
@@ -137,6 +139,26 @@ function main()
         
         imgui.Process = true 
 
+        for key, cmd in pairs(configB.bind_name) do  
+            if configB.bind_argument[key] == false then
+                if configB.bind_keys[key] ~= 'None' then  
+                    if atlibs.isKeysDown(atlibs.strToIdKeys(configB.bind_keys[key])) and not MenuBinder.v and not sampIsChatInputActive() then  
+                        if #configB.bind_int[key] > 0 then  
+                            if tonumber(configB.bind_delay[key]) > 0 and configB.bind_delay[key] ~= nil then
+                                local full_input_to_cmd = atlibs.string_split(configB.bind_int[key], "~")
+                                waiting_function:run(full_input_to_cmd, key)
+                            else 
+                                local full_input_to_cmd = atlibs.string_split(configB.bind_int[key], "~")
+                                for _, input in pairs(full_input_to_cmd) do
+                                    sampSendChat(u8:decode(tostring(input)))
+                                end                         
+                            end
+                        end 
+                    end
+                end  
+            end
+        end
+
         if not MenuBinder.v then  
             imgui.Process = false  
             imgui.ShowCursor = false  
@@ -190,12 +212,12 @@ function imgui.OnDrawFrame()
         imgui.EndMenuBar()
 
         if menuSelect == 0 then
-            imgui.Text(u8"Данное окно является биндером команд. Вы сможете добавить все свои необходимые команды.")
-            imgui.Text(u8"Это вспомогательный скрипт, работающее отдельно от пакета АТ.\nОбновляется отдельно, но есть возможность обновлять и в основном скрипте.")
-            imgui.Text(u8"Ввод команд осуществляется с легкостью и ненужно никаких особенных знаний.")
-            imgui.Text(u8"Интерфейс довольно прост, интуитивно понятен и описан.")
-            imgui.Text(u8"Warning! При редактировании команды или введении новых, нужно будет перезагрузить скрипты \n(ALT+R)")
-            imgui.Text(u8"Ну, или для особо ленивых, нажать кнопку ниже <3")
+            imgui.TextWrapped(u8"Данное окно является биндером команд. Вы сможете добавить все свои необходимые команды.")
+            imgui.TextWrapped(u8"Это вспомогательный скрипт, работающее отдельно от пакета АТ. Обновляется через основной скрипт.")
+            imgui.TextWrapped(u8"Ввод команд осуществляется с легкостью и ненужно никаких особенных знаний.")
+            imgui.TextWrapped(u8"Интерфейс довольно прост, интуитивно понятен и описан.")
+            imgui.TextWrapped(u8"Warning! При редактировании команды или введении новых, нужно будет перезагрузить скрипты (ALT+R)")
+            imgui.TextWrapped(u8"Ну, или для особо ленивых, нажать кнопку ниже <3")
             if imgui.Button(u8"Перезагрузить все скрипты MoonLoader") then  
                 lua_thread.create(function()
                     sampAddChatMessage(tag .. "Выполняю перезагрузку всех скриптов. Ожидайте.")
@@ -211,7 +233,7 @@ function imgui.OnDrawFrame()
             if imgui.Button(u8"Создать команду") then  
                 elements.boolean.CreateOrEditCommand = true
                 -- ## Ниже автоматическая чистка буфера для предотвращения появления текста из существующей команды.
-                elements.buff.name.v, elements.buff.int.v, elements.buff.delay.v, elements.buff.argument.v = "", "", "0", false 
+                elements.buff.name.v, elements.buff.int.v, elements.buff.delay.v, elements.buff.argument.v, elements.buff.keys.v = "", "", "0", false, "None" 
                 getpos = nil -- предотвращение изменения уже существующей команды
                 EditOldBind = false -- безопасная и автоматическая деактивация возможного редактирования другой команды
             end
@@ -227,6 +249,11 @@ function imgui.OnDrawFrame()
                         elements.buff.delay.v = tostring(configB.bind_delay[key])
                         if configB.bind_argument[key] ~= nil then 
                             elements.buff.argument.v = configB.bind_argument[key]
+                        end
+                        if configB.bind_keys[key] ~= nil then  
+                            elements.buff.keys.v = configB.bind_keys[key]
+                        else 
+                            elements.buff.keys.v = "None"
                         end
                     end
                     imgui.SameLine()
@@ -252,6 +279,23 @@ function imgui.OnDrawFrame()
                     imgui.PushItemWidth(130)
                     imgui.InputText("##command_name", elements.buff.name) 
                     imgui.PopItemWidth()
+                    if elements.buff.argument.v then
+                        imgui.Text(u8'Привязка клавиш с аргументами не работает.')
+                    else
+                        if elements.buff.keys.v ~= 'None' then
+                            imgui.Text(u8'Привязанные(-ая) клавиши(-а): ' .. elements.buff.keys.v) 
+                        else 
+                            imgui.Text(u8"Зажатые клавиши: " .. atlibs.getDownKeysText()); imgui.Tooltip(u8'При привязке, команду также можно будет активировать нажатием клавиш')
+                        end
+                        imgui.SameLine()
+                        if imgui.Button(fai.ICON_FA_SAVE) then  
+                            elements.buff.keys.v = atlibs.getDownKeysText()
+                        end; imgui.Tooltip(u8'Сохранение зажатой клавиши')
+                        imgui.SameLine()
+                        if imgui.Button(fa.ICON_REFRESH) then  
+                            elements.buff.keys.v = "None"
+                        end; imgui.Tooltip(u8'Сброс привязанных клавиш')
+                    end
                     imgui.Text(u8"Задержка между выполняемыми действиями: ")
                     imgui.Tooltip(u8"Если у Вас несколько выполняемых действий в одной команде (искл. /mess), то рекомендуется поставить задержку от 500 до 5000 (измерение в миллисекундах)")
                     imgui.SameLine()
@@ -273,6 +317,9 @@ function imgui.OnDrawFrame()
                         if not EditOldBind then  
                             local refresh_text = elements.buff.int.v:gsub("\n", "~")
                             table.insert(configB.bind_name, elements.buff.name.v)
+                            if #elements.buff.keys.v ~= 'None' then  
+                                table.insert(configB.bind_keys, elements.buff.keys.v) 
+                            end
                             table.insert(configB.bind_int, refresh_text)
                             table.insert(configB.bind_delay, elements.buff.delay.v)
                             table.insert(configB.bind_argument, elements.buff.argument.v)
@@ -285,9 +332,15 @@ function imgui.OnDrawFrame()
                             local refresh_text = elements.buff.int.v:gsub("\n", "~")
                             table.insert(configB.bind_name, getpos, elements.buff.name.v)
                             table.insert(configB.bind_int, getpos, refresh_text)
+                            if #elements.buff.keys.v ~= 'None' then  
+                                table.insert(configB.bind_keys, getpos, elements.buff.keys.v)
+                            else 
+                                table.insert(configB.bind_keys, getpos, 'None')
+                            end
                             table.insert(configB.bind_delay, getpos, elements.buff.delay.v)
                             table.insert(configB.bind_argument, getpos, elements.buff.argument.v)
                             table.remove(configB.bind_name, getpos + 1)
+                            table.remove(configB.bind_keys, getpos + 1)
                             table.remove(configB.bind_int, getpos + 1)
                             table.remove(configB.bind_delay, getpos + 1)
                             table.remove(configB.bind_argument, getpos + 1)
