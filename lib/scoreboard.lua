@@ -56,7 +56,6 @@ local groups = inicfg.load({
 if allset.set.fontSize < 0 or allset.set.fontSize > 4 then
 	allset.set.fontSize = 2
 end
-local cfg = nil
 local copColor = {
 	[12] = {11},
 	[6] = {29},
@@ -94,7 +93,6 @@ local ScrollToButton = false
 local logConnect = {}
 local thems = {}
 local themsId = {}
-local notThems = false
 local focusId = -1
 local scrollToId = false
 local gameInit = false
@@ -279,10 +277,6 @@ function imgui.OnDrawFrame()
 			end
 			imgui.Separator()
 			if imgui.Button(u8"Сохранить изменения", imgui.ImVec2(212, 0)) then
-				if notThems then
-					inicfg.save(cfg, "..\\resource\\scoreboard\\main\\data.ini")
-					notThems = false
-				end
 				showNotification(tag .. " Settings", "Настройки TAB`борда сохранены.")
 				inicfg.save(allset, "..\\config\\AdminTool\\scoreboard.ini")
 			end
