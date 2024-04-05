@@ -41,6 +41,7 @@ local config = inicfg.load({
         automute_osk = false,
         automute_rod = false, 
         automute_upom = false, 
+        agree_mute = false,
     },
 }, directIni)
 inicfg.save(config, directIni)
@@ -51,6 +52,7 @@ local elements = {
         automute_osk = imgui.ImBool(config.settings.automute_osk),
         automute_rod = imgui.ImBool(config.settings.automute_rod),
         automute_upom = imgui.ImBool(config.settings.automute_upom),
+        agree_mute = imgui.ImBool(config.settings.agree_mute),
     },
     imgui = {
         selectable = 0,
@@ -66,6 +68,7 @@ end
 
 -- ## Работа с элементами аддонов ImGUI (необходимо для корректного экспорта) ## --
 imgui.ToggleButton = require('imgui_addons').ToggleButton
+imgui.Tooltip = require('imgui_addons').Tooltip
 -- ## Работа с элементами аддонов ImGUI (необходимо для корректного экспорта) ## --
 
 -- ## Блок переменных, отвечающих за работу автомута и интеграции сцен ## --
@@ -148,29 +151,93 @@ function sampev.onServerMessage(color, text)
                     sampAddChatMessage(tag .. " ======================= | [AT] Automute-Stream | ================== ")
                     sampAddChatMessage(tag .. " | Мут ID[" .. id_rep .. "] за rep: " .. text_rep, -1)
                     sampAddChatMessage(tag .. " ======================= | [AT] Automute-Stream | ================== ")
-                    sampSendChat("/rmute " .. id_rep .. " 300 Нецензурная лексика")
-                    showNotification("Нарушитель: " .. nick_rep .. "[" .. id_rep .. "] \n Замучен за 'мат'. \n Его текст: " .. text_rep)
+                    if elements.settings.agree_mute.v then  
+                        lua_thread.create(function()
+                            local startTime = os.time()
+                            local timeLimit = 5
+                            sampAddChatMessage(tag .. 'Для подтверждения мута, нажмите Enter', -1)
+                            showNotification('Для подтверждения мута, нажмите Enter')
+                            while os.time() - startTime < timeLimit do 
+                                wait(0)
+                                if isKeyJustPressed(VK_RETURN) then 
+                                    sampSendChat("/rmute " .. id_rep .. " 300 Нецензурная лексика")
+                                    showNotification("Нарушитель: " .. nick_rep .. "[" .. id_rep .. "] \n Замучен за 'мат'. \n Его текст: " .. text_rep)
+                                end 
+                            end
+                        end)
+                    else
+                        sampSendChat("/rmute " .. id_rep .. " 300 Нецензурная лексика")
+                        showNotification("Нарушитель: " .. nick_rep .. "[" .. id_rep .. "] \n Замучен за 'мат'. \n Его текст: " .. text_rep)
+                    end
                 end
                 if osk_text and elements.settings.automute_osk.v then  
                     sampAddChatMessage(tag .. " ======================= | [AT] Automute-Stream | ================== ")
                     sampAddChatMessage(tag .. " | Мут ID[" .. id_rep .. "] за rep: " .. text_rep, -1)
                     sampAddChatMessage(tag .. " ======================= | [AT] Automute-Stream | ================== ")
-                    sampSendChat("/rmute " .. id_rep .. " 400 Оск/Униж.")
-                    showNotification("Нарушитель: " .. nick_rep .. "[" .. id_rep .. "] \n Замучен за 'Оскорбление/Унижение'. \n Его текст: " .. text_rep)
+                    if elements.settings.agree_mute.v then  
+                        lua_thread.create(function()
+                            local startTime = os.time()
+                            local timeLimit = 5
+                            sampAddChatMessage(tag .. 'Для подтверждения мута, нажмите Enter', -1)
+                            showNotification('Для подтверждения мута, нажмите Enter')
+                            while os.time() - startTime < timeLimit do 
+                                wait(0)
+                                if isKeyJustPressed(VK_RETURN) then 
+                                    sampSendChat("/rmute " .. id_rep .. " 400 Оск/Униж.")
+                                    showNotification("Нарушитель: " .. nick_rep .. "[" .. id_rep .. "] \n Замучен за 'Оскорбление/Унижение'. \n Его текст: " .. text_rep)
+                                end 
+                            end
+                        end)
+                    else 
+                        sampSendChat("/rmute " .. id_rep .. " 400 Оск/Униж.")
+                        showNotification("Нарушитель: " .. nick_rep .. "[" .. id_rep .. "] \n Замучен за 'Оскорбление/Унижение'. \n Его текст: " .. text_rep)
+                    end
                 end
                 if upom_text and elements.settings.automute_upom.v then  
                     sampAddChatMessage(tag .. " ======================= | [AT] Automute-Stream | ================== ")
                     sampAddChatMessage(tag .. " | Мут ID[" .. id_rep .. "] за rep: " .. text_rep, -1)
                     sampAddChatMessage(tag .. " ======================= | [AT] Automute-Stream | ================== ")
-                    sampSendChat("/rmute " .. id_rep .. " 1000 Упом.стор.проектов")
-                    showNotification("Нарушитель: " .. nick_rep .. "[" .. id_rep .. "] \n Замучен за 'Упом.стор.проектов'. \n Его текст: " .. text_rep)
+                    if elements.settings.agree_mute.v then  
+                        lua_thread.create(function()
+                            local startTime = os.time()
+                            local timeLimit = 5
+                            sampAddChatMessage(tag .. 'Для подтверждения мута, нажмите Enter', -1)
+                            showNotification('Для подтверждения мута, нажмите Enter')
+                            while os.time() - startTime < timeLimit do 
+                                wait(0)
+                                if isKeyJustPressed(VK_RETURN) then 
+                                    sampSendChat("/rmute " .. id_rep .. " 1000 Упом.стор.проектов")
+                                    showNotification("Нарушитель: " .. nick_rep .. "[" .. id_rep .. "] \n Замучен за 'Упом.стор.проектов'. \n Его текст: " .. text_rep)
+                                end 
+                            end
+                        end)
+                    else
+                        sampSendChat("/rmute " .. id_rep .. " 1000 Упом.стор.проектов")
+                        showNotification("Нарушитель: " .. nick_rep .. "[" .. id_rep .. "] \n Замучен за 'Упом.стор.проектов'. \n Его текст: " .. text_rep)
+                    end
                 end
                 if rod_text and elements.settings.automute_rod.v then  
                     sampAddChatMessage(tag .. " ======================= | [AT] Automute-Stream | ================== ")
                     sampAddChatMessage(tag .. " | Мут ID[" .. id_rep .. "] за rep: " .. text_rep, -1)
                     sampAddChatMessage(tag .. " ======================= | [AT] Automute-Stream | ================== ")
-                    sampSendChat("/rmute " .. id_rep .. " 5000 Оск/Униж. родных")
-                    showNotification("Нарушитель: " .. nick_rep .. "[" .. id_rep .. "] \n Замучен за 'Оскорбление/Унижение родных'. \n Его текст: " .. text_rep)
+                    if elements.settings.agree_mute.v then  
+                        lua_thread.create(function()
+                            local startTime = os.time()
+                            local timeLimit = 5
+                            sampAddChatMessage(tag .. 'Для подтверждения мута, нажмите Enter', -1)
+                            showNotification('Для подтверждения мута, нажмите Enter')
+                            while os.time() - startTime < timeLimit do 
+                                wait(0)
+                                if isKeyJustPressed(VK_RETURN) then 
+                                    sampSendChat("/rmute " .. id_rep .. " 5000 Оск/Униж. родных")
+                                    showNotification("Нарушитель: " .. nick_rep .. "[" .. id_rep .. "] \n Замучен за 'Оскорбление/Унижение родных'. \n Его текст: " .. text_rep)
+                                end 
+                            end
+                        end)
+                    else 
+                        sampSendChat("/rmute " .. id_rep .. " 5000 Оск/Униж. родных")
+                        showNotification("Нарушитель: " .. nick_rep .. "[" .. id_rep .. "] \n Замучен за 'Оскорбление/Унижение родных'. \n Его текст: " .. text_rep)
+                    end
                 end
             end  
             return true
@@ -191,8 +258,25 @@ function sampev.onServerMessage(color, text)
                 sampAddChatMessage(tag .. " | Мут " .. check_nick .. "[" .. check_id .. "] за msg: " .. check_text, -1)
                 sampAddChatMessage('                                                                            ')
                 sampAddChatMessage(tag .. " ======================= | [AT] Automute-Stream | ================== ")
-                sampSendChat("/mute " .. check_id .. " 300 Нецензурная лексика")
-                showNotification("Нарушитель: " .. check_nick .. "[" .. check_id .. "] \n Замучен за 'мат'. \n Его текст: " .. check_text)
+                if elements.settings.agree_mute.v then  
+                    lua_thread.create(function()
+                        local startTime = os.time()
+                        local timeLimit = 5
+                        sampAddChatMessage(tag .. 'Для подтверждения мута, нажмите Enter', -1)
+                        showNotification('Для подтверждения мута, нажмите Enter')
+                        while os.time() - startTime < timeLimit do 
+                            wait(0)
+                            if isKeyJustPressed(VK_RETURN) then 
+                                sampSendChat("/mute " .. check_id .. " 300 Нецензурная лексика")
+                                showNotification("Нарушитель: " .. check_nick .. "[" .. check_id .. "] \n Замучен за 'мат'. \n Его текст: " .. check_text)
+                                break 
+                            end  
+                        end 
+                    end) 
+                else 
+                    sampSendChat("/mute " .. check_id .. " 300 Нецензурная лексика")
+                    showNotification("Нарушитель: " .. check_nick .. "[" .. check_id .. "] \n Замучен за 'мат'. \n Его текст: " .. check_text)
+                end
             end
             if osk_text and elements.settings.automute_osk.v then  
                 sampAddChatMessage(tag .. " ======================= | [AT] Automute-Stream | ================== ")
@@ -200,8 +284,25 @@ function sampev.onServerMessage(color, text)
                 sampAddChatMessage(tag .. " | Мут " .. check_nick .. "[" .. check_id .. "] за msg: " .. check_text, -1)
                 sampAddChatMessage('                                                                            ')
                 sampAddChatMessage(tag .. " ======================= | [AT] Automute-Stream | ================== ")
-                sampSendChat("/mute " .. check_id .. " 400 Оск/Униж.")
-                showNotification("Нарушитель: " .. check_nick .. "[" .. check_id .. "] \n Замучен за 'Оскорбление/Унижение'. \n Его текст: " .. check_text)
+                if elements.settings.agree_mute.v then  
+                    lua_thread.create(function()
+                        local startTime = os.time()
+                        local timeLimit = 5
+                        sampAddChatMessage(tag .. 'Для подтверждения мута, нажмите Enter', -1)
+                        showNotification('Для подтверждения мута, нажмите Enter')
+                        while os.time() - startTime < timeLimit do 
+                            wait(0)
+                            if isKeyJustPressed(VK_RETURN) then  
+                                sampSendChat("/mute " .. check_id .. " 400 Оск/Униж.")
+                                showNotification("Нарушитель: " .. check_nick .. "[" .. check_id .. "] \n Замучен за 'Оскорбление/Унижение'. \n Его текст: " .. check_text)
+                                break
+                            end 
+                        end
+                    end)
+                else 
+                    sampSendChat("/mute " .. check_id .. " 400 Оск/Униж.")
+                    showNotification("Нарушитель: " .. check_nick .. "[" .. check_id .. "] \n Замучен за 'Оскорбление/Унижение'. \n Его текст: " .. check_text)
+                end
             end
             if upom_text and elements.settings.automute_upom.v then  
                 sampAddChatMessage(tag .. " ======================= | [AT] Automute-Stream | ================== ")
@@ -209,8 +310,25 @@ function sampev.onServerMessage(color, text)
                 sampAddChatMessage(tag .. " | Мут " .. check_nick .. "[" .. check_id .. "] за msg: " .. check_text, -1)
                 sampAddChatMessage('                                                                            ')
                 sampAddChatMessage(tag .. " ======================= | [AT] Automute-Stream | ================== ")
-                sampSendChat("/mute " .. check_id .. " 1000 Упом.стор.проектов")
-                showNotification("Нарушитель: " .. check_nick .. "[" .. check_id .. "] \n Замучен за 'Упом.стор.проектов'. \n Его текст: " .. check_text)
+                if elements.settings.agree_mute.v then  
+                    lua_thread.create(function()
+                        local startTime = os.time()
+                        local timeLimit = 5
+                        sampAddChatMessage(tag .. 'Для подтверждения мута, нажмите Enter', -1)
+                        showNotification('Для подтверждения мута, нажмите Enter')
+                        while os.time() - startTime < timeLimit do 
+                            wait(0)
+                            if isKeyJustPressed(VK_RETURN) then 
+                                sampSendChat("/mute " .. check_id .. " 1000 Упом.стор.проектов")
+                                showNotification("Нарушитель: " .. check_nick .. "[" .. check_id .. "] \n Замучен за 'Упом.стор.проектов'. \n Его текст: " .. check_text)
+                                break
+                            end 
+                        end 
+                    end) 
+                else 
+                    sampSendChat("/mute " .. check_id .. " 1000 Упом.стор.проектов")
+                    showNotification("Нарушитель: " .. check_nick .. "[" .. check_id .. "] \n Замучен за 'Упом.стор.проектов'. \n Его текст: " .. check_text)
+                end
             end
             if rod_text and elements.settings.automute_rod.v then  
                 sampAddChatMessage(tag .. " ======================= | [AT] Automute-Stream | ================== ")
@@ -218,8 +336,25 @@ function sampev.onServerMessage(color, text)
                 sampAddChatMessage(tag .. " | Мут " .. check_nick .. "[" .. check_id .. "] за msg: " .. check_text, -1)
                 sampAddChatMessage('                                                                            ')
                 sampAddChatMessage(tag .. " ======================= | [AT] Automute-Stream | ================== ")
-                sampSendChat("/mute " .. check_id .. " 5000 Оск/Униж. родных")
-                showNotification("Нарушитель: " .. check_nick .. "[" .. check_id .. "] \n Замучен за 'Оскорбление/Унижение родных'. \n Его текст: " .. check_text)
+                if elements.settings.agree_mute.v then  
+                    lua_thread.create(function()
+                        local startTime = os.time()
+                        local timeLimit = 5
+                        sampAddChatMessage(tag .. 'Для подтверждения мута, нажмите Enter', -1)
+                        showNotification('Для подтверждения мута, нажмите Enter')
+                        while os.time() - startTime < timeLimit do 
+                            wait(0)
+                            if isKeyJustPressed(VK_RETURN) then 
+                                sampSendChat("/mute " .. check_id .. " 5000 Оск/Униж. родных")
+                                showNotification("Нарушитель: " .. check_nick .. "[" .. check_id .. "] \n Замучен за 'Оскорбление/Унижение родных'. \n Его текст: " .. check_text)
+                                break
+                            end 
+                        end
+                    end)
+                else 
+                    sampSendChat("/mute " .. check_id .. " 5000 Оск/Униж. родных")
+                    showNotification("Нарушитель: " .. check_nick .. "[" .. check_id .. "] \n Замучен за 'Оскорбление/Унижение родных'. \n Его текст: " .. check_text)
+                end
             end
             return true
         end
@@ -557,6 +692,10 @@ function EXPORTS.ActiveAutoMute()
             config.settings.automute_rod = elements.settings.automute_rod.v  
             save()  
         end
+        if imgui.ToggleButton(u8'Подтверждение мута', elements.settings.agree_mute) then  
+            config.settings.agree_mute = elements.settings.agree_mute.v  
+            save()  
+        end; imgui.Tooltip(u8'Включает подтверждение мута. \n\nРекомендовано оставить включенным, если не уверены из-за спорных ситуаций.')
         imgui.EndPopup()
     end
 end
