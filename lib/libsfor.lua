@@ -1,5 +1,5 @@
 local imgui = require 'imgui' -- регистрация ImGUI
-local vkeys = require 'vkeys'
+local vkeys = require 'vkeys' -- регистрация ID клавиш и функций, позволяющих с ними стандартно работать
 local style = imgui.GetStyle() -- стиль для ImGUI
 local colors = style.Colors -- использование колоров
 local clr = imgui.Col -- регистрация кол-ов
@@ -12,7 +12,7 @@ local functions = {} -- блок экспортируемых функций
 
 local russian_characters = {
     [168] = 'Ё', [184] = 'ё', [192] = 'А', [193] = 'Б', [194] = 'В', [195] = 'Г', [196] = 'Д', [197] = 'Е', [198] = 'Ж', [199] = 'З', [200] = 'И', [201] = 'Й', [202] = 'К', [203] = 'Л', [204] = 'М', [205] = 'Н', [206] = 'О', [207] = 'П', [208] = 'Р', [209] = 'С', [210] = 'Т', [211] = 'У', [212] = 'Ф', [213] = 'Х', [214] = 'Ц', [215] = 'Ч', [216] = 'Ш', [217] = 'Щ', [218] = 'Ъ', [219] = 'Ы', [220] = 'Ь', [221] = 'Э', [222] = 'Ю', [223] = 'Я', [224] = 'а', [225] = 'б', [226] = 'в', [227] = 'г', [228] = 'д', [229] = 'е', [230] = 'ж', [231] = 'з', [232] = 'и', [233] = 'й', [234] = 'к', [235] = 'л', [236] = 'м', [237] = 'н', [238] = 'о', [239] = 'п', [240] = 'р', [241] = 'с', [242] = 'т', [243] = 'у', [244] = 'ф', [245] = 'х', [246] = 'ц', [247] = 'ч', [248] = 'ш', [249] = 'щ', [250] = 'ъ', [251] = 'ы', [252] = 'ь', [253] = 'э', [254] = 'ю', [255] = 'я',
-} 
+}  -- список русских символов
 
 function main()
 	while true do
@@ -20,7 +20,7 @@ function main()
 	end
 end
 
-function functions.imgui_TextColoredRGB(text, isCenter, isCenterText)
+function functions.imgui_TextColoredRGB(text, isCenter, isCenterText) -- RGB текст для ImGUI, с автоматической кодировкой
 	local width = imgui.GetWindowWidth()
     local style = imgui.GetStyle()
     local colors = style.Colors
@@ -91,7 +91,7 @@ function functions.imgui_TextColoredRGB(text, isCenter, isCenterText)
     render_text(text)
 end
 
-function functions.string_split(inputstr, sep)
+function functions.string_split(inputstr, sep) -- сплит текста
     if sep == nil then
             sep = "%s"
     end
@@ -103,7 +103,7 @@ function functions.string_split(inputstr, sep)
     return t
 end
 
-function functions.getMyNick()
+function functions.getMyNick() -- взятие ника текущего игрока, то-есть Вас
     local result, id = sampGetPlayerIdByCharHandle(playerPed)
     if result then
         local nick = sampGetPlayerNickname(id)
@@ -111,14 +111,14 @@ function functions.getMyNick()
     end
 end
 
-function functions.getMyId()
+function functions.getMyId() -- взятие ID текущего игрока, то-есть Вас
     local result, id = sampGetPlayerIdByCharHandle(playerPed)
     if result then
         return id
     end
 end
 
-function functions.textSplit(str, delim, plain)
+function functions.textSplit(str, delim, plain) -- аналог string.split, но работает с объемным текстом
     local tokens, pos, plain = {}, 1, not (plain == false) --[[ delimiter is plain text by default ]]
     repeat
         local npos, epos = string.find(str, delim, pos, plain)
@@ -128,18 +128,18 @@ function functions.textSplit(str, delim, plain)
     return tokens
 end
 
-function functions.playernickname(nick)
+function functions.playernickname(nick) -- функция для поиска всех никнеймов
     nick = tostring(nick)
     local _, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
     if nick == sampGetPlayerNickname(myid) then return myid end
     for i = 0, 1003 do
-      if sampIsPlayerConnected(i) and sampGetPlayerNickname(i) == nick then
-        return i
-      end
+        if sampIsPlayerConnected(i) and sampGetPlayerNickname(i) == nick then
+            return i
+        end
     end
-  end
+end
 
-function functions.string_rlower(s)
+function functions.string_rlower(s) -- делаем текст большми
     s = s:lower()
     local strlen = s:len()
     if strlen == 0 then return s end
@@ -158,7 +158,7 @@ function functions.string_rlower(s)
     return output
 end
 
-function functions.string_rupper(s)
+function functions.string_rupper(s) -- рупперим текст
     s = s:upper()
     local strlen = s:len()
     if strlen == 0 then return s end
@@ -177,7 +177,7 @@ function functions.string_rupper(s)
     return output
 end
 
-function getDownKeys()
+function getDownKeys() -- получаем список продавленных нахер клавиш
     local curkeys = ""
     local bool = false
     for k, v in pairs(vkeys) do
@@ -200,7 +200,7 @@ function getDownKeys()
     return curkeys, bool
 end
 
-function functions.getDownKeysText()
+function functions.getDownKeysText() -- получаем текст продавленных клавиш, не знаю как, но так и есть
 	tKeys = functions.string_split(getDownKeys(), " ")
 	if #tKeys ~= 0 then
 		for i = 1, #tKeys do
@@ -216,27 +216,23 @@ function functions.getDownKeysText()
 	end
 end
 
-function functions.strToIdKeys(str)
-    if str:find("+") then 
-	    tKeys = functions.string_split(str, "+")
-    else 
-        tKeys = functions.string_split(str, " ")
+function functions.strToIdKeys(str) -- получаем ID клавиш из обусловенного текста, поиска как раз по VKeys
+    tKeys = functions.string_split(str, "+")
+    if #tKeys ~= 0 then
+        for i = 1, #tKeys do
+            if i == 1 then
+                str = vkeys.name_to_id(tKeys[i], false)
+            else
+                str = str .. " " .. vkeys.name_to_id(tKeys[i], false)
+            end
+        end
+        return tostring(str)
+    else
+        return "(("
     end
-	if #tKeys ~= 0 then
-		for i = 1, #tKeys do
-			if i == 1 then
-				str = vkeys.name_to_id(tKeys[i], false)
-			else
-				str = str .. " " .. vkeys.name_to_id(tKeys[i], false)
-			end
-		end
-		return tostring(str)
-	else
-		return "(("
-	end
 end
 
-function functions.join_argb(a, r, g, b)
+function functions.join_argb(a, r, g, b) -- вводим ARGB через BIT таблицу
     local argb = b  -- b
     argb = bit.bor(argb, bit.lshift(g, 8))  -- g
     argb = bit.bor(argb, bit.lshift(r, 16)) -- r
@@ -244,7 +240,7 @@ function functions.join_argb(a, r, g, b)
     return argb
 end
 
-function functions.explode_argb(argb)
+function functions.explode_argb(argb) -- выкладываем разделенные A R G B также через BIT таблицу
     local a = bit.band(bit.rshift(argb, 24), 0xFF)
     local r = bit.band(bit.rshift(argb, 16), 0xFF)
     local g = bit.band(bit.rshift(argb, 8), 0xFF)
@@ -252,7 +248,7 @@ function functions.explode_argb(argb)
     return a, r, g, b
 end
 
-function functions.isKeysDown(keylist, pressed)
+function functions.isKeysDown(keylist, pressed) -- если какие-то клавиши были зажаты вместе, или нет
     local tKeys = functions.string_split(keylist, " ")
     if pressed == nil then
         pressed = false
@@ -276,6 +272,45 @@ function functions.isKeysDown(keylist, pressed)
             if wasKeyPressed(key) and not pressed then
                 bool = true
             elseif isKeyDown(key) and pressed then
+                bool = true
+            end
+        end
+    end
+    if nextLockKey == keylist then
+        if pressed and not wasKeyReleased(key) then
+            bool = false
+        else
+            bool = false
+            nextLockKey = ""
+        end
+    end
+    return bool
+end
+
+function functions.isKeysJustPressed(keylist, pressed) -- если какие-то клавиши были нажаты вместе, или нет
+    local tKeys = functions.string_split(keylist, " ")
+    if pressed == nil then
+        pressed = false
+    end
+    if tKeys[1] == nil then
+        return false
+    end
+    local bool = false
+    local key = #tKeys < 2 and tonumber(tKeys[1]) or tonumber(tKeys[2])
+    local modified = tonumber(tKeys[1])
+    if #tKeys < 2 then
+        if not isKeyJustPressed(VK_RMENU) and not isKeyJustPressed(VK_LMENU) and not isKeyJustPressed(VK_LSHIFT) and not isKeyJustPressed(VK_RSHIFT) and not isKeyJustPressed(VK_LCONTROL) and not isKeyJustPressed(VK_RCONTROL) then
+            if wasKeyPressed(key) and not pressed then
+                bool = true
+            elseif isKeyJustPressed(key) and pressed then
+                bool = true
+            end
+        end
+    else
+        if isKeyJustPressed(modified) and not wasKeyReleased(modified) then
+            if wasKeyPressed(key) and not pressed then
+                bool = true
+            elseif isKeyJustPressed(key) and pressed then
                 bool = true
             end
         end
