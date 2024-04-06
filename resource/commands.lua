@@ -462,7 +462,7 @@ cmd_massive = {
             reason = 'DM/car in /trade',
             time = 300,
         },
-        ['amp'] = {
+        ['ajm'] = {
             cmd = '/jailakk',
             reason = 'Нарушение правил MP',
             time = 300,
@@ -559,6 +559,12 @@ cmd_helper_others = {
 	},
 	['tool'] = {
 		reason = ' - Запуск основного интерфейса АТ',
+	},
+	['btool'] = {
+		reason = ' - Запуск биндера команд',
+	},
+	['amp'] = {
+		reason = ' - Запуск системы мероприятий',
 	},
 }
 
