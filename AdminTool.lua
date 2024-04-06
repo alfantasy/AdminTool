@@ -123,6 +123,7 @@ local urls = {
 	['commands'] = "https://raw.githubusercontent.com/alfantasy/AdminTool/main/resource/commands.lua",
 	['chatlogger'] = "https://raw.githubusercontent.com/alfantasy/AdminTool/main/chat-logger.lua",
 	['events'] = "https://raw.githubusercontent.com/alfantasy/AdminTool/main/ATEvents.lua",
+	['eventsForOwn'] = "https://raw.githubusercontent.com/alfantasy/AdminTool/main/config/AdminTool/evbinder.ini",
 }
 
 local paths = {
@@ -141,6 +142,7 @@ local paths = {
 	['commands'] = getWorkingDirectory() .. '/resource/commands.lua',
 	['chatlogger'] = getWorkingDirectory() .. '/chat-logger.lua',
 	['events'] = getWorkingDirectory() .. '/ATEvents.lua',
+	['eventsForOwn'] = getWorkingDirectory() .. '/config/AdminTool/evbinder.ini',
 }
 
 local upd_upvalue = {
@@ -1683,7 +1685,10 @@ function imgui.OnDrawFrame()
         end
 
         if menuSelect == 3 then  
-            imgui.Text(u8"Здесь указаны всевозможные команды для корректной выдачи наказаний. \nКаждая команда реализована по текущим правилам сервера. \nКроме этого, здесь расположены все остальные команды, используемые в АТ."); imgui.Separator();
+            imgui.TextWrapped(u8"Здесь указаны всевозможные команды для корректной выдачи наказаний. Каждая команда реализована по текущим правилам сервера. Кроме этого, здесь расположены все остальные команды, используемые в АТ.")
+			imgui.TextWrapped(u8'Также все команды Вам может подсказать внедренная в АТ функция, подсказывающая команда при их вводе в чат.')
+			imgui.TextWrapped(u8'При нажатии на команду в хелпере ввода, она копируется в чат')
+			imgui.Separator()
             if imgui.TreeNode(u8"Наказания в онлайне") then 
                 if imgui.TreeNode("Ban") then  
 					imgui.Text(u8"/ch [ID] - бан за читы")
@@ -1814,6 +1819,8 @@ function imgui.OnDrawFrame()
                 imgui.Text(u8"     * Зона стрима - это область, в которой игра видит игроков")
                 imgui.Text(u8"/aheal [ID] - отхилить игрока")
                 imgui.Text(u8"/akill [ID] - убить игрока")
+				imgui.Text(u8'/btool - запуск биндера')
+				imgui.Text(u8'/amp - запуск системы мероприятий')
                 imgui.TreePop()
             end
         end
@@ -1980,6 +1987,14 @@ function imgui.OnDrawFrame()
 			if imgui.Button(fai.ICON_FA_FILE_CODE .. u8" Настройки запуска") then  
 				imgui.OpenPopup('Settings Start')
 			end
+			if imgui.Button(u8' Скачать заготовленные мероприятия') then  
+				downloadUrlToFile(urls['eventsForOwn'], paths['eventsForOwn'], function(id, status)
+					if status == dlstatus.STATUS_ENDDOWNLOADDATA then
+						sampAddChatMessage(tag .. 'Файл с заготовленными мероприятиями установлен.')
+						reloadScripts()
+					end
+				end)
+			end; imgui.Tooltip(u8'ВАЖНО! ВСЕ ВАШИ ВВЕДЕННЫЕ МЕРОПРИЯТИЯ БУДУТ УДАЛЕНЫ! ФАЙЛ ЗАМЕНЯЕТ НЫНЕШНИЙ КОНФИГ!\n\nСОХРАНИТЕ МЕРОПРИЯТИЯ, ДАБЫ ИХ НЕ ПОТЕРЯТЬ\n\nФайл находится по пути Корень игры -> moonloader -> config -> AdminTool -> evbinder.ini')
 			if imgui.TreeNode(u8'Выдача административных префиксов') then  
 				if imgui.InputText(u8'Мл.Администратор', elm.input.prefix_MA) then  
 					config.colours.prefix_MA = elm.input.prefix_MA.v  
