@@ -972,7 +972,7 @@ function imgui.OnDrawFrame()
 
     if ATReportShow.v then  
         imgui.SetNextWindowPos(imgui.ImVec2(sw / 2, sh / 2), imgui.Cond.FirstUseEver, imgui.ImVec2(0.5, 0.5)) 
-        imgui.SetNextWindowSize(imgui.ImVec2(400, 300), imgui.Cond.FirstUseEver)
+        imgui.SetNextWindowSize(imgui.ImVec2(400, 210), imgui.Cond.FirstUseEver)
 
         imgui.ShowCursor = true
 
@@ -991,6 +991,7 @@ function imgui.OnDrawFrame()
         imgui.EndMenuBar()
 
         if elements.select_menu == 0 then
+			imgui.PushStyleVar(imgui.StyleVar.ButtonTextAlign , imgui.ImVec2(0.5, 0.5))
             if (nick_rep and pid_rep and rep_text) then  
 				imgui.Text(u8"Жалоба от: "); imgui.SameLine()
                 imgui.Text(nick_rep); imgui.ToClipboard(nick_rep); imgui.SameLine();
@@ -1001,7 +1002,9 @@ function imgui.OnDrawFrame()
             elseif (nick_rep == nil or pid_rep == nil or rep_text == nil or text_rep == nil) then
                 imgui.Text(u8"Жалоба не существует.")
             end	
+			imgui.PushItemWidth(310)
             imgui.InputText('##Ответ', elements.text) 
+			imgui.PopItemWidth()
             imgui.SameLine()
             if imgui.Button(fa.ICON_REFRESH .. ("##RefreshText//RemoveText")) then  
                 elements.text.v = ""
@@ -1016,8 +1019,13 @@ function imgui.OnDrawFrame()
             if imgui.Button(fa.ICON_FA_TEXT_HEIGHT .. ("##SendColor")) then  
                 elements.text.v = color()
 			end; imgui.Tooltip(u8"Ставит рандомный цвет перед ответом.")
+			imgui.SameLine()
+			if imgui.Checkbox(u8"##PrefixAnswer", elements.prefix_answer) then 
+				config.main.prefix_answer = elements.prefix_answer.v
+				inicfg.save(config, directIni)
+			end; imgui.Tooltip(u8"Автоматически при ответе подставляет пожелание из зарегистрированного текста.\nЗарегистрировать можно в настройках АТ.\n/tool (F3) -> Настройки (иконка 'Шестеренки')")
             imgui.Separator()
-            if imgui.Button(fa.ICON_FA_EYE .. u8" Работа по жб") then  
+            if imgui.Button(fa.ICON_FA_EYE .. u8" Работа по жб", imgui.ImVec2(125,20)) then  
 				lua_thread.create(function()
 					sampSendDialogResponse(2349, 1, 0)
 					wait(50)
@@ -1039,7 +1047,7 @@ function imgui.OnDrawFrame()
 				end)
 			end	
 			imgui.SameLine()
-            if imgui.Button(fa.ICON_BAN .. u8" Наказан") then
+            if imgui.Button(fa.ICON_BAN .. u8" Наказан", imgui.ImVec2(125,20)) then
 				lua_thread.create(function() 
 					sampSendDialogResponse(2349, 1, 0)
 					wait(50)
@@ -1057,7 +1065,7 @@ function imgui.OnDrawFrame()
 				end)
 			end
 			imgui.SameLine()
-			if imgui.Button(fa.ICON_COMMENTING_O .. u8" Уточните ID") then  
+			if imgui.Button(fa.ICON_COMMENTING_O .. u8" Уточните ID", imgui.ImVec2(125,20)) then  
 				lua_thread.create(function()
 					sampSendDialogResponse(2349, 1, 0)
 					wait(50)
@@ -1074,7 +1082,7 @@ function imgui.OnDrawFrame()
 					imgui.ShowCursor = false
 				end)
 			end	
-			if imgui.Button(fa.ICON_FA_EDIT .. u8" Уточните жб") then  
+			if imgui.Button(fa.ICON_FA_EDIT .. u8" Уточните жб", imgui.ImVec2(125,20)) then  
 				lua_thread.create(function()
 					sampSendDialogResponse(2349, 1, 0)
 					wait(50)
@@ -1092,7 +1100,51 @@ function imgui.OnDrawFrame()
 				end)
 			end	
 			imgui.SameLine()
-			if imgui.Button(fa.ICON_CHECK .. u8" Передать жалобу ##SEND") then  
+			if imgui.Button(fai.ICON_FA_SHARE .. u8" Жб на админа", imgui.ImVec2(125,20)) then
+				lua_thread.create(function()
+					sampSendDialogResponse(2349, 1, 0)
+					wait(50)
+					sampSendDialogResponse(2350, 1, 0)
+					wait(50)
+					if elements.prefix_answer.v then
+						sampSendDialogResponse(2351, 1, 0, '{FFFFFF} Пишите жалобу на администратора на форум https://forumrds.ru '.. u8:decode(config.main.prefix_for_answer))
+					else
+						sampSendDialogResponse(2351, 1, 0, '{FFFFFF} Пишите жалобу на администратора на форум https://forumrds.ru ')
+					end
+					wait(50)
+					sampCloseCurrentDialogWithButton(13)
+					ATReportShow.v = false
+					imgui.ShowCursor = false
+				end)
+			end
+			imgui.SameLine()
+			if imgui.Button(fai.ICON_FA_SHARE .. u8" Жб на игрока", imgui.ImVec2(125,20)) then
+				lua_thread.create(function()
+					sampSendDialogResponse(2349, 1, 0)
+					wait(50)
+					sampSendDialogResponse(2350, 1, 0)
+					wait(50)
+					if elements.prefix_answer.v then
+						sampSendDialogResponse(2351, 1, 0, '{FFFFFF} Пишите жалобу на игрока на форум https://forumrds.ru '.. u8:decode(config.main.prefix_for_answer))
+					else
+						sampSendDialogResponse(2351, 1, 0, '{FFFFFF} Пишите жалобу на игрока на форум https://forumrds.ru ')
+					end
+					wait(50)
+					sampCloseCurrentDialogWithButton(13)
+					ATReportShow.v = false
+					imgui.ShowCursor = false
+				end) 
+			end
+			imgui.Separator()
+            if imgui.Button(fai.ICON_FA_QUESTION_CIRCLE .. u8" Ответы от AT", imgui.ImVec2(125,20)) then 
+                elements.select_menu = 1
+            end
+            imgui.SameLine()
+			if imgui.Button(fa.ICON_FA_SAVE .. u8" Сохр. ответы", imgui.ImVec2(125,20)) then  
+				elements.select_menu = 2
+			end	
+			imgui.SameLine()
+			if imgui.Button(fa.ICON_CHECK .. u8" Передать жб ##SEND", imgui.ImVec2(125,20)) then  
 				lua_thread.create(function()
 					sampSendDialogResponse(2349, 1, 0)
 					wait(50)
@@ -1110,28 +1162,14 @@ function imgui.OnDrawFrame()
 					imgui.ShowCursor = false
 				end)	
 			end
-            if imgui.Button(fai.ICON_FA_QUESTION_CIRCLE .. u8" Ответы от AT") then 
-                elements.select_menu = 1
-            end
-            imgui.SameLine()
-			if imgui.Button(fa.ICON_FA_SAVE .. u8" Сохраненные ответы") then  
-				elements.select_menu = 2
-			end	
-            imgui.Separator()
 			-- imgui.Text(u8'Длина текста:' .. (#elements.text.v))
-			if imgui.Checkbox(u8"Пожелание в ответ", elements.prefix_answer) then 
-				config.main.prefix_answer = elements.prefix_answer.v
-				inicfg.save(config, directIni)
-			end; imgui.Tooltip(u8"Автоматически при ответе через кнопочки будет желать то, что вы зарегистрируете")
             elements.prefix_for_answer.v = config.main.prefix_for_answer
-            if imgui.InputText(u8'Ввод префикса', elements.prefix_for_answer) then  
-                config.main.prefix_for_answer = elements.prefix_for_answer.v
-                inicfg.save(config, directIni)
-            end
-            imgui.SetCursorPosY(imgui.GetWindowWidth() - 135)
+            -- if imgui.InputText(u8'Ввод префикса', elements.prefix_for_answer) then  
+            --     config.main.prefix_for_answer = elements.prefix_for_answer.v
+            --     inicfg.save(config, directIni)
+            -- end
             imgui.Separator()
-            imgui.SetCursorPosY(imgui.GetWindowWidth() - 125)
-            if imgui.Button(u8" Ответить") then
+            if imgui.Button(fai.ICON_FA_SMS .. u8" Ответить", imgui.ImVec2(95,20)) then
 				if #elements.text.v < 70 then 
 					lua_thread.create(function()
 						sampSendDialogResponse(2349, 1, 0)
@@ -1158,7 +1196,7 @@ function imgui.OnDrawFrame()
 				end
             end  
             imgui.SameLine()
-            if imgui.Button(fa.ICON_BAN .. u8" Отклонить") then  
+            if imgui.Button(fa.ICON_BAN .. u8" Отклонить", imgui.ImVec2(95,20)) then  
                 lua_thread.create(function()
                     sampSendDialogResponse(2349, 1, 0)
                     wait(50)
@@ -1171,8 +1209,8 @@ function imgui.OnDrawFrame()
                 end)
             end
             imgui.SameLine()
-			imgui.SetCursorPosX(imgui.GetWindowWidth() - 80)
-            if imgui.Button(fa.ICON_WINDOW_CLOSE .. u8" Закрыть") then  
+			imgui.SetCursorPosX(imgui.GetWindowWidth() - 100)
+            if imgui.Button(fa.ICON_WINDOW_CLOSE .. u8" Закрыть", imgui.ImVec2(95,20)) then  
                 lua_thread.create(function()
                     sampSendDialogResponse(2349, 0, 0)
                     wait(50)
@@ -1182,6 +1220,7 @@ function imgui.OnDrawFrame()
                     imgui.ShowCursor = ATReportShow.v
                 end)
             end
+			imgui.PopStyleVar(1)
             
             if imgui.BeginPopupModal(u8'Binder', false, imgui.WindowFlags.NoResize + imgui.WindowFlags.AlwaysAutoResize) then
                 imgui.BeginChild("##EditBinder", imgui.ImVec2(600, 225), true)
@@ -1227,7 +1266,7 @@ function imgui.OnDrawFrame()
         end
 
         if elements.select_menu == 1 then  
-            imgui.BeginChild("##menuSecond", imgui.ImVec2(150, 275), true)
+            imgui.BeginChild("##menuSecond", imgui.ImVec2(170, 200), true)
 			if imgui.Button(fa.ICON_OBJECT_GROUP .. u8" На кого-то/что-то", imgui.ImVec2(135, 0)) then  -- reporton key
 				elements.select_category = 1  
 			end	
@@ -1264,9 +1303,9 @@ function imgui.OnDrawFrame()
 			end	
 			imgui.EndChild()
 			imgui.SameLine()
-			imgui.BeginChild("##menuSelectable", imgui.ImVec2(390, 275), true)
+			imgui.BeginChild("##menuSelectable", imgui.ImVec2(200, 200), true)
 			if elements.select_category == 0 then  
-				imgui.Text(u8"Заготовленные/сохраненные ответы \nтакого типа меняются \nтолько разработчиками")
+				imgui.TextWrapped(u8"Ответы отсюда меняются только разработчиком.")
 			end	
 			if elements.select_category == 1 then  
 				for key, v in pairs(questions) do

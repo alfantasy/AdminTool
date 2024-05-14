@@ -162,8 +162,8 @@ local upd_upvalue = {
 	events = imgui.ImBool(false),
 } 
 
-local script_stream = 1
-local script_version_text = "14.0"
+local script_stream = 2
+local script_version_text = "14.1"
 -- ## Регистрация ссылок для GitHub, переменных для обновления ## --
 
 -- ## Блок переменных связанных с конфигами и элементами взаимодействия с параметрами конфига ## --
@@ -370,7 +370,7 @@ local set_color_float3 = imgui.ImFloat3(1.0, 1.0, 1.0)
 -- ## Блок переменных связанных с кастомным реконом ## --
 local ids_recon = {}
 local text_recon = {'STATS', 'MUTE', 'KICK', 'BAN', 'JAIL', 'CLOSE'}
-for i = 186, 250 do 
+for i = 190, 236 do 
 	table.insert(ids_recon, i, #ids_recon+1) 
 end
 local refresh_button_textdraw = 0
@@ -739,18 +739,18 @@ function main()
 			end)
 		end
 
-        if atlibs.isKeysJustPressed(atlibs.strToIdKeys(config.keys.WallHack)) and not ATMenu.v then  
+        if atlibs.isKeysJustPressed(atlibs.strToIdKeys(config.keys.WallHack)) and not ATMenu.v and not sampIsChatInputActive() and not sampIsDialogActive() then  
 			pother.ActiveWallHack()
         end
 
-        if atlibs.isKeysJustPressed(atlibs.strToIdKeys("R")) and ATRecon.v and not ATMenu.v then
+        if atlibs.isKeysJustPressed(atlibs.strToIdKeys("R")) and ATRecon.v and not ATMenu.v and not sampIsChatInputActive() and not sampIsDialogActive() then
             sampSendClickTextdraw(refresh_button_textdraw)
 			if other_res then  
 				pother.ActivateKeySync(recon_id) 
 			end
         end
 
-        if atlibs.isKeysJustPressed(atlibs.strToIdKeys("Q")) and ATRecon.v and control_to_player and not ATMenu.v then  
+        if atlibs.isKeysJustPressed(atlibs.strToIdKeys("Q")) and ATRecon.v and control_to_player and not ATMenu.v and not sampIsChatInputActive() and not sampIsDialogActive() then  
             sampSendChat("/reoff " )
             control_to_player = false
             imgui.ShowCursor = false 
@@ -759,11 +759,11 @@ function main()
 			end
         end
 
-		if atlibs.isKeysJustPressed(atlibs.strToIdKeys(config.keys.NextReconID)) and ATRecon.v and control_to_player and not ATMenu.v then  
+		if atlibs.isKeysJustPressed(atlibs.strToIdKeys(config.keys.NextReconID)) and ATRecon.v and control_to_player and not ATMenu.v and not sampIsChatInputActive() and not sampIsDialogActive() then  
 			sampSendChat('/re ' .. recon_id+1)
 		end
 
-		if atlibs.isKeysJustPressed(atlibs.strToIdKeys(config.keys.BackReconID)) and ATRecon.v and control_to_player and not ATMenu.v then  
+		if atlibs.isKeysJustPressed(atlibs.strToIdKeys(config.keys.BackReconID)) and ATRecon.v and control_to_player and not ATMenu.v and not sampIsChatInputActive() and not sampIsDialogActive()then  
 			sampSendChat('/re ' .. recon_id-1)
 		end
 
@@ -1092,16 +1092,21 @@ function sampev.onShowTextDraw(id, data)
 		end
 		for _, v in pairs(text_recon) do  
 			if data.text:find(v) then  
-				return false  
+				if id ~= 244 then 
+					return false  
+				end
 			end 
 		end
 		if data.text:find("(%d+)") then  
-			if id >= 2052 then  
+			if id == 2052 then  
 				return false  
 			end  
 		end
 		if ids_recon[id] then  
 			return false 
+		end
+		if data.text:find('CLOSE') or id == 244 then  
+			return true  
 		end
     end
 end
@@ -1135,6 +1140,7 @@ function sampev.onSendCommand(command)
         imgui.Process = ATRecon.v
         imgui.ShowCursor = false  
         recon_id = -1
+		pother.ActivateKeySync("off")
     end 
 	if elm.boolean.access_scan.v and not elm.boolean.auto_login.v then  
 		if string.find(command, '/alogin (.+)') then  
@@ -1923,23 +1929,31 @@ function imgui.OnDrawFrame()
 		end
 
 		if menuSelect == 6 then  
-			if plugins_main_res then  
-				plugin.ActiveATChat()
-			end
-			if renders_res then  
-				prender.ActiveChatRenders()
+			if not plugins_main_res and not renders_res then
+				imgui.TextWrapped(u8'Вы отключили данный скрипт в настройках запуска. Если нужно, включите его. Настройки (иконка "Шестеренки") -> Настройки запуска')
+			else
+				if plugins_main_res then  
+					plugin.ActiveATChat()
+				end
+				if renders_res then  
+					prender.ActiveChatRenders()
+				end
 			end
 		end
 
 		if menuSelect == 7 then  
 			if adminstate_res then  
 				admst.AdminStateMenu()
+			else
+				imgui.TextWrapped(u8'Вы отключили данный скрипт в настройках запуска. Если нужно, включите его. Настройки (иконка "Шестеренки") -> Настройки запуска')
 			end  
 		end
 
 		if menuSelect == 8 then  
 			if other_res then  
 				pother.ActivatedBulletTrack()
+			else 
+				imgui.TextWrapped(u8'Вы отключили данный скрипт в настройках запуска. Если нужно, включите его. Настройки (иконка "Шестеренки") -> Настройки запуска')
 			end 
 		end
 

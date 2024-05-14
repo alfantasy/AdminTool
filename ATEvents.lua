@@ -66,6 +66,7 @@ local elements = {
 		bin_delay = imgui.ImBuffer(2500),
         bin_vdt = imgui.ImBuffer(32),
         bin_coord = imgui.ImBuffer(2048),
+        gun_player = imgui.ImBuffer(64),
     },
 }
 -- ## Блок переменных связанных с конфигами и элементами взаимодействия с параметрами конфига ## --
@@ -539,10 +540,25 @@ function imgui.OnDrawFrame()
         imgui.PopItemWidth()
         imgui.SameLine()
         if imgui.Button(u8"Выдать приз") then  
-            --sampSendChat("/mess 6 В мероприятии победил игрок " .. sampGetPlayerNickname(tonumber(elements.buffers.win_player.v)) .. '[' .. elements.buffer.win_player.v .. "]")
-            --sampSendChat("/mess 6 Поздравим его с победой. <3") 
-            --sampSendChat("/mpwin " .. elements.buffers.win_player.v)
-            sampAddChatMessage(tag .. "[DEBUG] Выдаем приз игроку с ID [" .. elements.buffers.win_player.v .. "]", -1)
+            sampAddChatMessage(tag .. "Выдаем приз игроку с ID [" .. elements.buffers.win_player.v .. "]", -1)
+            sampSendChat("/mess 6 В мероприятии победил игрок " .. sampGetPlayerNickname(tonumber(elements.buffers.win_player.v)) .. '[' .. elements.buffer.win_player.v .. "]")
+            sampSendChat("/mess 6 Поздравим его с победой. <3") 
+            sampSendChat("/mpwin " .. elements.buffers.win_player.v)
+        end
+        imgui.Text(u8'Выдать оружия участникам МП'); imgui.Tooltip(u8'Если нужно выдать одно оружие, введите просто его ID. Если нужно выдать несколько, введите список через запятую.\nПример: 24,38,23')
+        imgui.PushItemWidth(75)
+        imgui.InputText('##GunPlayerEvent', elements.buffers.gun_player)
+        imgui.PopItemWidth()
+        imgui.SameLine()
+        if imgui.Button(u8"Выдать оружие") then  
+            gun_ids = atlibs.string_split(elements.buffers.gun_player.v, ",")
+            if #id_to_stream > 0 then 
+                for _, v in pairs(id_to_stream) do 
+                    for _, vid in pairs(gun_ids) do
+                        sampSendChat("/setweap " .. v .. " " .. vid .. " 5000")
+                    end
+                end 
+            end
         end
         
         imgui.Separator()
