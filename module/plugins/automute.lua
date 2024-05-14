@@ -149,7 +149,9 @@ function sampev.onServerMessage(color, text)
                 local rod_text, _ = checkMessage(text_rep, 4)
                 if mat_text and elements.settings.automute_mat.v then  
                     sampAddChatMessage(tag .. " ======================= | [AT] Automute-Stream | ================== ")
-                    sampAddChatMessage(tag .. " | ћут ID[" .. id_rep .. "] за rep: " .. text_rep, -1)
+                    sampAddChatMessage('                                                                            ')
+                    sampAddChatMessage(tag .. " | ћут ID[" .. id_rep .. "] за rep: {00C1FF}" .. text_rep, -1)
+                    sampAddChatMessage('                                                                            ')
                     sampAddChatMessage(tag .. " ======================= | [AT] Automute-Stream | ================== ")
                     if elements.settings.agree_mute.v then  
                         lua_thread.create(function()
@@ -172,7 +174,9 @@ function sampev.onServerMessage(color, text)
                 end
                 if osk_text and elements.settings.automute_osk.v then  
                     sampAddChatMessage(tag .. " ======================= | [AT] Automute-Stream | ================== ")
-                    sampAddChatMessage(tag .. " | ћут ID[" .. id_rep .. "] за rep: " .. text_rep, -1)
+                    sampAddChatMessage('                                                                            ')
+                    sampAddChatMessage(tag .. " | ћут ID[" .. id_rep .. "] за rep: {00C1FF}" .. text_rep, -1)
+                    sampAddChatMessage('                                                                            ')
                     sampAddChatMessage(tag .. " ======================= | [AT] Automute-Stream | ================== ")
                     if elements.settings.agree_mute.v then  
                         lua_thread.create(function()
@@ -195,7 +199,9 @@ function sampev.onServerMessage(color, text)
                 end
                 if upom_text and elements.settings.automute_upom.v then  
                     sampAddChatMessage(tag .. " ======================= | [AT] Automute-Stream | ================== ")
-                    sampAddChatMessage(tag .. " | ћут ID[" .. id_rep .. "] за rep: " .. text_rep, -1)
+                    sampAddChatMessage('                                                                            ')
+                    sampAddChatMessage(tag .. " | ћут ID[" .. id_rep .. "] за rep: {00C1FF}" .. text_rep, -1)
+                    sampAddChatMessage('                                                                            ')
                     sampAddChatMessage(tag .. " ======================= | [AT] Automute-Stream | ================== ")
                     if elements.settings.agree_mute.v then  
                         lua_thread.create(function()
@@ -218,7 +224,9 @@ function sampev.onServerMessage(color, text)
                 end
                 if rod_text and elements.settings.automute_rod.v then  
                     sampAddChatMessage(tag .. " ======================= | [AT] Automute-Stream | ================== ")
-                    sampAddChatMessage(tag .. " | ћут ID[" .. id_rep .. "] за rep: " .. text_rep, -1)
+                    sampAddChatMessage('                                                                            ')
+                    sampAddChatMessage(tag .. " | ћут ID[" .. id_rep .. "] за rep: {00C1FF}" .. text_rep, -1)
+                    sampAddChatMessage('                                                                            ')
                     sampAddChatMessage(tag .. " ======================= | [AT] Automute-Stream | ================== ")
                     if elements.settings.agree_mute.v then  
                         lua_thread.create(function()
@@ -255,7 +263,7 @@ function sampev.onServerMessage(color, text)
             if mat_text and elements.settings.automute_mat.v then  
                 sampAddChatMessage(tag .. " ======================= | [AT] Automute-Stream | ================== ")
                 sampAddChatMessage('                                                                            ')
-                sampAddChatMessage(tag .. " | ћут " .. check_nick .. "[" .. check_id .. "] за msg: " .. check_text, -1)
+                sampAddChatMessage(tag .. " | ћут " .. check_nick .. "[" .. check_id .. "] за msg: {00C1FF}" .. check_text, -1)
                 sampAddChatMessage('                                                                            ')
                 sampAddChatMessage(tag .. " ======================= | [AT] Automute-Stream | ================== ")
                 if elements.settings.agree_mute.v then  
@@ -281,7 +289,7 @@ function sampev.onServerMessage(color, text)
             if osk_text and elements.settings.automute_osk.v then  
                 sampAddChatMessage(tag .. " ======================= | [AT] Automute-Stream | ================== ")
                 sampAddChatMessage('                                                                            ')
-                sampAddChatMessage(tag .. " | ћут " .. check_nick .. "[" .. check_id .. "] за msg: " .. check_text, -1)
+                sampAddChatMessage(tag .. " | ћут " .. check_nick .. "[" .. check_id .. "] за msg: {00C1FF}" .. check_text, -1)
                 sampAddChatMessage('                                                                            ')
                 sampAddChatMessage(tag .. " ======================= | [AT] Automute-Stream | ================== ")
                 if elements.settings.agree_mute.v then  
@@ -307,7 +315,7 @@ function sampev.onServerMessage(color, text)
             if upom_text and elements.settings.automute_upom.v then  
                 sampAddChatMessage(tag .. " ======================= | [AT] Automute-Stream | ================== ")
                 sampAddChatMessage('                                                                            ')
-                sampAddChatMessage(tag .. " | ћут " .. check_nick .. "[" .. check_id .. "] за msg: " .. check_text, -1)
+                sampAddChatMessage(tag .. " | ћут " .. check_nick .. "[" .. check_id .. "] за msg: {00C1FF}" .. check_text, -1)
                 sampAddChatMessage('                                                                            ')
                 sampAddChatMessage(tag .. " ======================= | [AT] Automute-Stream | ================== ")
                 if elements.settings.agree_mute.v then  
@@ -333,7 +341,7 @@ function sampev.onServerMessage(color, text)
             if rod_text and elements.settings.automute_rod.v then  
                 sampAddChatMessage(tag .. " ======================= | [AT] Automute-Stream | ================== ")
                 sampAddChatMessage('                                                                            ')
-                sampAddChatMessage(tag .. " | ћут " .. check_nick .. "[" .. check_id .. "] за msg: " .. check_text, -1)
+                sampAddChatMessage(tag .. " | ћут " .. check_nick .. "[" .. check_id .. "] за msg: {00C1FF}" .. check_text, -1)
                 sampAddChatMessage('                                                                            ')
                 sampAddChatMessage(tag .. " ======================= | [AT] Automute-Stream | ================== ")
                 if elements.settings.agree_mute.v then  

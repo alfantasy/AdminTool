@@ -175,13 +175,13 @@ function sampev.onServerMessage(color, text)
                         form = lc_text .. " // " .. lc_nick
                     end  
                     showNotification("Пришла административная форма! \n Если у Вас включено автоматическое принятие форм, проигнорируйте уведомление\n /fac - принять | /fn - отклонить")
-                    sampAddChatMessage(tag .. "Форма: " .. adm_form, -1)
+                    sampAddChatMessage(tag .. "Форма: " .. form, -1)
                     if elements.boolean.auto_adminforms.v then
                         lua_thread.create(function()
                             sampSendChat("/a [AT] Форма принята.")
                             wait(5)
-                            sampSendChat(adm_form)
-                            adm_form = ''
+                            sampSendChat(form)
+                            form = ''
                         end)
                     else
                         start_forms()
@@ -195,12 +195,12 @@ function sampev.onServerMessage(color, text)
         sampRegisterChatCommand('fac', function()
             sampSendChat("/a [AT] Форма принята.")
             wait(5)
-            sampSendChat(adm_form)
-            adm_form = ''
+            sampSendChat(form)
+            form = ''
         end)
         sampRegisterChatCommand('fn', function()
             sampSendChat('/a [AT] Форма отклонена.')
-            adm_form = ''
+            form = ''
         end)
     end
     -- ## Работа с административными формами ## --

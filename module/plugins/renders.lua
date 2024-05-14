@@ -45,6 +45,8 @@ local config = inicfg.load({
         dchat = false,
         pmchat = false,
         reportchat = false,
+        warningchat = false,
+        lquit = false,
         Font = 10,
     },
     dchat = {
@@ -62,6 +64,16 @@ local config = inicfg.load({
         Y = 0,
         lines = 10,
     },
+    warningchat = {
+        X = 0,
+        Y = 0,
+        lines = 10,
+    },
+    lquit = {
+        X = 0,
+        Y = 0,
+        lines = 10,
+    }
 }, directIni)
 inicfg.save(config, directIni)
 
@@ -74,6 +86,8 @@ local elements = {
         dchat = imgui.ImBool(config.settings.dchat),
         pmchat = imgui.ImBool(config.settings.pmchat),
         reportchat = imgui.ImBool(config.settings.reportchat),
+        warningchat = imgui.ImBool(config.settings.warningchat),
+        lquit = imgui.ImBool(config.settings.lquit),
     },
     int = {
         Font = imgui.ImInt(config.settings.Font), 
@@ -99,6 +113,20 @@ local elements = {
         Y = 0,
         lines = imgui.ImInt(10),
     },
+    warningchat = {
+        chat_lines = { },
+        pos = false,
+        X = 0,
+        Y = 0,
+        lines = imgui.ImInt(10),
+    },
+    lquit = {
+        chat_lines = { },
+        pos = false,
+        X = 0,
+        Y = 0,
+        lines = imgui.ImInt(10),
+    }
 }
 -- ## Блок переменных связанных с конфигами и элементами взаимодействия с параметрами конфига ## --
 
@@ -136,9 +164,40 @@ local no_saved = {
 }
 
 local report_checking = false
+
+local quitReason = {
+    "вылетел / краш",
+    "вышел из игры",
+    "кикнут / забанен"
+  }
 -- ## Функции для прямых действий с рендером ## -- 
 
 -- ## Сохранение рендерных параметров ## --
+function saveLQuit()
+    config.lquit.X = elements.lquit.X
+    config.lquit.Y = elements.lquit.Y
+    config.lquit.lines = elements.lquit.lines.v
+    save()
+end
+
+function loadLQuit()
+    elements.lquit.X = config.lquit.X
+    elements.lquit.Y = config.lquit.Y
+    elements.lquit.lines.v = config.lquit.lines
+end
+
+function saveWarningChat()
+    config.warningchat.X = elements.warningchat.X
+    config.warningchat.Y = elements.warningchat.Y
+    config.warningchat.lines = elements.warningchat.lines.v
+    save()
+end 
+
+function loadWarningChat()
+    elements.warningchat.X = config.warningchat.X
+    elements.warningchat.Y = config.warningchat.Y
+    elements.warningchat.lines.v = config.warningchat.lines
+end
 
 function saveDChat()
     config.dchat.X = elements.dchat.X 
@@ -215,6 +274,40 @@ function sampev.onServerMessage(color, text)
         end  
         return false
     end
+    local str = {}
+    str = atlibs.string_split(text, " ")
+    if elements.boolean.warningchat.v then
+        if str[1] == "<AC-WARNING>" or str[1] == "<AC-KICK>" then  
+            for i = elements.warningchat.lines.v, 1, -1 do
+                if i ~= 1 then
+                    elements.warningchat.chat_lines[i] = elements.warningchat.chat_lines[i-1]
+                else
+                    elements.warningchat.chat_lines[i] = text
+                end
+            end 
+            return true
+        end
+    end
+end
+
+function sampev.onPlayerJoin(id, color, isNpc, nickname)
+    for i = elements.lquit.lines.v, 1, -1 do
+        if i ~= 1 then
+            elements.lquit.chat_lines[i] = elements.lquit.chat_lines[i-1]
+        else
+            elements.lquit.chat_lines[i] = string.format("%s[%d] подключился", nickname, id)
+        end 
+    end
+end
+
+function sampev.onPlayerQuit(id, reason)
+    for i = elements.lquit.lines.v, 1, -1 do
+        if i ~= 1 then
+            elements.lquit.chat_lines[i] = elements.lquit.chat_lines[i-1]
+        else
+            elements.lquit.chat_lines[i] = string.format("%s[%d] %s", sampGetPlayerNickname(id), id, quitReason[reason+1])
+        end 
+    end
 end
 
 function main()
@@ -226,18 +319,24 @@ function main()
     render_faq = lua_thread.create_suspended(drawFAQ)
     render_pm = lua_thread.create_suspended(drawPM)
     render_dchat = lua_thread.create_suspended(drawNearby)
+    render_warning = lua_thread.create_suspended(drawWarning)
+    render_lquit = lua_thread.create_suspended(drawLQuit)
     -- ## Инициализация поточных функций. Рендер ## --
 
     -- ## Подгрузка настроек рендеров ## --
     loadDChat()
     loadFAQ()
     loadPM()
+    loadWarningChat()
+    loadLQuit()
     -- ## Подгрузка настроек рендеров ## --
 
     -- ## Запуск поточных функций ## --
     render_faq:run()
     render_pm:run() 
     render_dchat:run()
+    render_warning:run()
+    render_lquit:run()
     -- ## Запуск поточных функций ## --
     while true do
         wait(0)
@@ -253,11 +352,47 @@ function main()
         if elements.reportchat.pos then  
             change_reportchat()
         end  
+
+        if elements.warningchat.pos then
+            change_warningchat()
+        end
+
+        if elements.lquit.pos then
+            change_lquit()
+        end
         
     end
 end
 
 -- ## Изменение позиций рендера ## --
+function change_lquit()
+    if isKeyJustPressed(0x02) then
+        elements.lquit.X = no_saved.X
+        elements.lquit.Y = no_saved.Y
+        elements.lquit.pos = false
+    elseif isKeyJustPressed(0x01) then
+        sampAddChatMessage(tag .. 'Положение чата выставлено.', -1)
+        elements.lquit.pos = false
+    else
+        elements.lquit.X, elements.lquit.Y = getCursorPos()
+        saveLQuit()
+    end
+end
+
+function change_warningchat()
+    if isKeyJustPressed(0x02) then
+        elements.warningchat.X = no_saved.X
+        elements.warningchat.Y = no_saved.Y
+        elements.warningchat.pos = false
+    elseif isKeyJustPressed(0x01) then
+        sampAddChatMessage(tag .. 'Положение чата выставлено.', -1)
+        elements.warningchat.pos = false
+    else
+        elements.warningchat.X, elements.warningchat.Y = getCursorPos()
+        saveWarningChat()
+    end
+end
+
 function change_dchat()
     if isKeyJustPressed(0x02) then  
         elements.dchat.X = no_saved.X  
@@ -302,6 +437,20 @@ end
 -- ## Изменение позиций рендера ## --
 
 -- ## Использование поточных функций, их активация и последовательная обработка ## --
+function drawWarning()
+    if elements.boolean.warningchat.v then
+        while true do
+            for i = elements.warningchat.lines.v, 1, -1 do
+                if elements.warningchat.chat_lines[i] == nil then
+                    elements.warningchat.chat_lines[i] = ' '
+                end
+                renderFontDrawText(font_render, elements.warningchat.chat_lines[i], elements.warningchat.X, elements.warningchat.Y+(ini_file_main.main.font+4)*(elements.warningchat.lines.v - i)+6, 0xFF9999FF)
+            end
+            wait(1)
+        end
+    end
+end
+
 function drawFAQ()
     if elements.boolean.reportchat.v then  
         while true do 
@@ -343,6 +492,20 @@ function drawNearby()
         end 
     end 
 end
+
+function drawLQuit()
+    if elements.boolean.lquit.v then
+        while true do
+            for i = elements.lquit.lines.v, 1, -1 do
+                if elements.lquit.chat_lines[i] == nil then
+                    elements.lquit.chat_lines[i] = ' '
+                end
+                renderFontDrawText(font_render, elements.lquit.chat_lines[i], elements.lquit.X, elements.lquit.Y+(ini_file_main.main.font+4)*(elements.lquit.lines.v - i)+6, 0xFF9999FF)
+            end
+            wait(1)
+        end
+    end
+end
 -- ## Использование поточных функций, их активация и последовательная обработка ## --
 
 function EXPORTS.ActiveChatRenders()
@@ -356,6 +519,12 @@ function EXPORTS.ActiveChatRenders()
         if imgui.RadioButton(u8"/report", rbutton, 3) then  
             change_dest = 3
         end  
+        if imgui.RadioButton(u8"WarningChat", rbutton, 4) then
+            change_dest = 4
+        end
+        if imgui.RadioButton(u8"Вход/Выход", rbutton, 5) then
+            change_dest = 5
+        end
         if change_dest == 1 then  
             imgui.Text(u8"Включение рендера /pm")
             imgui.SameLine()
@@ -414,6 +583,46 @@ function EXPORTS.ActiveChatRenders()
             if imgui.Button(u8'Сохранить') then  
                 showNotification("Настройка рендера /report сохранены")
                 saveFAQ()
+            end
+        end
+        if change_dest == 4 then
+            imgui.Text(u8"Включение рендера WarningChat")
+            imgui.SameLine()
+            if imgui.ToggleButton('##ActiveRenderWarningChat', elements.boolean.warningchat) then
+                config.settings.warningchat = elements.boolean.warningchat.v
+                save()
+            end
+            imgui.Text(u8'Количество строк: ')
+            imgui.PushItemWidth(80)
+            imgui.InputInt('##LinesWarningChat', elements.warningchat.lines)
+            imgui.PopItemWidth()
+            if imgui.Button(u8'Положение чата') then
+                no_saved.X = elements.warningchat.X; no_saved.Y = elements.warningchat.Y
+                elements.warningchat.pos = true
+            end
+            if imgui.Button(u8'Сохранить') then
+                showNotification("Настройка рендера WarningChat сохранена")
+                saveWarningChat()
+            end
+        end
+        if change_dest == 5 then
+            imgui.Text(u8"Включение рендера Вход/Выход")
+            imgui.SameLine()
+            if imgui.ToggleButton('##ActiveRenderLogin', elements.boolean.lquit) then
+                config.settings.lquit = elements.boolean.lquit.v
+                save()
+            end
+            imgui.Text(u8'Количество строк: ')
+            imgui.PushItemWidth(80)
+            imgui.InputInt('##LinesLogin', elements.lquit.lines)
+            imgui.PopItemWidth()
+            if imgui.Button(u8'Положение чата') then
+                no_saved.X = elements.lquit.X; no_saved.Y = elements.lquit.Y
+                elements.lquit.pos = true
+            end
+            if imgui.Button(u8'Сохранить') then
+                showNotification("Настройка рендера Вход/Выход сохранена")
+                saveLQuit()
             end
         end
         imgui.TreePop()
