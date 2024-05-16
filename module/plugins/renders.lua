@@ -244,7 +244,7 @@ function sampev.onServerMessage(color, text)
         local pm_text = text:match("%[A] SMS: (.+)")
         for i = elements.pmchat.lines.v, 1, -1 do  
             if i ~= 1 then  
-                elements.pmchat.chat_lines[i] = elements.pmchat.chat_lines[-1]
+                elements.pmchat.chat_lines[i] = elements.pmchat.chat_lines[i-1]
             else 
                 elements.pmchat.chat_lines[i] = "{00BFFF} [AT-PM] {FFFFFF}: " .. pm_text
             end
