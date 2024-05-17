@@ -193,10 +193,12 @@ function sampev.onServerMessage(color, text)
 
     function start_forms()
         sampRegisterChatCommand('fac', function()
-            sampSendChat("/a [AT] Форма принята.")
-            wait(5)
-            sampSendChat(form)
-            form = ''
+            lua_thread.create(function()
+                sampSendChat("/a [AT] Форма принята.")
+                wait(5)
+                sampSendChat(form)
+                form = ''
+            end)
         end)
         sampRegisterChatCommand('fn', function()
             sampSendChat('/a [AT] Форма отклонена.')
@@ -267,7 +269,7 @@ function sampev.onServerMessage(color, text)
 			end
 		end	
 		if elements.boolean.adminchat.v then 
-			for i =  every_settings.admin_chat.render_lines.v, 1, -1 do
+			for i = every_settings.admin_chat.render_lines.v, 1, -1 do
 				if i ~= 1 then
 					every_settings.no_saved_ac.chat_lines[i] = every_settings.no_saved_ac.chat_lines[i-1]
 				else
@@ -372,7 +374,7 @@ function drawAdminChat()
                         renderFontDrawText(font_ac, every_settings.no_saved_ac.chat_lines[i], every_settings.admin_chat.X, every_settings.admin_chat.Y+(elements.int.adminFont.v+4)*(every_settings.admin_chat.render_lines.v - i), atlibs.join_argb(255, 255, 255, 255))
                     end
 				end
-			elseif admin_chat_lines.centered.v == 1 then
+			elseif every_settings.admin_chat.centered.v == 1 then
 				for i = every_settings.admin_chat.render_lines.v, 1, -1 do
 					if every_settings.no_saved_ac.chat_lines[i] == nil then
 						every_settings.no_saved_ac.chat_lines[i] = " "
@@ -383,7 +385,7 @@ function drawAdminChat()
                         renderFontDrawText(font_ac, every_settings.no_saved_ac.chat_lines[i], every_settings.admin_chat.X - renderGetFontDrawTextLength(font_ac, every_settings.no_saved_ac.chat_lines[i]) / 2, every_settings.admin_chat.Y+elements.int.adminFont.v*(every_settings.admin_chat.render_lines.v - i)+5, atlibs.join_argb(atlibs.explode_argb(every_settings.admin_chat.color)))
                     end
 				end
-			elseif admin_chat_lines.centered.v == 2 then
+			elseif every_settings.admin_chat.centered.v == 2 then
 				for i = every_settings.admin_chat.render_lines.v, 1, -1 do
 					if every_settings.no_saved_ac.chat_lines[i] == nil then
 						every_settings.no_saved_ac.chat_lines[i] = " "
