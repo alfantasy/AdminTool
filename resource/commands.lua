@@ -283,17 +283,9 @@ cmd_massive = {
 		cmd = "/kick",
 		reason = ' DM in /jail',
 	},
-	['nk1'] = {
+	['ck'] = {
 		cmd = "/kick",
-		reason = ' Смените никнейм. 1/3',
-	},
-	['nk2'] = {
-		cmd = "/kick",
-		reason = ' Смените никнейм. 2/3',
-	},
-	['nk3'] = {
-		cmd = "/nak",
-		reason = ' Смените никнейм. 3/3',
+		reason = ' Смените никнейм.',
 	},
 	['cafk'] = {
 		cmd = "/kick",
