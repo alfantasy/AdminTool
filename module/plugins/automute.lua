@@ -41,6 +41,7 @@ local config = inicfg.load({
         automute_osk = false,
         automute_rod = false, 
         automute_upom = false, 
+        automute_oadm = false,
         agree_mute = false,
     },
 }, directIni)
@@ -52,6 +53,7 @@ local elements = {
         automute_osk = imgui.ImBool(config.settings.automute_osk),
         automute_rod = imgui.ImBool(config.settings.automute_rod),
         automute_upom = imgui.ImBool(config.settings.automute_upom),
+        automute_oadm = imgui.ImBool(config.settings.automute_oadm),
         agree_mute = imgui.ImBool(config.settings.agree_mute),
     },
     imgui = {
@@ -84,10 +86,14 @@ local onscene_upom = {
 local onscene_rod = { 
     "мать ебал", "mq", "мать в канаве", "твоя мать шлюха", "твой рот шатал", "mqq", "mmq", 'mmqq', "matb v kanave",
 }
+local onscene_oskadm = {
+    "админ еблан", "админ пидр", "админ лох", "админ гандон", "админ уебан", "админ твоя мать шлюха", "админ твой рот шатал", "админ mqq", "админ mmq", "админ mmqq", "админ matb v kanave",
+}
 local control_onscene_mat = false -- контролирование сцены автомута "Нецензурная лексика"
 local control_onscene_osk = false -- контролирование сцены автомута "Оскорбление/унижение"
 local control_onscene_upom = false -- контролирование сцены автомута "Упоминание стор.проектов"
 local control_onscene_rod = false -- контролирование сцены автомута "Оскорбление родных"
+local control_onscene_oskadm = false -- контролирование сцены автомута "Оскорбление админов"
 
 local russian_characters = {
     [168] = 'Ё', [184] = 'ё', [192] = 'А', [193] = 'Б', [194] = 'В', [195] = 'Г', [196] = 'Д', [197] = 'Е', [198] = 'Ж', [199] = 'З', [200] = 'И', [201] = 'Й', [202] = 'К', [203] = 'Л', [204] = 'М', [205] = 'Н', [206] = 'О', [207] = 'П', [208] = 'Р', [209] = 'С', [210] = 'Т', [211] = 'У', [212] = 'Ф', [213] = 'Х', [214] = 'Ц', [215] = 'Ч', [216] = 'Ш', [217] = 'Щ', [218] = 'Ъ', [219] = 'Ы', [220] = 'Ь', [221] = 'Э', [222] = 'Ю', [223] = 'Я', [224] = 'а', [225] = 'б', [226] = 'в', [227] = 'г', [228] = 'д', [229] = 'е', [230] = 'ж', [231] = 'з', [232] = 'и', [233] = 'й', [234] = 'к', [235] = 'л', [236] = 'м', [237] = 'н', [238] = 'о', [239] = 'п', [240] = 'р', [241] = 'с', [242] = 'т', [243] = 'у', [244] = 'ф', [245] = 'х', [246] = 'ц', [247] = 'ч', [248] = 'ш', [249] = 'щ', [250] = 'ъ', [251] = 'ы', [252] = 'ь', [253] = 'э', [254] = 'ю', [255] = 'я',
@@ -126,6 +132,15 @@ function checkMessage(msg, arg) -- под аргументом воспринимается номер нужного m
                     return true, ph -- возвращаем True и запрещенное слово
                 end 
             end 
+        elseif arg == 5 then -- MainStream Automute-Report For "Оскорбление/Унижение адм"
+            for i, ph in ipairs(onscene_oskadm) do -- массив с заполненными скриптом словами из файла
+                nmsg = atlibs.string_split(msg, " ") -- разбитие сообщения на массив по словам
+                for j, word in ipairs(nmsg) do -- цикл хождения по словам внутри массива
+                    if ph == atlibs.string_rlower(word) then  -- если запрещенное слово есть внутри массива, то
+                        return true, ph -- возврат True и запрещенное слово
+                    end
+                end
+            end
         end  
     end
 end 
@@ -147,6 +162,7 @@ function sampev.onServerMessage(color, text)
                 local osk_text, _ = checkMessage(text_rep, 2)
                 local upom_text, _ = checkMessage(text_rep, 3)
                 local rod_text, _ = checkMessage(text_rep, 4)
+                local oskadm_text, _ = checkMessage(text_rep, 5)
                 if mat_text and elements.settings.automute_mat.v then  
                     sampAddChatMessage(tag .. " ======================= | [AT] Automute-Stream | ================== ")
                     sampAddChatMessage('                                                                            ')
@@ -247,6 +263,31 @@ function sampev.onServerMessage(color, text)
                         showNotification("Нарушитель: " .. nick_rep .. "[" .. id_rep .. "] \n Замучен за 'Оскорбление/Унижение родных'. \n Его текст: " .. text_rep)
                     end
                 end
+                if oskadm_text and elements.settings.automute_oadm.v then
+                    sampAddChatMessage(tag .. " ======================= | [AT] Automute-Stream | ================== ")
+                    sampAddChatMessage('                                                                            ')
+                    sampAddChatMessage(tag .. " | Мут ID[" .. id_rep .. "] за rep: {00C1FF}" .. text_rep, -1)
+                    sampAddChatMessage('                                                                            ')
+                    sampAddChatMessage(tag .. " ======================= | [AT] Automute-Stream | ================== ")
+                    if elements.settings.agree_mute.v then
+                        lua_thread.create(function()
+                            local startTime = os.time()
+                            local timeLimit = 5
+                            sampAddChatMessage(tag .. 'Для подтверждения мута, нажмите Enter', -1)
+                            showNotification('Для подтверждения мута, нажмите Enter')
+                            while os.time() - startTime < timeLimit do
+                                wait(0)
+                                if isKeyJustPressed(VK_RETURN) then
+                                    sampSendChat("/rmute " .. id_rep .. " 2500 Оск/Униж. адм")
+                                    showNotification("Нарушитель: " .. nick_rep .. "[" .. id_rep .. "] \n Замучен за 'Оскорбление/Унижение администраторов'. \n Его текст: " .. text_rep)
+                                end
+                            end
+                        end)
+                    else
+                        sampSendChat("/rmute " .. id_rep .. " 2500 Оск/Униж. адм")
+                        showNotification("Нарушитель: " .. nick_rep .. "[" .. id_rep .. "] \n Замучен за 'Оскорбление/Унижение администраторов'. \n Его текст: " .. text_rep)
+                    end
+                end                        
             end  
             return true
         end
@@ -260,6 +301,7 @@ function sampev.onServerMessage(color, text)
             local osk_text, _ = checkMessage(check_text, 2)
             local upom_text, _ = checkMessage(check_text, 3)
             local rod_text, _ = checkMessage(check_text, 4)
+            local oskadm_text, _ = checkMessage(check_text, 5)
             if mat_text and elements.settings.automute_mat.v then  
                 sampAddChatMessage(tag .. " ======================= | [AT] Automute-Stream | ================== ")
                 sampAddChatMessage('                                                                            ')
@@ -364,6 +406,32 @@ function sampev.onServerMessage(color, text)
                     showNotification("Нарушитель: " .. check_nick .. "[" .. check_id .. "] \n Замучен за 'Оскорбление/Унижение родных'. \n Его текст: " .. check_text)
                 end
             end
+            if oskadm_text and elements.settings.automute_oadm.v then
+                sampAddChatMessage(tag .. " ======================= | [AT] Automute-Stream | ================== ")
+                sampAddChatMessage('                                                                            ')
+                sampAddChatMessage(tag .. " | Мут " .. check_nick .. "[" .. check_id .. "] за msg: {00C1FF}" .. check_text, -1)
+                sampAddChatMessage('                                                                            ')
+                sampAddChatMessage(tag .. " ======================= | [AT] Automute-Stream | ================== ")
+                if elements.settings.agree_mute.v then
+                    lua_thread.create(function()
+                        local startTime = os.time()
+                        local timeLimit = 5
+                        sampAddChatMessage(tag .. 'Для подтверждения мута, нажмите Enter', -1)
+                        showNotification('Для подтверждения мута, нажмите Enter')
+                        while os.time() - startTime < timeLimit do
+                            wait(0)
+                            if isKeyJustPressed(VK_RETURN) then
+                                sampSendChat("/mute " .. check_id .. " 2500 Оск/Униж. адм")
+                                showNotification("Нарушитель: " .. check_nick .. "[" .. check_id .. "] \n Замучен за 'Оскорбление/Унижение адм'. \n Его текст: " .. check_text)
+                                break
+                            end
+                        end
+                    end)
+                else 
+                    sampSendChat("/mute " .. check_id .. " 2500 Оск/Униж. адм")
+                    showNotification("Нарушитель: " .. check_nick .. "[" .. check_id .. "] \n Замучен за 'Оскорбление/Унижение адм'. \n Его текст: " .. check_text)
+                end
+            end
             return true
         end
     end 
@@ -442,6 +510,22 @@ function main()
         end 
         file_read_upom:close()
     end
+
+    local file_read_oadm, file_line_oadm = io.open(directoryAM.."\\oadm.txt", 'r'), 1
+    if file_read_oadm ~= nil then
+        file_read_oadm:seek("set", 0)
+        for line in file_read_oadm:lines() do
+            onscene_oskadm[file_line_oadm] = line
+            file_line_oadm = file_line_oadm + 1
+        end
+        file_read_oadm:close()
+    else
+        file_read_oadm, file_line_oadm = io.open(directoryAM.."\\oadm.txt", 'w'), 1
+        for _, v in ipairs(onscene_oskadm) do
+            file_read_oadm:write(v .. "\n")
+        end
+        file_read_oadm:close()
+    end
     -- ## Блок проверки на нахождение нужных файлов в рабочей папке ## --
 
     -- ## Блок регистрирующий команды для работы с автомутом (ввод своих слов/удаление слов) ## --
@@ -457,6 +541,9 @@ function main()
 
     sampRegisterChatCommand("s_mat", save_mat)
     sampRegisterChatCommand("d_mat", delete_mat)
+
+    sampRegisterChatCommand("s_oadm", save_oadm)
+    sampRegisterChatCommand("d_oadm", delete_oadm)
 
     -- ## Блок регистрирующий команды для работы с автомутом (ввод своих слов/удаление слов) ## --
 
@@ -631,6 +718,47 @@ function delete_mat(param)
     end
 end
 
+function save_oadm(param)
+    if param == nil then
+        return false
+    end
+    for _, val in ipairs(onscene_oskadm) do
+        if atlibs.string_rlower(param) == val then
+            sampAddChatMessage(tag .. " Слово \"" .. val .. "\" уже присутствует в списке оскорблений администраторов.")
+            return false
+        end
+    end
+    local file_write, file_line = io.open(directoryAM.. "\\oadm.txt", "w"), 1
+    onscene_oskadm[#onscene_oskadm + 1] = atlibs.string_rlower(param)
+    for _, val in ipairs(onscene_oskadm) do
+        file_write:write(val .. "\n")
+    end
+    file_write:close()
+    sampAddChatMessage(tag .. " Слово \"" .. atlibs.string_rlower(param) .. "\" успешно добавлено в список оскорблений администраторов.")
+end
+
+function delete_oadm(param)
+    if param == nil then
+        return false
+    end
+    local file_write, file_line = io.open(directoryAM.. "\\oadm.txt", "w"), 1
+    for i, val in ipairs(onscene_oskadm) do
+        if val == atlibs.string_rlower(param) then
+            onscene_oskadm[i] = nil
+            control_onscene_oskadm = true
+        else
+            file_write:write(val .. "\n")
+        end
+    end
+    file_write:close()
+    if control_onscene_oskadm then
+        sampAddChatMessage(tag .. " Слово \"" .. atlibs.string_rlower(param) .. "\" было успешно удалено из списка оскорблений администраторов.")
+        control_onscene_oskadm = false
+    else
+        sampAddChatMessage(tag .. " Слова \"" .. atlibs.string_rlower(param) .. "\" нет в списке оскорблений администраторов.")
+    end
+end
+
 function string.rlower(s)
     s = s:lower()
     local strlen = s:len()
@@ -673,6 +801,11 @@ function check_files_automute(param)
         local t = file_check:read("*all")
         file_check:close()        
             return t        
+    elseif param == 'oadm' then
+        local file_check = assert(io.open(getWorkingDirectory() .. '\\config\\AdminTool\\AutoMute\\oadm.txt', 'r'))
+        local t = file_check:read("*all")
+        file_check:close()
+            return t
     end
 end
 -- ## Блок функций, отвечающий за чтение файлов автомута для ввода необходимых слов ## --
@@ -699,6 +832,10 @@ function EXPORTS.ActiveAutoMute()
         if imgui.ToggleButton(u8'Автомут за оск родных', elements.settings.automute_rod) then  
             config.settings.automute_rod = elements.settings.automute_rod.v  
             save()  
+        end
+        if imgui.ToggleButton(u8'Автомут за оск/униж адм', elements.settings.automute_oadm) then
+            config.settings.automute_oadm = elements.settings.automute_oadm.v
+            save()
         end
         if imgui.ToggleButton(u8'Подтверждение мута', elements.settings.agree_mute) then  
             config.settings.agree_mute = elements.settings.agree_mute.v  
@@ -728,6 +865,9 @@ function EXPORTS.ReadWriteAM()
             end 
             if imgui.Button(u8"Оскорбление родных") then  
                 elements.imgui.selectable = 4
+            end
+            if imgui.Button(u8"Оскорбление админов") then
+                elements.imgui.selectable = 5
             end
             imgui.SetCursorPosY(imgui.GetWindowHeight() - 25)
             if imgui.Button(u8"Закрыть редактор") then  
@@ -815,6 +955,25 @@ function EXPORTS.ReadWriteAM()
                 imgui.Separator()
                 elements.imgui.stream.v = check_files_automute("oskrod")
                 for line in elements.imgui.stream.v:gmatch("[^\r\n]+") do  
+                    imgui.Text(u8(line))
+                end
+            end
+            if elements.imgui.selectable == 5 then
+                imgui.Text(u8"Для добавления/удаление слов, используйте поле ввода ниже")
+                imgui.InputText("##InputWord", elements.imgui.input_word)
+                imgui.SameLine()
+                if imgui.Button(fa.ICON_REFRESH) then
+                    elements.imgui.input_word.v = ""
+                end
+                if imgui.Button(u8"Добавить") then
+                    save_oadm(u8:decode(elements.imgui.input_word.v))
+                end
+                if imgui.Button(u8"Удалить") then
+                    delete_oadm(u8:decode(elements.imgui.input_word.v))
+                end
+                imgui.Separator()
+                elements.imgui.stream.v = check_files_automute("oskoadm")
+                for line in elements.imgui.stream.v:gmatch("[^\r\n]+") do
                     imgui.Text(u8(line))
                 end
             end
