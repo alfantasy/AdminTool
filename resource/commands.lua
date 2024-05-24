@@ -11,7 +11,7 @@ cmd_massive = {
 	}, 
 	["pl"] = {
 		cmd = "/ban",
-		reason = "Плагиат ника администратора",
+		reason = "Плагиат ника",
 		time = 7,
 	},
 	["ob"] = {
@@ -23,11 +23,6 @@ cmd_massive = {
 		cmd = "/iban",
 		reason = "Оск/Униж/Мат в хелпере",
 		time = 3,
-	},
-	["menk"] = {
-		cmd = "/iban",
-		reason = "Ник с запр. словами",
-		time = 7,
 	},
 	["gnck"] = {
 		cmd = "/iban",
@@ -41,7 +36,7 @@ cmd_massive = {
 	},
 	["nk"] = {
 		cmd = "/ban",
-		reason = "Ник с нецензурной лексикой",
+		reason = "Запрещенный ник",
 		time = 7,
 	},
 
