@@ -44,6 +44,7 @@ local directIni = "AdminTool\\settings_reports.ini"
 
 local config = inicfg.load({
     main = {
+		interface = true,
         prefix_answer = false, 
         prefix_for_answer = " // Приятной игры на сервере RDS <3",
     },
@@ -54,6 +55,7 @@ local config = inicfg.load({
 inicfg.save(config, directIni)
 
 local elements = {
+	interface = imgui.ImBool(config.main.interface),
     text = imgui.ImBuffer(4096),
     prefix_answer = imgui.ImBool(config.main.prefix_answer),
     prefix_for_answer = imgui.ImBuffer(256),
@@ -183,10 +185,7 @@ local questions = {
 	},
 	["HelpDefault"] = {
 		[u8"IP RDS 01"] = "46.174.52.246:7777",
-		[u8"IP RDS 02"] = "46.174.55.87:7777",
-		[u8"IP RDS 03"] = "46.174.49.170:7777",
-		[u8"IP RDS 04"] = "46.174.55.169:7777",
-		[u8"IP RDS 05"] = "62.122.213.75:7777",
+		[u8"IP RDS 02"] = "46.174.49.170:7777",
 		[u8"Сайт с цветами HTML"] = "https://colorscheme.ru/html-colors.html",
 		[u8"Сайт с цветами HTML 2"] = "https://htmlcolorcodes.com",
 		[u8"Как поставить цвет"] = "Цвет в коде HTML {RRGGBB}. Зеленый - 008000. Берем {} и ставим цвет перед словом {008000}Зеленый",
@@ -818,41 +817,45 @@ end
 
 -- ## Блок обработки ивентов и пакетов SA:MP ## -- 
 function sampev.onServerMessage(color, text)
-    if text:find("Администратор уже проверяет данную жалобу") then  
-        sampAddChatMessage(tag .. " Какой-то администратор уже проверяет жалобу. Если интерфейс включен, он закроется :(")
-        ATReportShow.v = false
-        imgui.Process = ATReportShow.v 
-        return false
-    end
+	if elements.interface.v then
+		if text:find("Администратор уже проверяет данную жалобу") then  
+			sampAddChatMessage(tag .. " Какой-то администратор уже проверяет жалобу. Если интерфейс включен, он закроется :(")
+			ATReportShow.v = false
+			imgui.Process = ATReportShow.v 
+			return false
+		end
+	end
 end
 
 function sampev.onShowDialog(id, style, title, button1, button2, text)
-    if id == 2349 then  
-        if text:match("Игрок: {......}(%S+)") and text:match("Жалоба:\n{......}(.*)\n\n{......}") then
-            nick_rep = text:match("Игрок: {......}(%S+)")
-            text_rep = text:match("Жалоба:\n{......}(.*)\n\n{......}")	
-			pid_rep = atlibs.playernickname(nick_rep)
-			if pid_rep == nil then  
-				pid_rep = "None"
+	if elements.interface.v then 
+		if id == 2349 then  
+			if text:match("Игрок: {......}(%S+)") and text:match("Жалоба:\n{......}(.*)\n\n{......}") then
+				nick_rep = text:match("Игрок: {......}(%S+)")
+				text_rep = text:match("Жалоба:\n{......}(.*)\n\n{......}")	
+				pid_rep = atlibs.playernickname(nick_rep)
+				if pid_rep == nil then  
+					pid_rep = "None"
+				end
+				rep_text = u8:encode(text_rep)
+				id_punish = rep_text:match("(%d+)")
 			end
-            rep_text = u8:encode(text_rep)
-            id_punish = rep_text:match("(%d+)")
-        end
-        if not ATReportShow.v then 
-            ATReportShow.v = true  
-            imgui.Process = true 
-        end
-		return false
-    else 
-        ATReportShow.v = false  
-        imgui.Process = false  
-        imgui.ShowCursor = false
-    end
-	if id == 2350 then  
-		return false  
-	end  
-	if id == 2351 then  
-		return false 
+			if not ATReportShow.v then 
+				ATReportShow.v = true  
+				imgui.Process = true 
+			end
+			return false
+		else 
+			ATReportShow.v = false  
+			imgui.Process = false  
+			imgui.ShowCursor = false
+		end
+		if id == 2350 then  
+			return false  
+		end  
+		if id == 2351 then  
+			return false 
+		end
 	end
 end
 -- ## Блок обработки ивентов и пакетов SA:MP ## -- 
@@ -970,9 +973,9 @@ function imgui.OnDrawFrame()
         imgui.ShowCursor = false  
     end
 
-    if ATReportShow.v then  
+    if ATReportShow.v and elements.interface.v then  
         imgui.SetNextWindowPos(imgui.ImVec2(sw / 2, sh / 2), imgui.Cond.FirstUseEver, imgui.ImVec2(0.5, 0.5)) 
-        imgui.SetNextWindowSize(imgui.ImVec2(400, 210), imgui.Cond.FirstUseEver)
+        imgui.SetNextWindowSize(imgui.ImVec2(420, 250), imgui.Cond.FirstUseEver)
 
         imgui.ShowCursor = true
 
@@ -988,6 +991,12 @@ function imgui.OnDrawFrame()
             imgui.Text(u8("     Текст репорта: " .. u8:decode(rep_text)))
             imgui.PopStyleVar(1)
             imgui.PopStyleVar(1)
+			imgui.SetCursorPosX(imgui.GetWindowWidth() - 35)
+			if elements.select_menu == 1 or elements.select_menu == 2 then  
+				if imgui.Button(fai.ICON_FA_ARROW_LEFT .. '##BackButton', imgui.ImVec2(27,0)) then
+					elements.select_menu = 0
+				end
+			end
         imgui.EndMenuBar()
 
         if elements.select_menu == 0 then
@@ -1025,7 +1034,7 @@ function imgui.OnDrawFrame()
 				inicfg.save(config, directIni)
 			end; imgui.Tooltip(u8"Автоматически при ответе подставляет пожелание из зарегистрированного текста.\nЗарегистрировать можно в настройках АТ.\n/tool (F3) -> Настройки (иконка 'Шестеренки')")
             imgui.Separator()
-            if imgui.Button(fa.ICON_FA_EYE .. u8" Работа по жб", imgui.ImVec2(125,20)) then  
+            if imgui.Button(fa.ICON_FA_EYE .. u8" Работа по жб", imgui.ImVec2(130,20)) then  
 				lua_thread.create(function()
 					sampSendDialogResponse(2349, 1, 0)
 					wait(50)
@@ -1047,7 +1056,7 @@ function imgui.OnDrawFrame()
 				end)
 			end	
 			imgui.SameLine()
-            if imgui.Button(fa.ICON_BAN .. u8" Наказан", imgui.ImVec2(125,20)) then
+            if imgui.Button(fa.ICON_BAN .. u8" Наказан", imgui.ImVec2(130,20)) then
 				lua_thread.create(function() 
 					sampSendDialogResponse(2349, 1, 0)
 					wait(50)
@@ -1065,7 +1074,7 @@ function imgui.OnDrawFrame()
 				end)
 			end
 			imgui.SameLine()
-			if imgui.Button(fa.ICON_COMMENTING_O .. u8" Уточните ID", imgui.ImVec2(125,20)) then  
+			if imgui.Button(fa.ICON_COMMENTING_O .. u8" Уточните ID", imgui.ImVec2(130,20)) then  
 				lua_thread.create(function()
 					sampSendDialogResponse(2349, 1, 0)
 					wait(50)
@@ -1082,7 +1091,7 @@ function imgui.OnDrawFrame()
 					imgui.ShowCursor = false
 				end)
 			end	
-			if imgui.Button(fa.ICON_FA_EDIT .. u8" Уточните жб", imgui.ImVec2(125,20)) then  
+			if imgui.Button(fa.ICON_FA_EDIT .. u8" Уточните жб", imgui.ImVec2(130,20)) then  
 				lua_thread.create(function()
 					sampSendDialogResponse(2349, 1, 0)
 					wait(50)
@@ -1100,7 +1109,7 @@ function imgui.OnDrawFrame()
 				end)
 			end	
 			imgui.SameLine()
-			if imgui.Button(fai.ICON_FA_SHARE .. u8" Жб на админа", imgui.ImVec2(125,20)) then
+			if imgui.Button(fai.ICON_FA_SHARE .. u8" Жб на админа", imgui.ImVec2(130,20)) then
 				lua_thread.create(function()
 					sampSendDialogResponse(2349, 1, 0)
 					wait(50)
@@ -1118,7 +1127,7 @@ function imgui.OnDrawFrame()
 				end)
 			end
 			imgui.SameLine()
-			if imgui.Button(fai.ICON_FA_SHARE .. u8" Жб на игрока", imgui.ImVec2(125,20)) then
+			if imgui.Button(fai.ICON_FA_SHARE .. u8" Жб на игрока", imgui.ImVec2(130,20)) then
 				lua_thread.create(function()
 					sampSendDialogResponse(2349, 1, 0)
 					wait(50)
@@ -1136,15 +1145,15 @@ function imgui.OnDrawFrame()
 				end) 
 			end
 			imgui.Separator()
-            if imgui.Button(fai.ICON_FA_QUESTION_CIRCLE .. u8" Ответы от AT", imgui.ImVec2(125,20)) then 
+            if imgui.Button(fai.ICON_FA_QUESTION_CIRCLE .. u8" Ответы от AT", imgui.ImVec2(130,20)) then 
                 elements.select_menu = 1
             end
             imgui.SameLine()
-			if imgui.Button(fa.ICON_FA_SAVE .. u8" Сохр. ответы", imgui.ImVec2(125,20)) then  
+			if imgui.Button(fa.ICON_FA_SAVE .. u8" Сохр. ответы", imgui.ImVec2(130,20)) then  
 				elements.select_menu = 2
 			end	
 			imgui.SameLine()
-			if imgui.Button(fa.ICON_CHECK .. u8" Передать жб ##SEND", imgui.ImVec2(125,20)) then  
+			if imgui.Button(fa.ICON_CHECK .. u8" Передать жб ##SEND", imgui.ImVec2(130,20)) then  
 				lua_thread.create(function()
 					sampSendDialogResponse(2349, 1, 0)
 					wait(50)
@@ -1169,7 +1178,7 @@ function imgui.OnDrawFrame()
             --     inicfg.save(config, directIni)
             -- end
             imgui.Separator()
-            if imgui.Button(fai.ICON_FA_SMS .. u8" Ответить", imgui.ImVec2(95,20)) then
+            if imgui.Button(fai.ICON_FA_SMS .. u8" Ответить", imgui.ImVec2(100,20)) then
 				if #elements.text.v < 70 then 
 					lua_thread.create(function()
 						sampSendDialogResponse(2349, 1, 0)
@@ -1196,7 +1205,7 @@ function imgui.OnDrawFrame()
 				end
             end  
             imgui.SameLine()
-            if imgui.Button(fa.ICON_BAN .. u8" Отклонить", imgui.ImVec2(95,20)) then  
+            if imgui.Button(fa.ICON_BAN .. u8" Отклонить", imgui.ImVec2(100,20)) then  
                 lua_thread.create(function()
                     sampSendDialogResponse(2349, 1, 0)
                     wait(50)
@@ -1210,7 +1219,7 @@ function imgui.OnDrawFrame()
             end
             imgui.SameLine()
 			imgui.SetCursorPosX(imgui.GetWindowWidth() - 100)
-            if imgui.Button(fa.ICON_WINDOW_CLOSE .. u8" Закрыть", imgui.ImVec2(95,20)) then  
+            if imgui.Button(fa.ICON_WINDOW_CLOSE .. u8" Закрыть", imgui.ImVec2(100,20)) then  
                 lua_thread.create(function()
                     sampSendDialogResponse(2349, 0, 0)
                     wait(50)
@@ -1223,7 +1232,7 @@ function imgui.OnDrawFrame()
 			imgui.PopStyleVar(1)
             
             if imgui.BeginPopupModal(u8'Binder', false, imgui.WindowFlags.NoResize + imgui.WindowFlags.AlwaysAutoResize) then
-                imgui.BeginChild("##EditBinder", imgui.ImVec2(600, 225), true)
+                imgui.BeginChild("##EditBinder", imgui.ImVec2(600, 210), true)
                 imgui.Text(u8'Название бинда:'); imgui.SameLine()
                 imgui.PushItemWidth(130)
                 imgui.InputText("##elements.binder_name", elements.binder_name)
@@ -1266,44 +1275,40 @@ function imgui.OnDrawFrame()
         end
 
         if elements.select_menu == 1 then  
-            imgui.BeginChild("##menuSecond", imgui.ImVec2(170, 200), true)
-			if imgui.Button(fa.ICON_OBJECT_GROUP .. u8" На кого-то/что-то", imgui.ImVec2(135, 0)) then  -- reporton key
+            imgui.BeginChild("##menuSecond", imgui.ImVec2(155, 215), true)
+			if imgui.Button(fa.ICON_OBJECT_GROUP .. u8" На кого-то/что-то", imgui.ImVec2(130, 0)) then  -- reporton key
 				elements.select_category = 1  
 			end	
-			if imgui.Button(fa.ICON_LIST .. u8" Команды (/help)", imgui.ImVec2(135, 0)) then  -- HelpCMD key
+			if imgui.Button(fa.ICON_LIST .. u8" Команды (/help)", imgui.ImVec2(130, 0)) then  -- HelpCMD key
 				elements.select_category = 2 
 			end 	
-			if imgui.Button(fa.ICON_USERS .. u8" Банде/семья", imgui.ImVec2(135, 0)) then  -- HelpGangFamilyMafia key
+			if imgui.Button(fa.ICON_USERS .. u8" Банде/семья", imgui.ImVec2(130, 0)) then  -- HelpGangFamilyMafia key
 				elements.select_category = 3
 			end	
-			if imgui.Button(fa.ICON_MAP_MARKER .. u8" Телепорты", imgui.ImVec2(135, 0)) then  -- HelpTP key
+			if imgui.Button(fa.ICON_MAP_MARKER .. u8" Телепорты", imgui.ImVec2(130, 0)) then  -- HelpTP key
 				elements.select_category = 4
 			end	
-			if imgui.Button(fa.ICON_SHOPPING_BAG .. u8" Бизнесы", imgui.ImVec2(135, 0)) then  -- HelpBuz key
+			if imgui.Button(fa.ICON_SHOPPING_BAG .. u8" Бизнесы", imgui.ImVec2(130, 0)) then  -- HelpBuz key
 				elements.select_category = 5 
 			end	
-			if imgui.Button(fa.ICON_MONEY .. u8" Продажа/Покупка", imgui.ImVec2(135, 0)) then  -- HelpSellBuy key
+			if imgui.Button(fa.ICON_MONEY .. u8" Продажа/Покупка", imgui.ImVec2(130, 0)) then  -- HelpSellBuy key
 				elements.select_category = 6 
 			end	
-			if imgui.Button(fa.ICON_BOLT .. u8" Настройки", imgui.ImVec2(135, 0)) then  -- HelpSettings key
+			if imgui.Button(fa.ICON_BOLT .. u8" Настройки", imgui.ImVec2(130, 0)) then  -- HelpSettings key
 				elements.select_category = 7
 			end	
-			if imgui.Button(fa.ICON_HOME .. u8" Дома", imgui.ImVec2(135, 0)) then  -- HelpHouses key
+			if imgui.Button(fa.ICON_HOME .. u8" Дома", imgui.ImVec2(130, 0)) then  -- HelpHouses key
 				elements.select_category = 8 
 			end	
-			if imgui.Button(fa.ICON_MALE .. u8" Скины", imgui.ImVec2(135, 0)) then  -- HelpSkins key
+			if imgui.Button(fa.ICON_MALE .. u8" Скины", imgui.ImVec2(130, 0)) then  -- HelpSkins key
 				elements.select_category = 9 
 			end	
-			if imgui.Button(fa.ICON_BARCODE .. u8" Остальные ответы", imgui.ImVec2(135, 0)) then  -- HelpDefault key
+			if imgui.Button(fa.ICON_BARCODE .. u8" Остальные ответы", imgui.ImVec2(130, 0)) then  -- HelpDefault key
 				elements.select_category = 10
-			end	
-			imgui.Separator()
-			if imgui.Button(fa.ICON_BACKWARD .. u8" Назад") then  
-				elements.select_menu = 0 
 			end	
 			imgui.EndChild()
 			imgui.SameLine()
-			imgui.BeginChild("##menuSelectable", imgui.ImVec2(200, 200), true)
+			imgui.BeginChild("##menuSelectable", imgui.ImVec2(235, 215), true)
 			if elements.select_category == 0 then  
 				imgui.TextWrapped(u8"Ответы отсюда меняются только разработчиком.")
 			end	
@@ -1654,7 +1659,7 @@ function imgui.OnDrawFrame()
 	
 				imgui.SetCursorPosX((imgui.GetWindowWidth() - 100) / 100)
 				if imgui.Button(u8'Закрыть##bind1', imgui.ImVec2(100,30)) then
-					elements.binder_name.v, elements.binder_text.v, elements.binder_delay.v = '', '', 2500
+					elements.binder_name.v, elements.binder_text.v, elements.binder_delay.v = '', '', "2500"
 					imgui.CloseCurrentPopup()
 				end
 				imgui.SameLine()
@@ -1666,9 +1671,9 @@ function imgui.OnDrawFrame()
 							table.insert(config.bind_name, elements.binder_name.v)
 							table.insert(config.bind_text, refresh_text)
 							table.insert(config.bind_delay, elements.binder_delay.v)
-							if save() then
+							if inicfg.save(config, directIni) then
 								sampAddChatMessage(tag .. 'Бинд"' ..u8:decode(elements.binder_name.v).. '" успешно создан!', -1)
-								elements.binder_name.v, elements.binder_text.v, elements.binder_delay.v = '', '', 2500
+								elements.binder_name.v, elements.binder_text.v, elements.binder_delay.v = '', '', "2500"
 							end
 								imgui.CloseCurrentPopup()
 							else
@@ -1679,9 +1684,9 @@ function imgui.OnDrawFrame()
 								table.remove(config.bind_name, getpos + 1)
 								table.remove(config.bind_text, getpos + 1)
 								table.remove(config.bind_delay, getpos + 1)
-							if save() then
+							if inicfg.save(config, directIni) then
 								sampAddChatMessage(tag .. 'Бинд"' ..u8:decode(elements.binder_name.v).. '" успешно отредактирован!', -1)
-								elements.binder_name.v, elements.binder_text.v, elements.binder_delay.v = '', '', 2500
+								elements.binder_name.v, elements.binder_text.v, elements.binder_delay.v = '', '', "2500"
 							end
 							EditOldBind = false
 							imgui.CloseCurrentPopup()
