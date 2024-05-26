@@ -342,7 +342,8 @@ function imgui.OnDrawFrame()
 						for i = clipper.DisplayStart + 1, clipper.DisplayEnd do
 							imgui.Text(u8(viewLog[i]))
 							if (imgui.IsItemClicked(0) or imgui.IsItemClicked(1)) and (logConFilter.v:len() == 0 or fCount > 0) then
-								setClipboardText(viewLog[i])
+								nick = viewLog[i]:match("%[%d+:%d+:%d+%] (.+)%[%d+%]")
+								setClipboardText(nick)
 							end
 						end
 					end
