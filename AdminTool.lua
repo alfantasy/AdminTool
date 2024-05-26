@@ -434,7 +434,7 @@ function main()
 		if status == dlstatus.STATUS_ENDDOWNLOADDATA then  
 			if tonumber(upd.info.version) > script_stream then  
 				if elm.boolean.autoupdate.v then  
-					lua_thread.create(function)
+					lua_thread.create(function()
 						if notf_res then  
 							showNotification('У Вас установлена неактуальная версия. Начинаем автообновление.')
 						end
