@@ -434,23 +434,26 @@ function main()
 		if status == dlstatus.STATUS_ENDDOWNLOADDATA then  
 			if tonumber(upd.info.version) > script_stream then  
 				if elm.boolean.autoupdate.v then  
-					if notf_res then  
-						showNotification('У Вас установлена неактуальная версия. Начинаем автообновление.')
-					end
-					sampAddChatMessage(tag .. 'Доступно обновление. AT начинает автообновление!', -1)
-					sampAddChatMessage(tag .. 'Просьба, не взаимодействуйте с игрой, пока AT не завершит обновление', -1)
-					for i, v in pairs(urls) do  
-						downloadUrlToFile(v, paths[i], function(id, status)
-							if status == dlstatus.STATUS_ENDDOWNLOADDATA then  
-								sampfuncsLog(log .. 'Файл успешно скачен. Игнорируйте данное сообщение :D')
-							end
-						end)
-					end
-					sampAddChatMessage(tag .. 'Пакет AdminTool успешно обновлен. Перезагружаем скрипты.')
-					if notf_res then  
-						showNotification('Пакет AdminTool обновлен.\nПерезагружаем скрипты.')
-					end  
-					reloadScripts()
+					lua_thread.create(function)
+						if notf_res then  
+							showNotification('У Вас установлена неактуальная версия. Начинаем автообновление.')
+						end
+						sampAddChatMessage(tag .. 'Доступно обновление. AT начинает автообновление!', -1)
+						sampAddChatMessage(tag .. 'Просьба, не взаимодействуйте с игрой, пока AT не завершит обновление', -1)
+						for i, v in pairs(urls) do  
+							downloadUrlToFile(v, paths[i], function(id, status)
+								if status == dlstatus.STATUS_ENDDOWNLOADDATA then  
+									sampfuncsLog(log .. 'Файл успешно скачен. Игнорируйте данное сообщение :D')
+								end
+							end)
+						end
+						if notf_res then  
+							showNotification('Пакет AdminTool обновлен.\nПерезагружаем скрипты.')
+						end  
+						sampAddChatMessage(tag .. 'Скрипты автоматически перезагружаться в течении 10 секунд.', -1)
+						wait(10000)
+						reloadScripts()
+					end)
 				else 
 					sampAddChatMessage(tag .. 'Доступно обновление. Если автообновление выключено, обновитесь в Настройках (/tool -> Настройки)')
 				end 
