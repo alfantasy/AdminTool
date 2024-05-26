@@ -145,6 +145,23 @@ local paths = {
 	['eventsForOwn'] = getWorkingDirectory() .. '/config/AdminTool/evbinder.ini',
 }
 
+local function downloadAll()  
+	lua_thread.create(function()
+		for i, v in pairs(urls) do  
+			downloadUrlToFile(v, paths[i], function(id, status)
+				if status == dlstatus.STATUS_ENDDOWNLOADDATA then  
+					sampfuncsLog(log .. 'Файл успешно скачен. Игнорируйте данное сообщение :D')
+				end
+			end)
+		end
+
+		wait(10000)
+		sampAddChatMessage(tag .. 'Пакет AdminTool успешно обновлен. Перезагружаем скрипты.')
+		reloadScripts()
+
+	end)
+end
+
 local upd_upvalue = {
 	main = imgui.ImBool(false),
 	pluginsAT = imgui.ImBool(false),
@@ -468,6 +485,25 @@ function main()
 	if elm.settings_start.renders.v == false then
 		prender.OffScript()
 	end
+
+	sampRegisterChatCommand("testdownload", function()
+		for i, v in pairs(urls) do
+			if doesDirectoryExist(getWorkingDirectory() .. '/testingdownload/') then
+				downloadUrlToFile(v, paths_test[i], function(id, status)
+					if status == dlstatus.STATUS_ENDDOWNLOADDATA then
+						sampAddChatMessage(log .. 'Файл ' .. i ..' успешно скачен. Игнорируйте данное сообщение :D', -1)
+					end 
+				end)
+			else 
+				createDirectory(getWorkingDirectory() .. '/testingdownload/')
+				downloadUrlToFile(v, paths_test[i], function(id, status)
+					if status == dlstatus.STATUS_ENDDOWNLOADDATA then
+						sampAddChatMessage(log .. 'Файл ' .. i ..' успешно скачен. Игнорируйте данное сообщение :D', -1)
+					end 
+				end)
+			end
+		end 
+	end)
 
     sampAddChatMessage(tag .. "Скрипт инициализирован. Для открытия AT введите: /tool", -1)
     sampfuncsLog(log .. " Инициализация основного скрипта. \n   Проверьте целостность плагинов и библиотек, содерщихся в MoonLoader")
@@ -2108,7 +2144,7 @@ function imgui.OnDrawFrame()
 							if paths[i] then  
 								downloadUrlToFile(urls[i], paths[i], function(id, status)
 									if status == dlstatus.STATUS_ENDDOWNLOADDATA then  
-										sampfuncsLog(log .. 'Файл скачен')
+										sampfuncsLog(log .. 'Файл успешно скачен. Игнорируйте данное сообщение :D')
 									end
 								end)
 							end 
@@ -2119,15 +2155,8 @@ function imgui.OnDrawFrame()
 				end
 				imgui.SameLine()
 				if imgui.Button(u8'Обновить все') then  
-					for i, v in pairs(urls) do  
-						downloadUrlToFile(v, paths[i], function(id,status)
-							if status == dlstatus.STATUS_ENDDOWNLOADDATA then  
-								sampfuncsLog(log .. 'Файл успешно скачен. Игнорируйте данное сообщение :D')
-							end
-						end)
-					end
-					sampAddChatMessage(tag .. 'Пакет AdminTool успешно обновлен. Перезагружаем скрипты.')
-					reloadScripts()
+					sampAddChatMessage(tag .. 'Начинаем обновлять полностью весь пакет АТ. Ожидайте!', -1)
+					downloadAll()
 				end
 				imgui.SameLine()
 				imgui.SetCursorPosX(350)
