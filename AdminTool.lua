@@ -486,25 +486,6 @@ function main()
 		prender.OffScript()
 	end
 
-	sampRegisterChatCommand("testdownload", function()
-		for i, v in pairs(urls) do
-			if doesDirectoryExist(getWorkingDirectory() .. '/testingdownload/') then
-				downloadUrlToFile(v, paths_test[i], function(id, status)
-					if status == dlstatus.STATUS_ENDDOWNLOADDATA then
-						sampAddChatMessage(log .. 'Файл ' .. i ..' успешно скачен. Игнорируйте данное сообщение :D', -1)
-					end 
-				end)
-			else 
-				createDirectory(getWorkingDirectory() .. '/testingdownload/')
-				downloadUrlToFile(v, paths_test[i], function(id, status)
-					if status == dlstatus.STATUS_ENDDOWNLOADDATA then
-						sampAddChatMessage(log .. 'Файл ' .. i ..' успешно скачен. Игнорируйте данное сообщение :D', -1)
-					end 
-				end)
-			end
-		end 
-	end)
-
     sampAddChatMessage(tag .. "Скрипт инициализирован. Для открытия AT введите: /tool", -1)
     sampfuncsLog(log .. " Инициализация основного скрипта. \n   Проверьте целостность плагинов и библиотек, содерщихся в MoonLoader")
     
@@ -2139,25 +2120,27 @@ function imgui.OnDrawFrame()
 				imgui.Checkbox(u8'Система мероприятий', upd_upvalue.events)
 				imgui.EndChild()
 				if imgui.Button(u8'Обновить выбранное') then  
-					for i, param in pairs(upd_upvalue) do  
-						if param.v then  
-							if paths[i] then  
+					lua_thread.create(function()
+						for i, param in pairs(upd_upvalue) do  
+							if param.v then  
 								downloadUrlToFile(urls[i], paths[i], function(id, status)
 									if status == dlstatus.STATUS_ENDDOWNLOADDATA then  
 										sampfuncsLog(log .. 'Файл успешно скачен. Игнорируйте данное сообщение :D')
 									end
 								end)
 							end 
-						end 
-					end  
-					sampAddChatMessage(tag .. 'Перезагружаем скрипты', -1)
-					reloadScripts()
+						end  
+						sampAddChatMessage(tag .. 'Скрипты перезагружаться сами, АТ также сделает перезагрузку спустя 10 секунд.', -1)
+						wait(10000)
+						sampAddChatMessage(tag .. 'Перезагружаем скрипты', -1)
+						reloadScripts()
+					end)
 				end
 				imgui.SameLine()
 				if imgui.Button(u8'Обновить все') then  
 					sampAddChatMessage(tag .. 'Начинаем обновлять полностью весь пакет АТ. Ожидайте!', -1)
 					downloadAll()
-				end
+				end 
 				imgui.SameLine()
 				imgui.SetCursorPosX(350)
 				if imgui.Button(u8'Закрыть') then  
