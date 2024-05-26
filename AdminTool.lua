@@ -179,8 +179,8 @@ local upd_upvalue = {
 	events = imgui.ImBool(false),
 } 
 
-local script_stream = 3
-local script_version_text = "14.2"
+local script_stream = 4
+local script_version_text = "14.3"
 -- ## Регистрация ссылок для GitHub, переменных для обновления ## --
 
 -- ## Блок переменных связанных с конфигами и элементами взаимодействия с параметрами конфига ## --
@@ -2501,6 +2501,8 @@ function imgui.OnDrawFrame()
 										if cmd_massive[key].cmd == "/kick" then  
 											if imgui.Button(u8(cmd_massive[key].reason)) then  
 												sampSendChat(cmd_massive[key].cmd .. " " .. recon_id .. " " .. cmd_massive[key].reason)
+												pother.ActivateKeySync("off") 
+												recon_id = -1
 											end 
 										end 
 									end
