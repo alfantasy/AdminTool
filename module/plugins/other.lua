@@ -909,7 +909,7 @@ function imgui.OnDrawFrame()
 		imgui.Begin("##HelperCommands", key_helper, imgui.WindowFlags.NoTitleBar + imgui.WindowFlags.NoResize + imgui.WindowFlags.NoMove + imgui.WindowFlags.NoCollapse)
 			if check_cmd_punis ~= nil then
 				for key, v in pairs(cmd_massive) do  
-					if key:find(string.lower(check_cmd_punis)) ~= nil or key == string.lower(check_cmd_punis):match("(.+) (.+)") or key == string.lower(check_cmd_punis):match("(.+)") then
+					if key:find(string.lower(check_cmd_punis), 1, true) ~= nil or key == string.lower(check_cmd_punis):match("(.+) (.+)") or key == string.lower(check_cmd_punis):match("(.+)") then
 						if cmd_massive[key].cmd == '/mute' then  
 							imgui.Text('Mute: /' .. key .. u8" [ID игрока] - " .. u8:encode(cmd_massive[key].reason))
 							if imgui.IsItemClicked() then  
@@ -967,7 +967,7 @@ function imgui.OnDrawFrame()
 					end
 				end
 				for key, v in pairs(cmd_helper_others) do  
-					if key:find(string.lower(check_cmd_punis)) ~= nil or key == string.lower(check_cmd_punis):match("(.+) (.+)") or key == string.lower(check_cmd_punis):match("(.+)") then
+					if key:find(string.lower(check_cmd_punis), 1, true) ~= nil or key == string.lower(check_cmd_punis):match("(.+) (.+)") or key == string.lower(check_cmd_punis):match("(.+)") then
 						imgui.Text('/' .. key .. u8:encode(cmd_helper_others[key].reason))
 						if imgui.IsItemClicked() then  
 							sampSetChatInputText("/" .. key)
@@ -975,7 +975,7 @@ function imgui.OnDrawFrame()
 					end 
 				end
 				for key, v in pairs(cmd_helper_answers) do  
-					if key:find(string.lower(check_cmd_punis)) ~= nil or key == string.lower(check_cmd_punis):match("(.+) (.+)") or key == string.lower(check_cmd_punis):match("(.+)") then
+					if key:find(string.lower(check_cmd_punis), 1, true) ~= nil or key == string.lower(check_cmd_punis):match("(.+) (.+)") or key == string.lower(check_cmd_punis):match("(.+)") then
 						imgui.Text(u8'Ответ в чат: /' .. key .. u8:encode(cmd_helper_answers[key].reason))
 						if imgui.IsItemClicked() then  
 							sampSetChatInputText("/" .. key .. ' ID')
