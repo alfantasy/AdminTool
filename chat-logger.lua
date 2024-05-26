@@ -365,7 +365,7 @@ function imgui.OnDrawFrame()
                 end 
             else 
                 for key,v in pairs(text_ru) do 
-                    if v:find(chat_find.v) ~= nil then  
+                    if v:find(chat_find.v, 1, true) ~= nil then  
                         imgui.Text(v)
                         if imgui.IsItemClicked() then
                             imgui.LogToClipboard()
