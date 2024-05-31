@@ -67,11 +67,13 @@ cmd_massive = {
 		cmd = "/mute",
 		reason = "Нецензурная лексика",
 		time = 300,
+		multi = true,
 	},
 	['ok'] = {
 		cmd = "/mute",
 		reason = "Оскорбление/Унижение",
 		time = 400,
+		multi = true,
 	},
 	['oa'] = {
 		cmd = "/mute",
@@ -231,7 +233,7 @@ cmd_massive = {
 	},
 	['fsh'] = {
 		cmd = "/jail",
-		reason = "SpeedHack/FlyCar",
+		reason = "SpeedHack/Fly",
 		time = 900,
 	},
 	['bag'] = {
@@ -476,7 +478,7 @@ cmd_massive = {
         },
         ['afsh'] = {
             cmd = '/jailakk',
-            reason = 'SpeedHack/FlyCar',
+            reason = 'SpeedHack/Fly',
             time = 900,
         },
         ['abag'] = {
@@ -557,252 +559,252 @@ cmd_helper_others = {
 
 cmd_helper_answers = {
 	['ngm'] = {
-        reason = ' [ID] - Данный игрок покинул игру.',
+        reason = ' Данный игрок покинул игру.',
     },
 	['tcm'] = {
-        reason = ' [ID] - Чтобы обменять валюту, введите /trade, и подойдите к NPC Арману, стоит справа',
+        reason = ' Чтобы обменять валюту, введите /trade, и подойдите к NPC Арману, стоит справа',
     },
 	['tm'] = {
-        reason = ' [ID] - Ожидайте.',
+        reason = ' Ожидайте.',
     },
 	['zsk'] = {
-        reason = ' [ID] - Если вы застряли, введите /spawn | /kill, но мы можем вам помочь!',
+        reason = ' Если вы застряли, введите /spawn | /kill, но мы можем вам помочь!',
     },
 	['vgf'] = {
-        reason = ' [ID] - Чтобы выдать выговор участнику банды, есть команда: /gvig',
+        reason = ' Чтобы выдать выговор участнику банды, есть команда: /gvig',
     },
 	['html'] = {
-        reason = ' [ID] - https://colorscheme.ru/html-colors.html',
+        reason = ' https://colorscheme.ru/html-colors.html',
     },
 	['ktp'] = {
-        reason = ' [ID] - /tp (по локациям), /g (/goto) id (к игроку) с VIP (/help -> 7 пункт)',
+        reason = ' /tp (по локациям), /g (/goto) id (к игроку) с VIP (/help -> 7 пункт)',
     },
 	['vp1'] = {
-        reason = ' [ID] - Данный игрок с привелегией Premuim VIP (/help -> 7)',
+        reason = ' Данный игрок с привелегией Premuim VIP (/help -> 7)',
     },
 	['vp2'] = {
-        reason = ' [ID] - Данный игрок с привелегией Diamond VIP (/help -> 7)',
+        reason = ' Данный игрок с привелегией Diamond VIP (/help -> 7)',
     },
 	['vp3'] = {
-        reason = ' [ID] - Данный игрок с привелегией Platinum VIP (/help -> 7)',
+        reason = ' Данный игрок с привелегией Platinum VIP (/help -> 7)',
     },
 	['vp4'] = {
-        reason = ' [ID] - Данный игрок с привелегией «Личный» VIP (/help -> 7)',
+        reason = ' Данный игрок с привелегией «Личный» VIP (/help -> 7)',
     },
 	['chap'] = {
-        reason = ' [ID] - /mm -> Действия -> Сменить пароль',
+        reason = ' /mm -> Действия -> Сменить пароль',
     },
 	['msp'] = {
-        reason = ' [ID] - /mm -> Транспортное средство -> Тип транспорта',
+        reason = ' /mm -> Транспортное средство -> Тип транспорта',
     },
 	['trp'] = {
-        reason = ' [ID] - /report',
+        reason = ' /report',
     },
 	['rid'] = {
-        reason = ' [ID] - Уточните ID нарушителя/читера в /report',
+        reason = ' Уточните ID нарушителя/читера в /report',
     },
 	['bk'] = {
-        reason = ' [ID] - Оплатить бизнес/дом можно с помощью /bank или /tp -> Разное -> Банк',
+        reason = ' Оплатить бизнес/дом можно с помощью /bank или /tp -> Разное -> Банк',
     },
 	['h7'] = {
-        reason = ' [ID] - Посмотреть информацию можно в /help -> 7 пункт.',
+        reason = ' Посмотреть информацию можно в /help -> 7 пункт.',
     },
 	['h8'] = {
-        reason = ' [ID] - Узнать данную информацию можно в /help -> 8 пункт.',
+        reason = ' Узнать данную информацию можно в /help -> 8 пункт.',
     },
 	['h14'] = {
-        reason = ' [ID] - Узнать данную информацию можно в /help -> 14 пункт.',
+        reason = ' Узнать данную информацию можно в /help -> 14 пункт.',
     },
 	['zba'] = {
-        reason = ' [ID] - Админ наказал не так? Пишите жалобу на форум https://forumrds.ru',
+        reason = ' Админ наказал не так? Пишите жалобу на форум https://forumrds.ru',
     },
 	['zbp'] = {
-        reason = ' [ID] - Пишите жалобу на игрока на форум https://forumrds.ru',
+        reason = ' Пишите жалобу на игрока на форум https://forumrds.ru',
     },
 	['avt'] = {
-        reason = ' [ID] - /tp -> Разное -> Автосалоны | Приятной игры!',
+        reason = ' /tp -> Разное -> Автосалоны | Приятной игры!',
     },
 	['avt1'] = {
-        reason = ' [ID] - /tp -> Разное -> Автосалоны -> Автомастерская | Приятной игры!',
+        reason = ' /tp -> Разное -> Автосалоны -> Автомастерская | Приятной игры!',
     },
 	['pgf'] = {
-        reason = ' [ID] - /gleave (банда) || /fleave (семья)',
+        reason = ' /gleave (банда) || /fleave (семья)',
     },
 	['lgf'] = {
-        reason = ' [ID] - /leave (покинуть мафию) | Приятной игры на RDS <3',
+        reason = ' /leave (покинуть мафию) | Приятной игры на RDS <3',
     },
 	['igf'] = {
-        reason = ' [ID] - /ginvite (банда) || /finvite (семья)',
+        reason = ' /ginvite (банда) || /finvite (семья)',
     },
 	['ugf'] = {
-        reason = ' [ID] - /guninvite (банда) || /funinvite (семья)',
+        reason = ' /guninvite (банда) || /funinvite (семья)',
     },
 	['cops'] = {
-        reason = ' [ID] - 265-267, 280-286, 288, 300-304, 306, 307, 309-311',
+        reason = ' 265-267, 280-286, 288, 300-304, 306, 307, 309-311',
     },
 	['bal'] = {
-        reason = ' [ID] - 102-104',
+        reason = ' 102-104',
     },
 	['cro'] = {
-        reason = ' [ID] - 105-107',
+        reason = ' 105-107',
     },
 	['rumf'] = {
-        reason = ' [ID] - 111-113',
+        reason = ' 111-113',
     },
 	['vg'] = {
-        reason = ' [ID] - 108-110',
+        reason = ' 108-110',
     },
 	['var'] = {
-        reason = ' [ID] - 114-116',
+        reason = ' 114-116',
     },
 	['triad'] = {
-        reason = ' [ID] - 117-118, 120',
+        reason = ' 117-118, 120',
     },
 	['mf'] = {
-        reason = ' [ID] - 124-127',
+        reason = ' 124-127',
     },
 	['gvm'] = {
-        reason = ' [ID] - Для перевода денег, необхдимо ввести /givemoney IDPlayer сумму',
+        reason = ' Для перевода денег, необхдимо ввести /givemoney IDPlayer сумму',
     },
 	['gvs'] = {
-        reason = ' [ID] - Для перевода очков, необходимо ввести /givescore IDPlayer сумму',
+        reason = ' Для перевода очков, необходимо ввести /givescore IDPlayer сумму',
     },
 	['cpt'] = {
-        reason = ' [ID] - Для того, чтобы начать капт, нужно ввести /capture',
+        reason = ' Для того, чтобы начать капт, нужно ввести /capture',
     },
 	['psv'] = {
-        reason = ' [ID] - /passive - пассивный режим, для того, чтобы вас не могли убить.',
+        reason = ' /passive - пассивный режим, для того, чтобы вас не могли убить.',
     },
 	['dis'] = {
-        reason = ' [ID] - Игрок не в сети.',
+        reason = ' Игрок не в сети.',
     },
 	['nac'] = {
-        reason = ' [ID] - Игрок наказан.',
+        reason = ' Игрок наказан.',
     },
 	['cl'] = {
-        reason = ' [ID] - Данный игрок чист.',
+        reason = ' Данный игрок чист.',
     },
 	['yt'] = {
-        reason = ' [ID] - Уточните вашу жалобу/вопрос.',
+        reason = ' Уточните вашу жалобу/вопрос.',
     },
 	['drb'] = {
-        reason = ' [ID] - /derby - записатся на дерби',
+        reason = ' /derby - записатся на дерби',
     },
 	['smc'] = {
-        reason = ' [ID] - /sellmycar IDPlayer Слот(1-3) RDScoin (игроку), в гос: /car',
+        reason = ' /sellmycar IDPlayer Слот(1-3) RDScoin (игроку), в гос: /car',
     },
 	['c'] = {
-        reason = ' [ID] - Начал(а) работу по вашей жалобе.',
+        reason = ' Начал(а) работу по вашей жалобе.',
     },
 	['stp'] = {
-        reason = ' [ID] - Чтобы посмотреть коины, вирты, рубли и т.д. - /statpl',
+        reason = ' Чтобы посмотреть коины, вирты, рубли и т.д. - /statpl',
     },
 	['prk'] = {
-        reason = ' [ID] - /parkour - записатся на паркур ',
+        reason = ' /parkour - записатся на паркур ',
     },
 	['n'] = {
-        reason = ' [ID] - Не вижу нарушений от игрока.',
+        reason = ' Не вижу нарушений от игрока.',
     },
 	['hg'] = {
-        reason = ' [ID] - Помогли вам.',
+        reason = ' Помогли вам.',
     },
 	['int'] = {
-        reason = ' [ID] -  Данную информацию можно узнать в интернете.',
+        reason = '  Данную информацию можно узнать в интернете.',
     },
 	['og'] = {
-        reason = ' [ID] - стать на пикап "Ограбление банка", после около ячеек нажимать на ALT и ехать на красный маркер на карте',
+        reason = ' стать на пикап "Ограбление банка", после около ячеек нажимать на ALT и ехать на красный маркер на карте',
     },
 	['msid'] = {
-        reason = ' [ID] - Наказание будет снято. Ошибка ID',
+        reason = ' Наказание будет снято. Ошибка ID',
     },
 	['al'] = {
-        reason = ' [ID] - Администратор, введите /alogin',
+        reason = ' Администратор, введите /alogin',
     },
 	['gfi'] = {
-        reason = ' [ID] - /funinvite id (в семью), /ginvite id (в банду)',
+        reason = ' /funinvite id (в семью), /ginvite id (в банду)',
     },
 	['hin'] = {
-		reason = ' [ID] - /hpanel -> Слот1-3 -> Изменить -> Аренда дома',
+		reason = ' /hpanel -> Слот1-3 -> Изменить -> Аренда дома',
 	},
 	['gn'] = {
-		reason = ' [ID] - /menu (/mm) - ALT/Y -> Оружие',
+		reason = ' /menu (/mm) - ALT/Y -> Оружие',
 	},
 	['pd'] = {
-		reason = ' [ID] - /menu (/mm) - ALT/Y -> Предметы',
+		reason = ' /menu (/mm) - ALT/Y -> Предметы',
 	},
 	['dtl'] = {
-		reason = ' [ID] - Детали разбросаны по всей карте. Обмен происходится на /garage.',
+		reason = ' Детали разбросаны по всей карте. Обмен происходится на /garage.',
 	},
 	['nz'] = {
-		reason = ' [ID] - Не запрещено.',
+		reason = ' Не запрещено.',
 	},
 	['y'] = {
-		reason = ' [ID] - Да.',
+		reason = ' Да.',
 	},
 	['net'] = {
-		reason = ' [ID] - Нет.',
+		reason = ' Нет.',
 	},
 	['gak'] = {
-		reason = ' [ID] - Продать аксессуары, или купить можно на /trade. Чтобы продать, F у лавки ',
+		reason = ' Продать аксессуары, или купить можно на /trade. Чтобы продать, F у лавки ',
 	},
 	['fp'] = {
-		reason = ' [ID] - /familypanel',
+		reason = ' /familypanel',
 	},
 	['mg'] = {
-		reason = ' [ID] - /menu (/mm) - ALT/Y -> Система банд',
+		reason = ' /menu (/mm) - ALT/Y -> Система банд',
 	},
 	['pg'] = {
-		reason = ' [ID] - Проверим.',
+		reason = ' Проверим.',
 	},
 	['krb'] = {
-		reason = ' [ID] - Казино, работы, бизнес.',
+		reason = ' Казино, работы, бизнес.',
 	},
 	['kmd'] = {
-		reason = ' [ID] - Казино, МП, достижения, работы, обмен очков на коины(/trade)',
+		reason = ' Казино, МП, достижения, работы, обмен очков на коины(/trade)',
 	},
 	['gm'] = {
-		reason = ' [ID] - GodMode (ГодМод) на сервере не работает.',
+		reason = ' GodMode (ГодМод) на сервере не работает.',
 	},
 	['plg'] = {
-		reason = ' [ID] - Попробуйте перезайти.',
+		reason = ' Попробуйте перезайти.',
 	},
 	['nv'] = {
-		reason = ' [ID] - Не выдаем.',
+		reason = ' Не выдаем.',
 	},
 	['of'] = {
-		reason = ' [ID] - Не оффтопьте.',
+		reason = ' Не оффтопьте.',
 	},
 	['en'] = {
-		reason = ' [ID] - Не знаем.',
+		reason = ' Не знаем.',
 	},
 	['vbg'] = {
-		reason = ' [ID] - Скорей всего - это баг.',
+		reason = ' Скорей всего - это баг.',
 	},
 	['ctun'] = {
-		reason = ' [ID] - /menu (/mm) - ALT/Y -> Т/С -> Тюнинг',
+		reason = ' /menu (/mm) - ALT/Y -> Т/С -> Тюнинг',
 	},
 	['cr'] = {
-		reason = ' [ID] - /car',
+		reason = ' /car',
 	},
 	['zsk'] = {
-		reason = ' [ID] - Если вы застряли, введите /spawn | /kill',
+		reason = ' Если вы застряли, введите /spawn | /kill',
 	},
 	['smh'] = {
-		reason = ' [ID] - /sellmyhouse (игроку)  ||  /hpanel -> слот -> Изменить -> Продать дом государству',
+		reason = ' /sellmyhouse (игроку)  ||  /hpanel -> слот -> Изменить -> Продать дом государству',
 	},
 	['gadm'] = {
-		reason = ' [ID] - Ожидать набор, или же /help -> 18 пункт.',
+		reason = ' Ожидать набор, или же /help -> 18 пункт.',
 	},
 	['hct'] = {
-		reason = ' [ID] - /count time || /dmcount time',
+		reason = ' /count time || /dmcount time',
 	},
 	['gvr'] = {
-		reason = ' [ID] - /giverub IDPlayer rub | С Личного (/help -> 7)',
+		reason = ' /giverub IDPlayer rub | С Личного (/help -> 7)',
 	},
 	['gvc'] = {
-		reason = ' [ID] - /givecoin IDPlayer coin | С Личного (/help -> 7)',
+		reason = ' /givecoin IDPlayer coin | С Личного (/help -> 7)',
 	},
 	['tdd'] = {
-		reason = ' [ID] - /dt 0-990 / Виртуальный мир',
+		reason = ' /dt 0-990 / Виртуальный мир',
 	},
 }
