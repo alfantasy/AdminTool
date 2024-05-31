@@ -2417,8 +2417,8 @@ function imgui.OnDrawFrame()
 										if cmd_massive[key].cmd == "/ban" or cmd_massive[key].cmd == '/iban' then  
 											if imgui.Button(u8(cmd_massive[key].reason)) then  
 												if config.access.ban then
-													sampSendChat("/ans " .. arg .. " Уважаемый игрок, вы нарушали правила сервера, и если вы..")
-													sampSendChat("/ans " .. arg .. " ..не согласны с наказанием, напишите жалобу на форум https://forumrds.ru")
+													sampSendChat("/ans " .. recon_id .. " Уважаемый игрок, вы нарушали правила сервера, и если вы..")
+													sampSendChat("/ans " .. recon_id .. " ..не согласны с наказанием, напишите жалобу на форум https://forumrds.ru")
 													sampSendChat(cmd_massive[key].cmd .. " " .. recon_id .. " " .. cmd_massive[key].time .. " " .. cmd_massive[key].reason)
 												else 
 													sampSendChat('/a ' .. cmd_massive[key].cmd .. " " .. recon_id .. " " .. cmd_massive[key].time .. " " .. cmd_massive[key].reason)
