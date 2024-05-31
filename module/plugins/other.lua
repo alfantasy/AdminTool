@@ -1046,7 +1046,7 @@ function imgui.OnDrawFrame()
 					end
 				end
 				for key, v in pairs(cmd_helper_answers) do  
-					imgui.Text('Ответ в чат: /' .. key ..u8:encode(cmd_helper_answers[key].reason))
+					imgui.Text(u8'Ответ в чат: /' .. key .. ' [ID] - ' .. u8:encode(cmd_helper_answers[key].reason))
 					if imgui.IsItemClicked() then  
 						sampSetChatInputText('/' .. key .. " ID")
 					end 
