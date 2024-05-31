@@ -145,7 +145,7 @@ local paths = {
 	['eventsForOwn'] = getWorkingDirectory() .. '/config/AdminTool/evbinder.ini',
 }
 
-local function downloadAll()  
+local function downloadAll() -- функция для обновления скриптов
 	lua_thread.create(function()
 		for i, v in pairs(urls) do  
 			downloadUrlToFile(v, paths[i], function(id, status)
@@ -162,7 +162,7 @@ local function downloadAll()
 	end)
 end
 
-local upd_upvalue = {
+local upd_upvalue = { -- массив для регистрации выборочного обновления
 	main = imgui.ImBool(false),
 	pluginsAT = imgui.ImBool(false),
 	otherAT = imgui.ImBool(false),
@@ -179,8 +179,8 @@ local upd_upvalue = {
 	events = imgui.ImBool(false),
 } 
 
-local script_stream = 4
-local script_version_text = "14.3"
+local script_stream = 5
+local script_version_text = "14.4"
 -- ## Регистрация ссылок для GitHub, переменных для обновления ## --
 
 -- ## Блок переменных связанных с конфигами и элементами взаимодействия с параметрами конфига ## --
@@ -777,6 +777,7 @@ function main()
             imgui.ShowCursor = false 
 			if other_res then  
 				pother.ActivateKeySync("off") 
+				recon_id = -1
 			end
         end
 
@@ -905,6 +906,9 @@ function sampev.onShowDialog(id, style, title, button1, button2, text)
 				sampAddChatMessage(tag .. '/access просканирован. Для просмотра своих /access, выключите повторный сканинг в настройках.', -1)
 				wait(10)
 				sampCloseCurrentDialogWithButton(0)
+				elm.boolean.access_scan.v = false  
+				config.access.scaning = elm.boolean.access_scan.v
+				ConfigSave()
 			end)
 		end
 	end
@@ -1725,15 +1729,6 @@ function imgui.OnDrawFrame()
 							imgui.TextWrapped(u8'/'..key..u8' [ID] - ' .. u8(cmd_massive[key].reason))
 						end 
 					end 
-					-- imgui.Text(u8"/ch [ID] - бан за читы")
-					-- imgui.Text(u8"/pl [ID] - бан за плагиат ника ")
-					-- imgui.Text(u8"/nk [ID] - бан за запрещ.никнейм")
-					-- imgui.Text(u8"/gcnk [ID] - бан за название банды с оском/унижением")
-					-- imgui.Text(u8"/brekl [ID] - бан за рекламе | for 18 lvl ")
-					-- imgui.Text(u8"/hl [ID] - бан за оск в хелпере")
-					-- imgui.Text(u8"/ob [ID] - бан за обход бана")
-					-- imgui.Text(u8"/bnm [ID] - бан за неадеквата")
-					-- imgui.Text(u8"/bosk [ID] - бан за оск проекта | for 18 lvl ")
                     imgui.TreePop()
                 end
                 if imgui.TreeNode("Jail") then  
@@ -1742,23 +1737,7 @@ function imgui.OnDrawFrame()
 							imgui.TextWrapped(u8'/'..key..u8' [ID] - ' .. u8(cmd_massive[key].reason))
 						end
 					end
-					-- imgui.Text(u8"/sk [ID] - jail за SK in zz")
-					-- imgui.Text(u8"/dz [ID] - jail за DM/DB in zz")
-					-- imgui.Text(u8"/td [ID] - jail за DB/car in /trade")
-					-- imgui.Text(u8"/tbk [ID] - jail за DB с Ковшом в ЗЗ")
-					-- imgui.Text(u8"/fsh [ID] - /jail за SH and FC")
-					-- imgui.Text(u8"/jm [ID] - jail за нарушение правил мероприятия.")
-					-- imgui.Text(u8"/bag [ID] - jail за багоюз")
-					-- imgui.Text(u8"/pk [ID] - jail за паркур мод")
-					-- imgui.Text(u8"/zv [ID] - jail за злоуп.вип")
-					-- imgui.Text(u8"/skw [ID] - jail за SK на /gw")
-					-- imgui.Text(u8"/ngw [ID] - jail за использование запрет.команд на /gw")
-					-- imgui.Text(u8"/dbgw [ID] - jail за DB вертолет на /gw")
-                    -- imgui.Text(u8"/jch [ID] - jail за читы")
-					-- imgui.Text(u8"/pmx [ID] - jail за серьезная помеха игрокам")
-					-- imgui.Text(u8"/dgw [ID] - jail за наркотики на /gw")
-					-- imgui.Text(u8"/sch [ID] - jail за запрещенные скрипты")
-					-- imgui.Text(u8'/jcw [ID] - jail за ClickWarp/Metla')
+
                     imgui.TreePop()
                 end
                 if imgui.TreeNode("Mute") then  
@@ -1767,26 +1746,6 @@ function imgui.OnDrawFrame()
 							imgui.TextWrapped(u8'/'..key..u8' [ID] - ' .. u8(cmd_massive[key].reason))
 						end
 					end
-					-- imgui.Text(u8"/m [ID] - мут за мат | /rm - мут за мат в репорт ")
-					-- imgui.Text(u8"/ok [ID] - мут за оскорбление/унижение")
-					-- imgui.Text(u8"/fd [ID] - мут за флуд/спам")
-					-- imgui.Text(u8"/po [ID] - мут за попрошайку")
-					-- imgui.Text(u8"/oa [ID] - мут за оск.адм ")
-					-- imgui.Text(u8"/roa [ID] - мут за оск.адм в репорт")
-					-- imgui.Text(u8"/up [ID] - мут за упом.проекта")
-					-- imgui.Text(u8"/rup [ID] - мут за упом.проекта в репорт")
-					-- imgui.Text(u8"/ia [ID] - мут за выдачу себя за адм")
-					-- imgui.Text(u8"/kl [ID] - мут за клевету на адм")
-					-- imgui.Text(u8"/nm [ID]  - мут за неадекват. ")
-					-- imgui.Text(u8"/rnm [ID]  - мут за неадекват в реп.")
-					-- imgui.Text(u8"/or [ID] - мут за оск род")
-					-- imgui.Text(u8"/rz [ID] - розжиг межнац.розни")
-					-- imgui.Text(u8"/zs [ID] - злоупотребление символами")
-					-- imgui.Text(u8"/ror [ID] - мут за оск род в репорт")
-					-- imgui.Text(u8"/cp [ID] - капс/оффтоп в репорт ")
-					-- imgui.Text(u8"/rpo [ID] - попрошайка в репорт ")
-					-- imgui.Text(u8"/rkl [ID] - клевета на адм в репорт")
-					-- imgui.Text(u8"/rrz [ID] - розжиг межнац.розни в репорт")
                     imgui.TreePop()
                 end
                 if imgui.TreeNode("Kick") then  
@@ -1795,9 +1754,6 @@ function imgui.OnDrawFrame()
 							imgui.TextWrapped(u8'/'..key..u8' [ID] - ' .. u8(cmd_massive[key].reason))
 						end
 					end
-                    -- imgui.Text(u8"/dj [ID] - кик за dm in jail")
-					-- imgui.Text(u8"/ck [ID] - кик за запрещенный никнейм")
-					-- imgui.Text(u8"/cafk [ID] - кик за афк на арене")
                     imgui.TreePop()
                 end
                 imgui.TreePop()
@@ -1810,19 +1766,6 @@ function imgui.OnDrawFrame()
 							imgui.TextWrapped(u8'/'..key..u8' [NickName] - ' .. u8(cmd_massive[key].reason))
 						end
 					end
-					-- imgui.Text(u8"/apl [NickName] - бан за плагиат ник админа")
-					-- imgui.Text(u8"/ach [NickName] (/achi [IP]) - бан за читы (ip)")
-					-- imgui.Text(u8"/ank [NickName] - бан за ник с оск/униж")
-					-- imgui.Text(u8"/agcnk [NickName] - бан за название банды с оск/униж")
-					-- imgui.Text(u8"/agcnkip [NickName] - бан по IP за название банды с оск/униж")
-					-- imgui.Text(u8"/okpr/ip [NickName] - оск проекта")
-					-- imgui.Text(u8"/svoakk/ip [NickName] - бан по акк/IP по рекламе")
-					-- imgui.Text(u8"/ahl [NickName] (/achi) [IP] - бан за оск в хелпере (ip)")
-					-- imgui.Text(u8"/aob [NickName] - бан за обход бана")
-					-- imgui.Text(u8"/rdsob [NickName] - бан за обман адм/игроков")
-					-- imgui.Text(u8"/rdsip [NickName] - бан по IP за обман адм/игроков")
-					-- imgui.Text(u8"/amenk [NickName] - бан за запрет.слова в нике")
-					-- imgui.Text(u8"/abnm  [NickName] - бан за неадеквата")
                     imgui.TreePop()
                 end
                 if imgui.TreeNode("Jail") then  
@@ -1831,22 +1774,6 @@ function imgui.OnDrawFrame()
 							imgui.TextWrapped(u8'/'..key..u8' [NickName] - ' .. u8(cmd_massive[key].reason))
 						end
 					end
-					-- imgui.Text(u8"/ask [NickName] - jail за SK in zz")
-					-- imgui.Text(u8"/adz [NickName] [Множитель от 2 до 10] - jail за DM/DB in zz")
-					-- imgui.Text(u8"/atd [NickName] - jail за DB/CAR in trade")
-					-- imgui.Text(u8"/afsh [NickName] - jail за SH ans FC")
-					-- imgui.Text(u8"/ajm [NickName] - jail за наруш.правил МП")
-					-- imgui.Text(u8"/abag [NickName] - jail за багоюз")
-					-- imgui.Text(u8"/apk [NickName] - jail за паркур мод")
-					-- imgui.Text(u8"/azv [NickName] - jail за злоуп.вип")
-					-- imgui.Text(u8"/askw [NickName] - jail за SK на /gw")
-					-- imgui.Text(u8"/angw [NickName] - исп.запрет.команд на /gw")
-					-- imgui.Text(u8"/adbgw [NickName] - jail за DB верт на /gw")
-					-- imgui.Text(u8"/ajch [NickName] - jail за читы")
-					-- imgui.Text(u8"/apmx [NickName] - jail за серьез.помеху")
-					-- imgui.Text(u8"/adgw [NickName] - jail за наркотики на /gw")
-					-- imgui.Text(u8"/asch [NickName] - jail за запрещенные скрипты")
-					-- imgui.Text(u8'/ajcw [NickName] - jail за ClickWarp/Metla')
                     imgui.TreePop()
                 end
                 if imgui.TreeNode("Mute") then  
@@ -1855,17 +1782,6 @@ function imgui.OnDrawFrame()
 							imgui.TextWrapped(u8'/'..key..u8' [NickName] - ' .. u8(cmd_massive[key].reason))
 						end
 					end
-					-- imgui.Text(u8"/am [NickName] - мут за мат ")
-					-- imgui.Text(u8"/aok [NickName] - мут за оск ")
-					-- imgui.Text(u8"/afd [NickName] - мут за флуд/спам")
-					-- imgui.Text(u8"/apo [NickName]  - мут за попрошайку")
-					-- imgui.Text(u8"/aoa [NickName] - мут за оск.адм")
-					-- imgui.Text(u8"/aup [NickName] - мут за упоминание проектов")
-					-- imgui.Text(u8"/anm [NickName] [Множитель от 2 до 3]- мут за неадеквата")
-					-- imgui.Text(u8"/aor [NickName] - мут за оск/упом родных")
-					-- imgui.Text(u8"/aia [NickName] - мут за выдачу себя за адм")
-					-- imgui.Text(u8"/akl [NickName] - мут за клевету на адм")
-					-- imgui.Text(u8"/arz [NickName] - мут за розжиг межнац.розни")
                     imgui.TreePop()
                 end
                 imgui.TreePop()
@@ -1882,18 +1798,6 @@ function imgui.OnDrawFrame()
 				for key in pairs(cmd_helper_others) do 
 					imgui.TextWrapped(u8'/' .. key .. u8' ' .. u8(cmd_helper_others[key].reason))
 				end
-                -- imgui.Text(u8"/u [ID] - обычный размут")
-                -- imgui.Text(u8"/uu [ID] - размут с сообщением в /ans")
-                -- imgui.Text(u8"/uj [ID] - разджайлить игрока")
-                -- imgui.Text(u8"/as [ID] - разбанить игрока")
-                -- imgui.Text(u8"/ru [ID] - размут репорта")
-                -- imgui.Text(u8"/rcl - очистка чата (не /cc, визуально для Вас)")
-                -- imgui.Text(u8"/spp [ID] - заспавнить ВСЕХ игроков в зоне стрима *")
-                -- imgui.Text(u8"     * Зона стрима - это область, в которой игра видит игроков")
-                -- imgui.Text(u8"/aheal [ID] - отхилить игрока")
-                -- imgui.Text(u8"/akill [ID] - убить игрока")
-				-- imgui.Text(u8'/btool - запуск биндера')
-				-- imgui.Text(u8'/amp - запуск системы мероприятий')
                 imgui.TreePop()
             end
         end
@@ -2353,9 +2257,32 @@ function imgui.OnDrawFrame()
                                         imgui.BufferingBar((tonumber(speed)*100/tonumber(const))/100, imgui.ImVec2(imgui.GetWindowWidth()-10, 10), false)
                                     end
                                     if key ~= 1 and key ~= 2 and key ~= 3 and key ~= 4 then
-                                        imgui.Text(u8:encode(recon_info[key]) .. " " .. info_to_player[key])
+										if key == 11 then  
+											local lvl = string.match(info_to_player[11], "(%d+)")
+											local str_lvl = ''
+											if tonumber(lvl) == 0 then
+												str_lvl = u8'Не имеется.'
+											elseif tonumber(lvl) == 1 then
+												str_lvl = u8'Обычный'
+											elseif tonumber(lvl) == 2 then
+												str_lvl = u8'Премиум'
+											elseif tonumber(lvl) == 3 then
+												str_lvl = u8'Diamond'
+											elseif tonumber(lvl) == 4 then
+												str_lvl = u8'Platinum'
+											elseif tonumber(lvl) == 5 then
+												str_lvl = u8'Personal'
+											end
+											imgui.Text(u8:encode(recon_info[key]) .. " " .. str_lvl)
+										else
+                                        	imgui.Text(u8:encode(recon_info[key]) .. " " .. info_to_player[key])
+										end
                                     end
                                 end
+								imgui.Separator()
+								if imgui.Button(u8'Взаимодействие с игроком') then  
+									imgui.OpenPopup('ReconWithSpecterPlayer')
+								end
                                 imgui.Separator()
                                 imgui.Text(u8"Игроки в зоне стрима: ")
                                 local id_to_stream = playersToStreamZone()
@@ -2373,10 +2300,6 @@ function imgui.OnDrawFrame()
                                 else
                                     imgui.Text(u8"Кроме игрока нет никого рядом...")
                                 end
-								imgui.Separator()
-								if imgui.Button(u8'Взаимодействие с игроком') then  
-									imgui.OpenPopup('ReconWithSpecterPlayer')
-								end
 								imgui.Separator()
 								imgui.TextWrapped(u8'Для появления курсора: ПКМ (F).')
 								imgui.TextWrapped(u8'R - обновить рекон. \nQ - выйти из рекона.')
@@ -2443,9 +2366,15 @@ function imgui.OnDrawFrame()
                                     imgui.InputText(u8'Время', elm.input.set_time_punish_in_recon)
                                     if imgui.Button(u8"Выдать наказание") then 
                                         if #elm.input.set_punish_in_recon.v > 0 and #elm.input.set_time_punish_in_recon.v then 
-                                            sampSendChat("/jail " .. recon_id .. " " .. elm.input.set_time_punish_in_recon.v .. " " .. elm.input.set_punish_in_recon.v)
-                                            elm.input.set_time_punish_in_recon.v = ""
-                                            elm.input.set_punish_in_recon.v = ""
+											if config.access.jail then
+                                            	sampSendChat("/jail " .. recon_id .. " " .. elm.input.set_time_punish_in_recon.v .. " " .. elm.input.set_punish_in_recon.v)
+                                            	elm.input.set_time_punish_in_recon.v = ""
+                                            	elm.input.set_punish_in_recon.v = ""
+											else 
+												sampSendChat('/a /jail ' .. recon_id .. " " .. elm.input.set_time_punish_in_recon.v .. " " .. elm.input.set_punish_in_recon.v)
+												elm.input.set_time_punish_in_recon.v = ""
+                                            	elm.input.set_punish_in_recon.v = ""
+											end
                                             sampSendChat("/reoff ")
 											pother.ActivateKeySync("off") 
                                             recon_id = -1
@@ -2456,7 +2385,11 @@ function imgui.OnDrawFrame()
 									for key in pairs(cmd_massive) do  
 										if cmd_massive[key].cmd == "/jail" then  
 											if imgui.Button(u8(cmd_massive[key].reason)) then  
-												sampSendChat(cmd_massive[key].cmd .. " " .. recon_id .. " " .. cmd_massive[key].time .. " " .. cmd_massive[key].reason)
+												if config.access.jail then
+													sampSendChat(cmd_massive[key].cmd .. " " .. recon_id .. " " .. cmd_massive[key].time .. " " .. cmd_massive[key].reason)
+												else 
+													sampSendChat('/a ' .. cmd_massive[key].cmd .. " " .. recon_id .. " " .. cmd_massive[key].time .. " " .. cmd_massive[key].reason)
+												end
 											end 
 										end 
 									end
@@ -2466,9 +2399,13 @@ function imgui.OnDrawFrame()
                                     imgui.InputText(u8'Время', elm.input.set_time_punish_in_recon)
                                     if imgui.Button(u8"Выдать наказание") then 
                                         if #elm.input.set_punish_in_recon.v > 0 and #elm.input.set_time_punish_in_recon.v then 
-                                            sampSendChat("/ban " .. recon_id .. " " .. elm.input.set_time_punish_in_recon.v .. " " .. elm.input.set_punish_in_recon.v)
-                                            elm.input.set_time_punish_in_recon.v = ""
-                                            elm.input.set_punish_in_recon.v = ""
+											if config.access.ban then
+												sampSendChat("/ban " .. recon_id .. " " .. elm.input.set_time_punish_in_recon.v .. " " .. elm.input.set_punish_in_recon.v)
+												elm.input.set_time_punish_in_recon.v = ""
+												elm.input.set_punish_in_recon.v = ""
+											else 
+												sampSendChat("/a /ban " .. recon_id .. " " .. elm.input.set_time_punish_in_recon.v .. " " .. elm.input.set_punish_in_recon.v)
+											end
                                             sampSendChat("/reoff ")
 											pother.ActivateKeySync("off") 
                                             recon_id = -1
@@ -2479,7 +2416,15 @@ function imgui.OnDrawFrame()
 									for key in pairs(cmd_massive) do  
 										if cmd_massive[key].cmd == "/ban" or cmd_massive[key].cmd == '/iban' then  
 											if imgui.Button(u8(cmd_massive[key].reason)) then  
-												sampSendChat(cmd_massive[key].cmd .. " " .. recon_id .. " " .. cmd_massive[key].time .. " " .. cmd_massive[key].reason)
+												if config.access.ban then
+													sampSendChat("/ans " .. arg .. " Уважаемый игрок, вы нарушали правила сервера, и если вы..")
+													sampSendChat("/ans " .. arg .. " ..не согласны с наказанием, напишите жалобу на форум https://forumrds.ru")
+													sampSendChat(cmd_massive[key].cmd .. " " .. recon_id .. " " .. cmd_massive[key].time .. " " .. cmd_massive[key].reason)
+												else 
+													sampSendChat('/a ' .. cmd_massive[key].cmd .. " " .. recon_id .. " " .. cmd_massive[key].time .. " " .. cmd_massive[key].reason)
+												end
+												pother.ActivateKeySync("off")
+												recon_id = -1
 											end 
 										end 
 									end

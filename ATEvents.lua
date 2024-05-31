@@ -541,7 +541,7 @@ function imgui.OnDrawFrame()
         imgui.SameLine()
         if imgui.Button(u8"Выдать приз") then  
             sampAddChatMessage(tag .. "Выдаем приз игроку с ID [" .. elements.buffers.win_player.v .. "]", -1)
-            sampSendChat("/mess 6 В мероприятии победил игрок " .. sampGetPlayerNickname(tonumber(elements.buffers.win_player.v)) .. '[' .. elements.buffer.win_player.v .. "]")
+            sampSendChat("/mess 6 В мероприятии победил игрок " .. sampGetPlayerNickname(tonumber(elements.buffers.win_player.v)) .. '[' .. elements.buffers.win_player.v .. "]")
             sampSendChat("/mess 6 Поздравим его с победой. <3") 
             sampSendChat("/mpwin " .. elements.buffers.win_player.v)
         end

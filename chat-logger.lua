@@ -182,13 +182,15 @@ function main()
 
     if elements.clearFiles.v then  
         scan_logs_file()
-        for key,v in pairs(logs_file) do
-            local day, month, year = v:match("(%d+)-(%d+)-(%d+)")
-            for i = 0, elements.days_for_clear.v do
-                if i ~= elements.days_for_clear.v then 
-                    day = tonumber(day) - 1
-                    if os.remove(getWorkingDirectory() .. "\\config\\chatlog\\" .. day .. "-" .. month .. "-" .. year .. ".txt") then  
-                        sampfuncsLog(tag .. "Удалил лог-файл " .. day .. "-" .. month .. "-" .. year .. ".txt")
+        for key, v in pairs(logs_file) do
+            if v:find("(%d+)-(%d+)-(%d+)") then
+                local day, month, year = v:match("(%d+)-(%d+)-(%d+)")
+                for i = 0, elements.days_for_clear.v do
+                    if i ~= elements.days_for_clear.v then 
+                        day = tonumber(day) - 1
+                        if os.remove(getWorkingDirectory() .. "\\config\\chatlog\\" .. day .. "-" .. month .. "-" .. year .. ".txt") then  
+                            sampfuncsLog(tag .. "Удалил лог-файл " .. day .. "-" .. month .. "-" .. year .. ".txt")
+                        end
                     end
                 end
             end

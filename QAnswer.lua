@@ -4,6 +4,7 @@ script_author('alfantasyz')
 
 -- ## Регистрация библиотек, плагинов и аддонов ## --
 require 'lib.moonloader'
+require 'resource.commands' -- импортирование массива с командами.
 local inicfg = require 'inicfg' -- работа с INI файлами
 local sampev = require 'lib.samp.events' -- работа с ивентами и пакетами SAMP
 local encoding = require 'encoding' -- работа с кодировкой
@@ -251,90 +252,15 @@ function main()
     sampfuncsLog(log .. " Инициализация системы ответов на репорты. \n  Просьба, проверьте целостность библиотек, дабы избежать ошибок!")
 
 	-- ## Ответы на репорты для чата (/ans id text || /ot id text) ## --
-	sampRegisterChatCommand("tdd", cmd_tdd)
-	sampRegisterChatCommand("gadm", cmd_gadm)
-	sampRegisterChatCommand("enk", cmd_enk)
-	sampRegisterChatCommand("gak", cmd_gak)
-	sampRegisterChatCommand("ctun", cmd_ctun)
-	sampRegisterChatCommand("gn", cmd_gn)
-	sampRegisterChatCommand("pd", cmd_pd)
-	sampRegisterChatCommand("dtl", cmd_dtl)
-	sampRegisterChatCommand("nz", cmd_nz)
-	sampRegisterChatCommand("yes", cmd_yes)
-	sampRegisterChatCommand("net", cmd_net)
-	sampRegisterChatCommand("nt", cmd_nt)
-	sampRegisterChatCommand("fp", cmd_fp)
-	sampRegisterChatCommand("mg", cmd_mg)
-	sampRegisterChatCommand("pg", cmd_pg)
-	sampRegisterChatCommand("krb", cmd_krb)
-	sampRegisterChatCommand("kmd", cmd_kmd)
-	sampRegisterChatCommand("gm", cmd_gm)
-	sampRegisterChatCommand("plg", cmd_plg)
-	sampRegisterChatCommand("vbg", cmd_vbg)
-	sampRegisterChatCommand("en", cmd_en)
-	sampRegisterChatCommand("of", cmd_of)
-	sampRegisterChatCommand("nv", cmd_nv)
-	sampRegisterChatCommand("bk", cmd_bk)
-	sampRegisterChatCommand("h7", cmd_h7)
-	sampRegisterChatCommand("h8", cmd_h8)
-	sampRegisterChatCommand("h14", cmd_h14)
-	sampRegisterChatCommand("zba", cmd_zba)
-	sampRegisterChatCommand("zbp", cmd_zbp)
-	sampRegisterChatCommand("int", cmd_int)
-	sampRegisterChatCommand("og", cmd_og)
-	sampRegisterChatCommand("dis", cmd_dis)
-	sampRegisterChatCommand("avt", cmd_avt)
-	sampRegisterChatCommand("avt1", cmd_avt1)
-	sampRegisterChatCommand("pgf", cmd_pgf)
-	sampRegisterChatCommand("igf", cmd_igf)
-	sampRegisterChatCommand("msid", cmd_msid)
-	sampRegisterChatCommand("al", cmd_al)
-	sampRegisterChatCommand("c", cmd_c)
-	sampRegisterChatCommand("cl", cmd_cl)
-	sampRegisterChatCommand("yt", cmd_yt)
-	sampRegisterChatCommand("n", cmd_n)
-	sampRegisterChatCommand("nac", cmd_nac)
-	sampRegisterChatCommand("hg", cmd_hg)
-	sampRegisterChatCommand("tm", cmd_tm)
-	sampRegisterChatCommand("cpt", cmd_cpt)
-	sampRegisterChatCommand("psv", cmd_psv)
-	sampRegisterChatCommand("drb", cmd_drb)
-	sampRegisterChatCommand("prk", cmd_prk)
-	sampRegisterChatCommand("zsk", cmd_zsk)
-	sampRegisterChatCommand("vgf", cmd_vgf)
-	sampRegisterChatCommand("stp", cmd_stp)
-	sampRegisterChatCommand("rid", cmd_rid)
-	sampRegisterChatCommand("gvs", cmd_gvs)
-	sampRegisterChatCommand("gvm", cmd_gvm)
-	sampRegisterChatCommand("msp", cmd_msp)
-	sampRegisterChatCommand("chap", cmd_chap)
-	sampRegisterChatCommand("lgf", cmd_lgf)
-	sampRegisterChatCommand("trp", cmd_trp)
-	sampRegisterChatCommand("cops", cmd_cops)
-	sampRegisterChatCommand("bal", cmd_bal)
-	sampRegisterChatCommand("cro", cmd_cro)
-	sampRegisterChatCommand("vg", cmd_vg)
-	sampRegisterChatCommand("rumf", cmd_rumf)
-	sampRegisterChatCommand("var", cmd_var)
-	sampRegisterChatCommand("triad", cmd_triad)
-	sampRegisterChatCommand("mf", cmd_mf)
-	sampRegisterChatCommand("smc", cmd_smc)
-	sampRegisterChatCommand("html", cmd_html)
-	sampRegisterChatCommand("ugf", cmd_ugf)
-	sampRegisterChatCommand("vp1", cmd_vp1)
-	sampRegisterChatCommand("vp2", cmd_vp2)
-	sampRegisterChatCommand("vp3", cmd_vp3)
-	sampRegisterChatCommand("vp4", cmd_vp4)
-	sampRegisterChatCommand("ktp", cmd_ktp)
-	sampRegisterChatCommand("tcm", cmd_tcm)
-	sampRegisterChatCommand("gfi", cmd_gfi)
-	sampRegisterChatCommand("hin", cmd_hin)
-	sampRegisterChatCommand("smh", cmd_smh)
-	sampRegisterChatCommand("cr", cmd_cr)
-	sampRegisterChatCommand("hct", cmd_hct)
-	sampRegisterChatCommand("gvr", cmd_gvr)
-	sampRegisterChatCommand("gvc", cmd_gvc)
-	sampRegisterChatCommand("ngm", cmd_ngm)
+	for key in pairs(cmd_helper_answers) do  
+		sampRegisterChatCommand(key, function(arg)
+			if #arg > 0 then  
+				sampSendChat("/ans " .. arg .. cmd_helper_answers[key].reason .. ' // Приятной игры на сервере RDS. <3 ')
+			else 
+				sampAddChatMessage(tag .. 'Вы не ввели ID игрока', -1)
+			end
+		end)
+	end
 	-- ## Ответы на репорты для чата (/ans id text || /ot id text) ## --
 
     while true do
@@ -345,7 +271,6 @@ function main()
         if atlibs.isKeysDown(atlibs.strToIdKeys(ATMainConfig.keys.OpenReport)) and not sampIsDialogActive() and not sampIsChatInputActive() then  
 			lua_thread.create(function()
 				sampSendChat("/ans ")
-
 				sampSendDialogResponse(2348, 1, 0)
 				wait(50)
 			end)
@@ -464,356 +389,6 @@ function main()
         
     end
 end
-
--- ## Блок функций - быстрых ответов в чате ## --
-function cmd_ngm(arg)
-	sampSendChat("/ans " .. arg .. " Данный игрок покинул игру. // Приятной игры на RDS <3")
-end
-
-function cmd_tcm(arg)
-	sampSendChat("/ans " .. arg .. " Чтобы обменять валюту, введите /trade, и подойдите к NPC Арману, стоит справа ")
-end 
-
-function cmd_tm(arg)
-	sampSendChat("/ans " .. arg .. " Ожидайте. | Приятного времяпрепровождения на RDS <3 ")
-end
-
-function cmd_zsk(arg)
-	sampSendChat("/ans " .. arg .. " Если вы застряли, введите /spawn | /kill, но мы можем вам помочь! ")
-end
-
-function cmd_vgf(arg)
-	sampSendChat("/ans " .. arg .. " Чтобы выдать выговор участнику банды, есть команда: /gvig ")
-end
-
-function cmd_html(arg)
-	sampSendChat("/ans ".. arg .. " https://colorscheme.ru/html-colors.html | Приятной игры! ")
-end
-
-function cmd_ktp(arg)
-	sampSendChat("/ans " .. arg .. " /tp (по локациям), /g (/goto) id (к игроку) с VIP (/help -> 7 пункт) ")
-end
-
-function cmd_vp1(arg)
-	sampSendChat("/ans " .. arg .. " Данный игрок с привелегией Premuim VIP (/help -> 7)  | Приятной игры! <3 ")
-end
-
-function cmd_vp2(arg)
-	sampSendChat("/ans " .. arg .. " Данный игрок с привелегией Diamond VIP (/help -> 7) | Приятной игры! <3 ")
-end
-
-function cmd_vp3(arg)
-	sampSendChat("/ans " .. arg .. " Данный игрок с привелегией Platinum VIP (/help -> 7) | Приятной игры! <3 ")
-end
-
-function cmd_vp4(arg)
-	sampSendChat("/ans " .. arg .. " Данный игрок с привелегией «Личный» VIP (/help -> 7) | Приятной игры! <3 ")
-end
-
-function cmd_chap(arg)
-	sampSendChat("/ans " .. arg .. " /mm -> Действия -> Сменить пароль | Приятной игры! <3 ")
-end
-
-function cmd_msp(arg)
-	sampSendChat("/ans " .. arg .. " /mm -> Транспортное средство -> Тип транспорта | Приятной игры на RDS. <3 ")
-end
-
-function cmd_trp(arg)
-	sampSendChat("/ans " .. arg .. " /report | Приятной игры на RDS. <3 ")
-end
-
-function cmd_rid(arg)
-	sampSendChat("/ans " .. arg .. " Уточните ID нарушителя/читера в /report | Удачного времяпрепровождения. ")
-end
-
-function cmd_bk(arg)
-	sampSendChat("/ans " .. arg .. " Оплатить бизнес/дом можно с помощью /bank или /tp -> Разное -> Банк ")
-end
-
-function cmd_h7(arg)
-	sampSendChat("/ans " .. arg .. " Посмотреть информацию можно в /help -> 7 пункт. | Приятной игры на RDS. <3 ")
-end
-
-function cmd_h8(arg)
-	sampSendChat("/ans " .. arg .. " Узнать данную информацию можно в /help -> 8 пункт. | Приятной игры на RDS. <3 ")
-end
-
-function cmd_h14(arg)
-	sampSendChat("/ans " .. arg .. " Узнать данную информацию можно в /help -> 14 пункт. | Приятной игры на RDS. <3 ")
-end
-
-function cmd_zba(arg)
-	sampSendChat("/ans " .. arg .. " Админ наказал не так? Пишите жалобу на форум https://forumrds.ru")
-end
-
-function cmd_zbp(arg)
-	sampSendChat("/ans " .. arg .. " Пишите жалобу на игрока на форум https://forumrds.ru")
-end
-
-function cmd_avt(arg)
-	sampSendChat("/ans " .. arg .. " /tp -> Разное -> Автосалоны | Приятной игры!")
-end
-
-function cmd_avt1(arg)
-	sampSendChat("/ans " .. arg .. " /tp -> Разное -> Автосалоны -> Автомастерская | Приятной игры!")
-end
-
-function cmd_pgf(arg)
-	sampSendChat("/ans " .. arg .. " /gleave (банда) || /fleave (семья)| Приятной игры на RDS <3")
-end
-
-function cmd_lgf(arg)
-	sampSendChat("/ans " .. arg .. " /leave (покинуть мафию) | Приятной игры на RDS <3")
-end
-
-function cmd_igf(arg)
-	sampSendChat("/ans " .. arg .. " /ginvite (банда) || /finvite (семья) | Удачной игры на RDS <3" )
-end
-
-function cmd_ugf(arg)
-	sampSendChat("/ans " .. arg .. " /guninvite (банда) || /funinvite (семья) | Удачной игры на RDS <3 ")
-end
-
-function cmd_cops(arg)
-	sampSendChat("/ans " .. arg .. " 265-267, 280-286, 288, 300-304, 306, 307, 309-311 | Удачной игры на RDS <3")
-end
-
-function cmd_bal(arg)
-	sampSendChat("/ans " .. arg .. "  102-104 | Удачной игры на RDS <3")
-end
-
-function cmd_cro(arg)
-	sampSendChat("/ans " .. arg .. " 105-107 | Удачной игры на RDS <3")
-end
-
-function cmd_rumf(arg)
-	sampSendChat("/ans " .. arg .. " 111-113 | Удачной игры на RDS <3")
-end
-
-function cmd_vg(arg)
-	sampSendChat("/ans " .. arg .. " 108-110 | Удачной игры на RDS <3 ")
-end
-
-function cmd_var(arg)
-	sampSendChat("/ans " .. arg .. " 114-116 | Удачной игры на RDS <3")
-end
-
-function cmd_triad(arg)
-	sampSendChat("/ans " .. arg .. " 117-118, 120  | Удачной игры на RDS <3")
-end
-
-function cmd_mf(arg)
-	sampSendChat("/ans " .. arg .. " 124-127 | Удачной игры на RDS <3")
-end
-
-function cmd_gvm(arg)
-	sampSendChat("/ans " .. arg .. " Для перевода денег, необхдимо ввести /givemoney IDPlayer сумму | Приятной игры!' ")
-end
-
-function cmd_gvs(arg)
-	sampSendChat("/ans " .. arg .. " Для перевода очков, необходимо ввести /givescore IDPlayer сумму | С Diamond VIP. ")
-end
-
-function cmd_cpt(arg)
-	sampSendChat("/ans " .. arg .. " Для того, чтобы начать капт, нужно ввести /capture | Приятной игры! ")
-end
-
-function cmd_psv(arg)
-	sampSendChat("/ans " .. arg .. " /passive - пассивный режим, для того, чтобы вас не могли убить.  ")
-end
-
-function cmd_dis(arg)
-	sampSendChat("/ans " ..  arg .. " Игрок не в сети. | Приятной игры на RDS <3 ")
-end
-
-function cmd_nac(arg)
-	sampSendChat("/ans " .. arg .. " Игрок наказан. | Приятной игры на RDS <3")
-end
-
-function cmd_cl(arg)
-	sampSendChat("/ans " .. arg .. " Данный игрок чист. | Приятной игры на RDS <3")
-end
-
-function cmd_yt(arg)
-	sampSendChat("/ans " .. arg .. " Уточните вашу жалобу/вопрос. | Приятной игры на RDS <3")
-end
-
-function cmd_drb(arg)
-	sampSendChat("/ans " .. arg .. " /derby - записатся на дерби | Приятной игры на RDS 02 <3 ")
-end
-
-function cmd_smc(arg)
-	sampSendChat("/ans " .. arg .. " /sellmycar IDPlayer Слот(1-3) RDScoin (игроку), в гос: /car ")
-end
-
-function cmd_c(arg)
-	lua_thread.create(function()
-		sampSendChat("/ans " .. arg .. " Начал(а) работу по вашей жалобе. | Приятной игры на RDS <3")
-		wait(1000)
-		sampSetChatInputEnabled(true)
-		sampSetChatInputText("/re " )
-	end)
-end
-
-function cmd_stp(arg)
-	sampSendChat("/ans " .. arg .. " Чтобы посмотреть коины, вирты, рубли и т.д. - /statpl ")
-end
-
-function cmd_prk(arg)
-	sampSendChat("ans ".. arg .. " /parkour - записатся на паркур | Приятной игры на RDS 02 <3 ")
-end
-
-function cmd_n(arg)
-	sampSendChat("/ans " .. arg .. " Не вижу нарушений от игрока. | Приятной игры на RDS <3")
-end
-
-function cmd_hg(arg)
-	sampSendChat("/ans " .. arg .. " Помогли вам. | Приятного времяпрепровождения на RDS <3 ")
-end
-
-function cmd_int(arg)
-	sampSendChat("/ans " .. arg .. " Данную информацию можно узнать в интернете. Приятной игры! ")
-end
-
-function cmd_og(arg)
-	sampSendChat("/ans " .. arg ..  'Встать на пикап "Ограбление банка", после около ячеек нажимать на ALT и ехать на красный маркер на карте')
-end
-
-function cmd_msid(arg)
-	lua_thread.create(function()
-		sampSendChat("/ans " .. arg .. " Здравствуйте! Произошла ошибка в ID! Наказание снято. ")
-		sampSendChat("/ans " .. arg .. " Приятного времяпрепровождения на Russian Drift Server! ")
-	end)
-end
-
-function cmd_al(arg)
-	lua_thread.create(function()
-		sampSendChat("/ans " .. arg .. " Здравствуйте! Вы забыли ввести /alogin! ")
-		sampSendChat("/ans " .. arg .. " Введите команду /alogin и свой пароль, пожалуйста.")
-	end)
-end
-
-function cmd_gfi(arg)
-	sampSendChat("/ans " .. arg .. " /funinvite id (в семью), /ginvite id (в банду) ")
-end
-
-function cmd_hin(arg)
-	sampSendChat("/ans " .. arg .. ' /hpanel -> Слот1-3 -> Изменить -> Аренда дома | Приятной игры на RDS <3 ')
-end
-
-function cmd_gn(arg)
-	sampSendChat("/ans " .. arg .. " /menu (/mm) - ALT/Y -> Оружие | Удачного времяпреповождения")
-end
-
-function cmd_pd(arg)
-	sampSendChat("/ans " .. arg .. " /menu (/mm) - ALT/Y -> Предметы | Удачного времяпреповождения")
-end
-
-function cmd_dtl(arg)
-	sampSendChat("/ans " .. arg .. " Детали разбросаны по всей карте. Обмен происходится на /garage. | Удачного времяпреповождения")
-end
-
-function cmd_nz(arg)
-	sampSendChat("/ans " .. arg .. " Не запрещено. | Удачного времяпреповождения")
-end
-
-function cmd_y(arg)
-	sampSendChat("/ans " .. arg .. " Да. | Удачного времяпреповождения")
-end
-
-function cmd_net(arg)
-	sampSendChat("/ans " .. arg .. " Нет. | Удачного времяпреповождения")
-end
-
-function cmd_gak(arg)
-	sampSendChat("/ans" .. arg .. " Продать аксессуары, или купить можно на /trade. Чтобы продать, F у лавки ")
-end
-
-function cmd_enk(arg)
-	sampSendChat("/ans " .. arg .. " Никак. | Удачного времяпреповождения")
-end
-
-function cmd_fp(arg)
-	sampSendChat("/ans " .. arg .. " /familypanel | Удачного времяпреповождения")
-end
-
-function cmd_mg(arg)
-	sampSendChat("/ans " .. arg .. " /menu (/mm) - ALT/Y -> Система банд | Удачного времяпреповождения")
-end
-
-function cmd_pg(arg)
-	sampSendChat("/ans " .. arg .. " Проверим. | Удачного времяпреповождения")
-end
-
-function cmd_krb(arg)
-	sampSendChat("/ans " .. arg .. " Казино, работы, бизнес. | Удачного времяпреповождения")
-end
-
-function cmd_kmd(arg)
-	sampSendChat("/ans " .. arg .. " Казино, МП, достижения, работы, обмен очков на коины(/trade) | Приятной игры на RDS <3")
-end
-
-function cmd_gm(arg)
-	sampSendChat("/ans " .. arg .. " GodMode (ГодМод) на сервере не работает. | Удачного времяпреповождения")
-end
-
-function cmd_plg(arg)
-	sampSendChat("/ans " .. arg .. " Попробуйте перезайти. | Удачного времяпреповождения")
-end
-
-function cmd_nv(arg)
-	sampSendChat("/ans " .. arg .. " Не выдаем. | Удачного времяпреповождения")
-end
-
-function cmd_of(arg)
-	sampSendChat("/ans " .. arg .. " Не оффтопьте. | Удачного времяпреповождения")
-end
-
-function cmd_en(arg)
-	sampSendChat("/ans " .. arg .. " Не знаем. | Удачного времяпреповождения")
-end
-
-function cmd_vbg(arg)
-	sampSendChat("/ans " .. arg .. " Скорей всего - это баг. | Удачного времяпреповождения")
-end
-
-function cmd_ctun(arg)
-	sampSendChat("/ans " .. arg .. ' /menu (/mm) - ALT/Y -> Т/С -> Тюнинг | Приятной игры на RDS <3')
-end
-
-function cmd_cr(arg)
-	sampSendChat("/ans " .. arg .. ' /car | Приятной игры на сервере RDS <3 ')
-end
-
-function cmd_zsk(arg)
-	sampSendChat("/ans " .. arg .. " Если вы застряли, введите /spawn | /kill | Приятной игры на RDS <3")
-end
-
-function cmd_smh(arg)
-	sampSendChat("/ans " .. arg .. " /sellmyhouse (игроку)  ||  /hpanel -> слот -> Изменить -> Продать дом государству ")
-end
-
-function cmd_gadm(arg)
-	sampSendChat("/ans " .. arg .. " Ожидать набор, или же /help -> 18 пункт. | Приятной игры на RDS. <3")
-end
-
-function cmd_hct(arg)
-	sampSendChat("/ans " .. arg .. " /count time || /dmcount time | Приятной игры на RDS. <3 ")
-end
-
-function cmd_gvr(arg)
-	sampSendChat("/ans " .. arg .. " /giverub IDPlayer rub | С Личного (/help -> 7) | Приятной игры!")
-end
-
-function cmd_gvc(arg)
-	sampSendChat("/ans " .. arg .. " /givecoin IDPlayer coin | С Личного (/help -> 7) | Приятной игры!")
-end
-
-function cmd_tdd(arg)
-	sampSendChat("/ans " .. arg .. " /dt 0-990 / Виртуальный мир | Приятной игры!")
-end
--- ## Блок функций - быстрых ответов в чате ## --
-
 
 -- ## Блок обработки ивентов и пакетов SA:MP ## -- 
 function sampev.onServerMessage(color, text)
@@ -975,7 +550,7 @@ function imgui.OnDrawFrame()
 
     if ATReportShow.v and elements.interface.v then  
         imgui.SetNextWindowPos(imgui.ImVec2(sw / 2, sh / 2), imgui.Cond.FirstUseEver, imgui.ImVec2(0.5, 0.5)) 
-        imgui.SetNextWindowSize(imgui.ImVec2(420, 250), imgui.Cond.FirstUseEver)
+        imgui.SetNextWindowSize(imgui.ImVec2(430, 250), imgui.Cond.FirstUseEver)
 
         imgui.ShowCursor = true
 
@@ -1034,7 +609,7 @@ function imgui.OnDrawFrame()
 				inicfg.save(config, directIni)
 			end; imgui.Tooltip(u8"Автоматически при ответе подставляет пожелание из зарегистрированного текста.\nЗарегистрировать можно в настройках АТ.\n/tool (F3) -> Настройки (иконка 'Шестеренки')")
             imgui.Separator()
-            if imgui.Button(fa.ICON_FA_EYE .. u8" Работа по жб", imgui.ImVec2(130,20)) then  
+            if imgui.Button(fa.ICON_FA_EYE .. u8" Работа по жб", imgui.ImVec2(135,20)) then  
 				lua_thread.create(function()
 					sampSendDialogResponse(2349, 1, 0)
 					wait(50)
@@ -1056,7 +631,7 @@ function imgui.OnDrawFrame()
 				end)
 			end	
 			imgui.SameLine()
-            if imgui.Button(fa.ICON_BAN .. u8" Наказан", imgui.ImVec2(130,20)) then
+            if imgui.Button(fa.ICON_BAN .. u8" Наказан", imgui.ImVec2(135,20)) then
 				lua_thread.create(function() 
 					sampSendDialogResponse(2349, 1, 0)
 					wait(50)
@@ -1074,7 +649,7 @@ function imgui.OnDrawFrame()
 				end)
 			end
 			imgui.SameLine()
-			if imgui.Button(fa.ICON_COMMENTING_O .. u8" Уточните ID", imgui.ImVec2(130,20)) then  
+			if imgui.Button(fa.ICON_COMMENTING_O .. u8" Уточните ID", imgui.ImVec2(135,20)) then  
 				lua_thread.create(function()
 					sampSendDialogResponse(2349, 1, 0)
 					wait(50)
@@ -1091,7 +666,7 @@ function imgui.OnDrawFrame()
 					imgui.ShowCursor = false
 				end)
 			end	
-			if imgui.Button(fa.ICON_FA_EDIT .. u8" Уточните жб", imgui.ImVec2(130,20)) then  
+			if imgui.Button(fa.ICON_FA_EDIT .. u8" Уточните жб", imgui.ImVec2(135,20)) then  
 				lua_thread.create(function()
 					sampSendDialogResponse(2349, 1, 0)
 					wait(50)
@@ -1109,7 +684,7 @@ function imgui.OnDrawFrame()
 				end)
 			end	
 			imgui.SameLine()
-			if imgui.Button(fai.ICON_FA_SHARE .. u8" Жб на админа", imgui.ImVec2(130,20)) then
+			if imgui.Button(fai.ICON_FA_SHARE .. u8" Жб на админа", imgui.ImVec2(135,20)) then
 				lua_thread.create(function()
 					sampSendDialogResponse(2349, 1, 0)
 					wait(50)
@@ -1127,7 +702,7 @@ function imgui.OnDrawFrame()
 				end)
 			end
 			imgui.SameLine()
-			if imgui.Button(fai.ICON_FA_SHARE .. u8" Жб на игрока", imgui.ImVec2(130,20)) then
+			if imgui.Button(fai.ICON_FA_SHARE .. u8" Жб на игрока", imgui.ImVec2(135,20)) then
 				lua_thread.create(function()
 					sampSendDialogResponse(2349, 1, 0)
 					wait(50)
@@ -1144,16 +719,69 @@ function imgui.OnDrawFrame()
 					imgui.ShowCursor = false
 				end) 
 			end
+			if imgui.Button(fai.ICON_FA_INFO_CIRCLE .. u8' Баг на сервере', imgui.ImVec2(135,20)) then
+				lua_thread.create(function()
+					sampSendDialogResponse(2349, 1, 0)
+					wait(50)
+					sampSendDialogResponse(2350, 1, 0)
+					wait(50)
+					if elements.prefix_answer.v then
+						sampSendDialogResponse(2351, 1, 0, '{FFFFFF} Напишите в тех.раздел на форуме https://forumrds.ru '.. u8:decode(config.main.prefix_for_answer))
+					else
+						sampSendDialogResponse(2351, 1, 0, '{FFFFFF} Напишите в тех.раздел на форуме https://forumrds.ru')
+					end
+					wait(50)
+					sampCloseCurrentDialogWithButton(13)
+					ATReportShow.v = false
+					imgui.ShowCursor = false
+				end)
+			end
+			imgui.SameLine()
+			if imgui.Button(fai.ICON_FA_TOGGLE_OFF .. u8' Не в сети', imgui.ImVec2(135,20)) then
+				lua_thread.create(function()
+					sampSendDialogResponse(2349, 1, 0)
+					wait(50)
+					sampSendDialogResponse(2350, 1, 0)
+					wait(50)
+					if elements.prefix_answer.v then
+						sampSendDialogResponse(2351, 1, 0, '{FFFFFF} Игрок не в сети. '.. u8:decode(config.main.prefix_for_answer))
+					else
+						sampSendDialogResponse(2351, 1, 0, '{FFFFFF} Игрок не в сети. ')
+					end
+					wait(50)
+					sampCloseCurrentDialogWithButton(13)
+					ATReportShow.v = false
+					imgui.ShowCursor = false
+				end)
+			end
+			imgui.SameLine()
+			if imgui.Button(fai.ICON_FA_CLOCK .. u8' Чист/нет наруш.', imgui.ImVec2(135,20)) then  
+				lua_thread.create(function()
+					sampSendDialogResponse(2349, 1, 0)
+					wait(50)
+					sampSendDialogResponse(2350, 1, 0)
+					wait(50)
+					if elements.prefix_answer.v then
+						sampSendDialogResponse(2351, 1, 0, '{FFFFFF} Не вижу нарушений со стороны игрока. '.. u8:decode(config.main.prefix_for_answer))
+					else
+						sampSendDialogResponse(2351, 1, 0, '{FFFFFF} Не вижу нарушений со стороны игрока. ')
+					end
+					wait(50)
+					sampCloseCurrentDialogWithButton(13)
+					ATReportShow.v = false
+					imgui.ShowCursor = false
+				end)
+			end
 			imgui.Separator()
-            if imgui.Button(fai.ICON_FA_QUESTION_CIRCLE .. u8" Ответы от AT", imgui.ImVec2(130,20)) then 
+            if imgui.Button(fai.ICON_FA_QUESTION_CIRCLE .. u8" Ответы от AT", imgui.ImVec2(135,20)) then 
                 elements.select_menu = 1
             end
             imgui.SameLine()
-			if imgui.Button(fa.ICON_FA_SAVE .. u8" Сохр. ответы", imgui.ImVec2(130,20)) then  
+			if imgui.Button(fa.ICON_FA_SAVE .. u8" Сохр. ответы", imgui.ImVec2(135,20)) then  
 				elements.select_menu = 2
 			end	
 			imgui.SameLine()
-			if imgui.Button(fa.ICON_CHECK .. u8" Передать жб ##SEND", imgui.ImVec2(130,20)) then  
+			if imgui.Button(fa.ICON_CHECK .. u8" Передать жб ##SEND", imgui.ImVec2(135,20)) then  
 				lua_thread.create(function()
 					sampSendDialogResponse(2349, 1, 0)
 					wait(50)
@@ -1178,7 +806,7 @@ function imgui.OnDrawFrame()
             --     inicfg.save(config, directIni)
             -- end
             imgui.Separator()
-            if imgui.Button(fai.ICON_FA_SMS .. u8" Ответить", imgui.ImVec2(100,20)) then
+            if imgui.Button(fai.ICON_FA_SMS .. u8" Ответить", imgui.ImVec2(110,20)) then
 				if #elements.text.v < 70 then 
 					lua_thread.create(function()
 						sampSendDialogResponse(2349, 1, 0)
@@ -1205,7 +833,7 @@ function imgui.OnDrawFrame()
 				end
             end  
             imgui.SameLine()
-            if imgui.Button(fa.ICON_BAN .. u8" Отклонить", imgui.ImVec2(100,20)) then  
+            if imgui.Button(fa.ICON_BAN .. u8" Отклонить", imgui.ImVec2(110,20)) then  
                 lua_thread.create(function()
                     sampSendDialogResponse(2349, 1, 0)
                     wait(50)
@@ -1218,8 +846,8 @@ function imgui.OnDrawFrame()
                 end)
             end
             imgui.SameLine()
-			imgui.SetCursorPosX(imgui.GetWindowWidth() - 100)
-            if imgui.Button(fa.ICON_WINDOW_CLOSE .. u8" Закрыть", imgui.ImVec2(100,20)) then  
+			imgui.SetCursorPosX(imgui.GetWindowWidth() - 115)
+            if imgui.Button(fa.ICON_WINDOW_CLOSE .. u8" Закрыть", imgui.ImVec2(110,20)) then  
                 lua_thread.create(function()
                     sampSendDialogResponse(2349, 0, 0)
                     wait(50)
@@ -1278,34 +906,34 @@ function imgui.OnDrawFrame()
             imgui.BeginChild("##menuSecond", imgui.ImVec2(155, 215), true)
 			if imgui.Button(fa.ICON_OBJECT_GROUP .. u8" На кого-то/что-то", imgui.ImVec2(130, 0)) then  -- reporton key
 				elements.select_category = 1  
-			end	
+			end; imgui.Tooltip(u8'Базовые ответы на простой репорт (читеры, или прочие простые вопросы не требующие особых ответов)')
 			if imgui.Button(fa.ICON_LIST .. u8" Команды (/help)", imgui.ImVec2(130, 0)) then  -- HelpCMD key
 				elements.select_category = 2 
-			end 	
+			end; imgui.Tooltip(u8'Ответы по вопросам команд /help')
 			if imgui.Button(fa.ICON_USERS .. u8" Банде/семья", imgui.ImVec2(130, 0)) then  -- HelpGangFamilyMafia key
 				elements.select_category = 3
-			end	
+			end; imgui.Tooltip(u8'Ответы по вопросам организаций')
 			if imgui.Button(fa.ICON_MAP_MARKER .. u8" Телепорты", imgui.ImVec2(130, 0)) then  -- HelpTP key
 				elements.select_category = 4
-			end	
+			end; imgui.Tooltip(u8'Ответы по вопросам телепортаций.')
 			if imgui.Button(fa.ICON_SHOPPING_BAG .. u8" Бизнесы", imgui.ImVec2(130, 0)) then  -- HelpBuz key
 				elements.select_category = 5 
-			end	
+			end; imgui.Tooltip(u8'Ответы по вопросам бизнесов.')
 			if imgui.Button(fa.ICON_MONEY .. u8" Продажа/Покупка", imgui.ImVec2(130, 0)) then  -- HelpSellBuy key
 				elements.select_category = 6 
-			end	
+			end; imgui.Tooltip(u8'Ответы по вопросам продажи/покупки валюты.')
 			if imgui.Button(fa.ICON_BOLT .. u8" Настройки", imgui.ImVec2(130, 0)) then  -- HelpSettings key
 				elements.select_category = 7
-			end	
+			end; imgui.Tooltip(u8'Ответы по вопросам настроек (/settings)')
 			if imgui.Button(fa.ICON_HOME .. u8" Дома", imgui.ImVec2(130, 0)) then  -- HelpHouses key
 				elements.select_category = 8 
-			end	
+			end; imgui.Tooltip(u8'Ответы по вопросам недвижимости (дом)')
 			if imgui.Button(fa.ICON_MALE .. u8" Скины", imgui.ImVec2(130, 0)) then  -- HelpSkins key
 				elements.select_category = 9 
-			end	
+			end; imgui.Tooltip(u8'Ответы по вопросам скинов.')
 			if imgui.Button(fa.ICON_BARCODE .. u8" Остальные ответы", imgui.ImVec2(130, 0)) then  -- HelpDefault key
 				elements.select_category = 10
-			end	
+			end; imgui.Tooltip(u8'Ответы по вопросам, которые не входят ни в одну категорию')
 			imgui.EndChild()
 			imgui.SameLine()
 			imgui.BeginChild("##menuSelectable", imgui.ImVec2(235, 215), true)
