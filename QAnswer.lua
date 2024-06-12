@@ -807,7 +807,7 @@ function imgui.OnDrawFrame()
             -- end
             imgui.Separator()
             if imgui.Button(fai.ICON_FA_SMS .. u8" Ответить", imgui.ImVec2(110,20)) then
-				if #elements.text.v < 70 then 
+				if #elements.text.v < 80 then 
 					lua_thread.create(function()
 						sampSendDialogResponse(2349, 1, 0)
 						wait(50)
@@ -827,8 +827,28 @@ function imgui.OnDrawFrame()
 					end)
 					ATReportShow.v = false
 				else 
-					if (#elements.text.v + #config.main.prefix_for_answer) > 110 then 
-						sampAddChatMessage(tag .. ' Длина вашего текста превышает ограничения. Измените текст. Либо уберите пожелание для ответа', -1)
+					if (#elements.text.v + #config.main.prefix_for_answer) > 100 then
+						local half_length = math.floor(#elements.text.v / 2)
+						local first_half = elements.text.v:sub(1, half_length)
+						local second_half = elements.text.v:sub(half_length+1)
+						lua_thread.create(function()
+							sampSendDialogResponse(2349, 1, 0)
+							wait(50)
+							sampSendDialogResponse(2350, 1, 0)
+							wait(50)
+							sampSendDialogResponse(2351, 1, 0, u8:decode(first_half) .. '...')
+							wait(50)
+							sampCloseCurrentDialogWithButton(13)
+							wait(50)
+							elements.text.v = " "
+							wait(500)
+							if elements.prefix_answer.v then
+								sampSendChat('/ans ' .. pid_rep .. ' ...' .. u8:decode(second_half) .. " " .. u8:decode(config.main.prefix_for_answer))
+							else 
+								sampSendChat('/ans ' .. pid_rep .. ' ...' .. u8:decode(second_half))
+							end
+						end)
+						ATReportShow.v = false
 					end
 				end
             end  
@@ -945,21 +965,28 @@ function imgui.OnDrawFrame()
 					if key == "reporton" then
 						for key_2, v_2 in pairs(questions[key]) do
 							if imgui.Button(key_2) then
-								if not elements.prefix_answer.v then
-									lua_thread.create(function()
-									local settext = '{FFFFFF}' .. v_2
-									end)
-								else
-									lua_thread.create(function()
-									local settext = '{FFFFFF}' .. v_2 .. ' ' .. color() .. u8:decode(config.main.prefix_for_answer)
-									sampSendDialogResponse(2349, 1, 0)
-									sampSendDialogResponse(2350, 1, 0)
-									wait(50)
-									sampSendDialogResponse(2351, 1, 0, settext)
-									wait(50)
-									sampCloseCurrentDialogWithButton(13)
-									end)
-								end
+								-- if not elements.prefix_answer.v then
+								-- 	lua_thread.create(function()
+								-- 	local settext = '{FFFFFF}' .. v_2
+								-- 	sampSendDialogResponse(2349, 1, 0)
+								-- 	sampSendDialogResponse(2350, 1, 0)
+								-- 	wait(50)
+								-- 	sampSendDialogResponse(2351, 1, 0, settext)
+								-- 	wait(50)
+								-- 	sampCloseCurrentDialogWithButton(13)
+								-- 	end)
+								-- else
+								-- 	lua_thread.create(function()
+								-- 	local settext = '{FFFFFF}' .. v_2 .. ' ' .. color() .. u8:decode(config.main.prefix_for_answer)
+								-- 	sampSendDialogResponse(2349, 1, 0)
+								-- 	sampSendDialogResponse(2350, 1, 0)
+								-- 	wait(50)
+								-- 	sampSendDialogResponse(2351, 1, 0, settext)
+								-- 	wait(50)
+								-- 	sampCloseCurrentDialogWithButton(13)
+								-- 	end)
+								-- end
+								SendReport_Onclick('{FFFFFF}' .. v_2, pid_rep)
 								elements.select_category = 0
 								elements.select_menu = 0 
 							end
@@ -972,28 +999,9 @@ function imgui.OnDrawFrame()
 					if key == "HelpCmd" then
 						for key_2, v_2 in pairs(questions[key]) do
 							if imgui.Button(key_2) then
-								if not elements.prefix_answer.v then
-									lua_thread.create(function()
-									local settext = '{FFFFFF}' .. v_2
-									sampSendDialogResponse(2349, 1, 0)
-									sampSendDialogResponse(2350, 1, 0)
-									wait(50)
-									sampSendDialogResponse(2351, 1, 0, settext)
-									wait(50)
-									sampCloseCurrentDialogWithButton(13)
-									end)
-								else
-									lua_thread.create(function()
-									local settext = '{FFFFFF}' .. v_2 .. ' ' .. color() .. u8:decode(config.main.prefix_for_answer)
-									sampSendDialogResponse(2349, 1, 0)
-									sampSendDialogResponse(2350, 1, 0)
-									wait(50)
-									sampSendDialogResponse(2351, 1, 0, settext)
-									wait(50)
-									sampCloseCurrentDialogWithButton(13)
-									end)
-								end
-								report_ans = 0
+								SendReport_Onclick('{FFFFFF}' .. v_2, pid_rep)
+								elements.select_category = 0
+								elements.select_menu = 0 
 							end
 						end
 					end
@@ -1004,28 +1012,9 @@ function imgui.OnDrawFrame()
 					if key == "HelpGangFamilyMafia" then
 						for key_2, v_2 in pairs(questions[key]) do
 							if imgui.Button(key_2) then
-								if not elements.prefix_answer.v then
-									lua_thread.create(function()
-									local settext = '{FFFFFF}' .. v_2
-									sampSendDialogResponse(2349, 1, 0)
-									sampSendDialogResponse(2350, 1, 0)
-									wait(50)
-									sampSendDialogResponse(2351, 1, 0, settext)
-									wait(50)
-									sampCloseCurrentDialogWithButton(13)
-									end)
-								else
-									lua_thread.create(function()
-									local settext = '{FFFFFF}' .. v_2 .. ' ' .. color() .. u8:decode(config.main.prefix_for_answer)
-									sampSendDialogResponse(2349, 1, 0)
-									sampSendDialogResponse(2350, 1, 0)
-									wait(50)
-									sampSendDialogResponse(2351, 1, 0, settext)
-									wait(50)
-									sampCloseCurrentDialogWithButton(13)
-									end)
-								end
-								report_ans = 0
+								SendReport_Onclick('{FFFFFF}' .. v_2, pid_rep)
+								elements.select_category = 0
+								elements.select_menu = 0 
 							end
 						end
 					end
@@ -1036,28 +1025,9 @@ function imgui.OnDrawFrame()
 					if key == "HelpTP" then
 						for key_2, v_2 in pairs(questions[key]) do
 							if imgui.Button(key_2) then
-								if not elements.prefix_answer.v then
-									lua_thread.create(function()
-									local settext = '{FFFFFF}' .. v_2
-									sampSendDialogResponse(2349, 1, 0)
-									sampSendDialogResponse(2350, 1, 0)
-									wait(50)
-									sampSendDialogResponse(2351, 1, 0, settext)
-									wait(50)
-									sampCloseCurrentDialogWithButton(13)
-									end)
-								else
-									lua_thread.create(function()
-									local settext = '{FFFFFF}' .. v_2 .. ' ' .. color() .. u8:decode(config.main.prefix_for_answer)
-									sampSendDialogResponse(2349, 1, 0)
-									sampSendDialogResponse(2350, 1, 0)
-									wait(50)
-									sampSendDialogResponse(2351, 1, 0, settext)
-									wait(50)
-									sampCloseCurrentDialogWithButton(13)
-									end)
-								end
-								report_ans = 0
+								SendReport_Onclick('{FFFFFF}' .. v_2, pid_rep)
+								elements.select_category = 0
+								elements.select_menu = 0 
 							end
 						end
 					end
@@ -1068,28 +1038,9 @@ function imgui.OnDrawFrame()
 					if key == "HelpSellBuy" then
 						for key_2, v_2 in pairs(questions[key]) do
 							if imgui.Button(key_2) then
-								if not elements.prefix_answer.v then
-									lua_thread.create(function()
-									local settext = '{FFFFFF}' .. v_2
-									sampSendDialogResponse(2349, 1, 0)
-									sampSendDialogResponse(2350, 1, 0)
-									wait(50)
-									sampSendDialogResponse(2351, 1, 0, settext)
-									wait(50)
-									sampCloseCurrentDialogWithButton(13)
-									end)
-								else
-									lua_thread.create(function()
-									local settext = '{FFFFFF}' .. v_2 .. ' ' .. color() .. u8:decode(config.main.prefix_for_answer)
-									sampSendDialogResponse(2349, 1, 0)
-									sampSendDialogResponse(2350, 1, 0)
-									wait(50)
-									sampSendDialogResponse(2351, 1, 0, settext)
-									wait(50)
-									sampCloseCurrentDialogWithButton(13)
-									end)
-								end
-								report_ans = 0
+								SendReport_Onclick('{FFFFFF}' .. v_2, pid_rep)
+								elements.select_category = 0
+								elements.select_menu = 0
 							end
 						end
 					end
@@ -1100,28 +1051,9 @@ function imgui.OnDrawFrame()
 					if key == "HelpDefault" then
 						for key_2, v_2 in pairs(questions[key]) do
 							if imgui.Button(key_2) then
-								if not elements.prefix_answer.v then
-									lua_thread.create(function()
-									local settext = '{FFFFFF}' .. v_2
-									sampSendDialogResponse(2349, 1, 0)
-									sampSendDialogResponse(2350, 1, 0)
-									wait(50)
-									sampSendDialogResponse(2351, 1, 0, settext)
-									wait(50)
-									sampCloseCurrentDialogWithButton(13)
-									end)
-								else
-									lua_thread.create(function()
-									local settext = '{FFFFFF}' .. v_2 .. ' ' .. color() .. u8:decode(config.main.prefix_for_answer)
-									sampSendDialogResponse(2349, 1, 0)
-									sampSendDialogResponse(2350, 1, 0)
-									wait(50)
-									sampSendDialogResponse(2351, 1, 0, settext)
-									wait(50)
-									sampCloseCurrentDialogWithButton(13)
-									end)
-								end
-								report_ans = 0
+								SendReport_Onclick('{FFFFFF}' .. v_2, pid_rep)
+								elements.select_category = 0
+								elements.select_menu = 0 
 							end
 						end
 					end
@@ -1132,28 +1064,9 @@ function imgui.OnDrawFrame()
 					if key == "HelpSkins" then
 						for key_2, v_2 in pairs(questions[key]) do
 							if imgui.Button(key_2) then
-								if not elements.prefix_answer.v then
-									lua_thread.create(function()
-									local settext = '{FFFFFF}' .. v_2
-									sampSendDialogResponse(2349, 1, 0)
-									sampSendDialogResponse(2350, 1, 0)
-									wait(50)
-									sampSendDialogResponse(2351, 1, 0, settext)
-									wait(50)
-									sampCloseCurrentDialogWithButton(13)
-									end)
-								else
-									lua_thread.create(function()
-									local settext = '{FFFFFF}' .. v_2 .. ' ' .. color() .. u8:decode(config.main.prefix_for_answer)
-									sampSendDialogResponse(2349, 1, 0)
-									sampSendDialogResponse(2350, 1, 0)
-									wait(50)
-									sampSendDialogResponse(2351, 1, 0, settext)
-									wait(50)
-									sampCloseCurrentDialogWithButton(13)
-									end)
-								end
-								report_ans = 0
+								SendReport_Onclick('{FFFFFF}' .. v_2, pid_rep)
+								elements.select_category = 0
+								elements.select_menu = 0 
 							 end
 						 end
 					end
@@ -1164,28 +1077,9 @@ function imgui.OnDrawFrame()
 					if key == "HelpSettings" then
 						for key_2, v_2 in pairs(questions[key]) do
 							if imgui.Button(key_2) then
-								if not elements.prefix_answer.v then
-									lua_thread.create(function()
-									local settext = '{FFFFFF}' .. v_2
-									sampSendDialogResponse(2349, 1, 0)
-									sampSendDialogResponse(2350, 1, 0)
-									wait(50)
-									sampSendDialogResponse(2351, 1, 0, settext)
-									wait(50)
-									sampCloseCurrentDialogWithButton(13)
-									end)
-								else
-									lua_thread.create(function()
-									local settext = '{FFFFFF}' .. v_2 .. ' ' .. color() .. u8:decode(config.main.prefix_for_answer)
-									sampSendDialogResponse(2349, 1, 0)
-									sampSendDialogResponse(2350, 1, 0)
-									wait(50)
-									sampSendDialogResponse(2351, 1, 0, settext)
-									wait(50)
-									sampCloseCurrentDialogWithButton(13)
-									end)
-								end
-								report_ans = 0
+								SendReport_Onclick('{FFFFFF}' .. v_2, pid_rep)
+								elements.select_category = 0
+								elements.select_menu = 0 
 							end
 						end
 					end
@@ -1196,28 +1090,9 @@ function imgui.OnDrawFrame()
 					if key == "HelpHouses" then
 						for key_2, v_2 in pairs(questions[key]) do
 							if imgui.Button(key_2) then
-								if not elements.prefix_answer.v then
-									lua_thread.create(function()
-									local settext = '{FFFFFF}' .. v_2
-									sampSendDialogResponse(2349, 1, 0)
-									sampSendDialogResponse(2350, 1, 0)
-									wait(50)
-									sampSendDialogResponse(2351, 1, 0, settext)
-									wait(50)
-									sampCloseCurrentDialogWithButton(13)
-									end)
-								else
-									lua_thread.create(function()
-									local settext = '{FFFFFF}' .. v_2 .. ' ' .. color() .. u8:decode(config.main.prefix_for_answer)
-									sampSendDialogResponse(2349, 1, 0)
-									sampSendDialogResponse(2350, 1, 0)
-									wait(50)
-									sampSendDialogResponse(2351, 1, 0, settext)
-									wait(50)
-									sampCloseCurrentDialogWithButton(13)
-									end)
-								end
-								report_ans = 0
+								SendReport_Onclick('{FFFFFF}' .. v_2, pid_rep)
+								elements.select_category = 0
+								elements.select_menu = 0 
 							end
 						end
 					end
@@ -1228,28 +1103,9 @@ function imgui.OnDrawFrame()
 					if key == "HelpBuz" then
 						for key_2, v_2 in pairs(questions[key]) do
 							if imgui.Button(key_2) then
-								if not elements.prefix_answer.v then
-									lua_thread.create(function()
-									local settext = '{FFFFFF}' .. v_2
-									sampSendDialogResponse(2349, 1, 0)
-									sampSendDialogResponse(2350, 1, 0)
-									wait(50)
-									sampSendDialogResponse(2351, 1, 0, settext)
-									wait(50)
-									sampCloseCurrentDialogWithButton(13)
-									end)
-								else
-									lua_thread.create(function()
-									local settext = '{FFFFFF}' .. v_2 .. ' ' .. color() .. u8:decode(config.main.prefix_for_answer)
-									sampSendDialogResponse(2349, 1, 0)
-									sampSendDialogResponse(2350, 1, 0)
-									wait(50)
-									sampSendDialogResponse(2351, 1, 0, settext)
-									wait(50)
-									sampCloseCurrentDialogWithButton(13)
-									end)
-								end
-								report_ans = 0
+								SendReport_Onclick('{FFFFFF}' .. v_2, pid_rep)
+								elements.select_category = 0
+								elements.select_menu = 0 
 							end
 						end
 					end
@@ -1350,4 +1206,42 @@ function SendBind_Report(num)
 			num = -1
 		end
 	end)
+end
+
+function SendReport_Onclick(dtext, player_id)
+	local prefix = u8:decode(config.main.prefix_for_answer)
+	if #dtext < 100 and (#dtext + #prefix) < 100 then 
+		lua_thread.create(function()
+			sampSendDialogResponse(2349, 1, 0)
+			wait(50)
+			sampSendDialogResponse(2350, 1, 0)
+			wait(50)
+			if elements.prefix_answer.v then 
+				sampSendDialogResponse(2351, 1, 0, dtext .. ' ' .. color() .. prefix) 
+			else 
+				sampSendDialogResponse(2351, 1, 0, dtext)
+			end
+			wait(50)
+			sampCloseCurrentDialogWithButton(13)
+		end)
+	else 
+		local half_length = math.floor(#dtext / 2)
+		local first_half = dtext:sub(1, half_length)
+		local second_half = dtext:sub(half_length+1)
+		sampSendDialogResponse(2349, 1, 0)
+		wait(50)
+		sampSendDialogResponse(2350, 1, 0)
+		wait(50)
+		sampSendDialogResponse(2351, 1, 0, first_half .. '...')
+		wait(50)
+		sampSendDialogResponse(2351, 1, 1, second_half)
+		wait(50)
+		sampCloseCurrentDialogWithButton(13)
+		wait(500)
+		if elements.prefix_answer.v then
+			sampSendChat('/ans ' .. player_id .. ' ...' .. second_half .. " " .. prefix)
+		else 
+			sampSendChat('/ans ' .. player_id .. ' ...' .. second_half)
+		end  
+	end
 end

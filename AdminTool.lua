@@ -158,7 +158,6 @@ local function downloadAll() -- функция для обновления скриптов
 		wait(10000)
 		sampAddChatMessage(tag .. 'Пакет AdminTool успешно обновлен. Перезагружаем скрипты.')
 		reloadScripts()
-
 	end)
 end
 
@@ -179,8 +178,9 @@ local upd_upvalue = { -- массив для регистрации выборочного обновления
 	events = imgui.ImBool(false),
 } 
 
-local script_stream = 5
-local script_version_text = "14.4"
+local script_stream = 6
+local script_version_text = "14.5"
+local check_update = false
 -- ## Регистрация ссылок для GitHub, переменных для обновления ## --
 
 -- ## Блок переменных связанных с конфигами и элементами взаимодействия с параметрами конфига ## --
@@ -221,6 +221,7 @@ local config = inicfg.load({
         styleImGUI = 0,
         font = 10,
 		auto_prefix = false,
+		automultiply = false,
     },
     colours = {
         render_admins = "{FFFFFF}",
@@ -239,6 +240,7 @@ local config = inicfg.load({
 		BackReconID = 'None',
 		SendRP = 'None',
 		SendRecon = 'None',
+		AgreeMute = 'Enter',
     },
     position = {
         reX = 0,
@@ -286,10 +288,15 @@ local elm = {
 		render_admins_imgui = imgui.ImBool(config.main.render_admins_imgui),
         auto_online = imgui.ImBool(config.main.auto_online),
 		auto_prefix = imgui.ImBool(config.main.auto_prefix),
+		automultiply = imgui.ImBool(config.main.automultiply),
 
 		-- ## Отдельные булевые значения ## --
 		access_scan = imgui.ImBool(config.access.scaning),
 		-- ## Отдельные булевые значения ## --
+
+		-- ## Булевые значения экспортированных скриптов ## --
+		prefix_answer = imgui.ImBool(configReports.main.prefix_answer),
+		-- ## Булевые значения экспортированных скриптов ## --
     },
     int = {
         styleImGUI = imgui.ImInt(config.main.styleImGUI),
@@ -426,6 +433,11 @@ local control_spawn = false
 local multiply_punish_frame = {}
 -- ## Переменные для системы выдачи наказаний ## -- 
 
+-- ## Переменные для контролирования входа/выхода игрока ## --
+local quitlogin_control = true 
+local players_control_frame = {}
+-- ## Переменные для контролирования входа/выхода игрока ## --
+
 function main()
     while not isSampAvailable() do wait(0) end
 
@@ -440,19 +452,7 @@ function main()
 						end
 						sampAddChatMessage(tag .. 'Доступно обновление. AT начинает автообновление!', -1)
 						sampAddChatMessage(tag .. 'Просьба, не взаимодействуйте с игрой, пока AT не завершит обновление', -1)
-						for i, v in pairs(urls) do  
-							downloadUrlToFile(v, paths[i], function(id, status)
-								if status == dlstatus.STATUS_ENDDOWNLOADDATA then  
-									sampfuncsLog(log .. 'Файл успешно скачен. Игнорируйте данное сообщение :D')
-								end
-							end)
-						end
-						if notf_res then  
-							showNotification('Пакет AdminTool обновлен.\nПерезагружаем скрипты.')
-						end  
-						sampAddChatMessage(tag .. 'Скрипты автоматически перезагружаться в течении 10 секунд.', -1)
-						wait(10000)
-						reloadScripts()
+						check_update = true
 					end)
 				else 
 					sampAddChatMessage(tag .. 'Доступно обновление. Если автообновление выключено, обновитесь в Настройках (/tool -> Настройки)')
@@ -547,15 +547,27 @@ function main()
 					end
 				end
 				if cmd_massive[key].cmd == "/mute" then  
-					if #multiply_punish_frame > 0 then 
-						for i, v in pairs(multiply_punish_frame) do  
-							if v:find(cmd_massive[key].reason) then  
-								if v:find(sampGetPlayerNickname(arg)) then  
-									splited = atlibs.textSplit(v, "~")
-									time_send = splited[3]
-									reason_send = splited[2]
+					if elm.boolean.automultiply.v then
+						current_time_hour, current_time_min, current_time_sec = string.match(os.date("%H:%M:%S"), "(%d+):(%d+):(%d+)")
+						current_time_full = tonumber(current_time_hour) * 3600 + tonumber(current_time_min) * 60 + tonumber(current_time_sec)
+						if #multiply_punish_frame > 0 then 
+							for i, v in pairs(multiply_punish_frame) do  
+								if v:find(cmd_massive[key].reason) then  
+									if v:find(sampGetPlayerNickname(arg)) then  
+										splited = atlibs.textSplit(v, "~")
+										time_stamp_send = splited[4]
+										hour, min, sec = string.match(time_stamp_send, "(%d+):(%d+):(%d+)")
+										fulltimestamp = tonumber(hour) * 3600 + tonumber(min) * 60 + tonumber(sec)
+										if current_time_full - fulltimestamp >= 30 then  
+											time_send = splited[3]
+											reason_send = splited[2]
+										else 
+											sampAddChatMessage(tag .. 'КД между мутом по множителю 30 секунд ради Вашей безопасности.', -1)
+											sampAddChatMessage(tag .. 'Мут по множителю выдается каждые 30 секунд.')
+										end 
+									end  
 								end  
-							end  
+							end
 						end
 					end
 					if time_send and reason_send then
@@ -573,15 +585,27 @@ function main()
 					end						
 				end
 				if cmd_massive[key].cmd == '/rmute' then  
-					if #multiply_punish_frame > 0 then 
-						for i, v in pairs(multiply_punish_frame) do  
-							if v:find(cmd_massive[key].reason) then  
-								if v:find(sampGetPlayerNickname(arg)) then  
-									splited = atlibs.textSplit(v, "~")
-									time_send = splited[3]
-									reason_send = splited[2]
+					if elm.boolean.automultiply.v then 
+						current_time_hour, current_time_min, current_time_sec = string.match(os.date("%H:%M:%S"), "(%d+):(%d+):(%d+)")
+						current_time_full = tonumber(current_time_hour) * 3600 + tonumber(current_time_min) * 60 + tonumber(current_time_sec)
+						if #multiply_punish_frame > 0 then 
+							for i, v in pairs(multiply_punish_frame) do  
+								if v:find(cmd_massive[key].reason) then  
+									if v:find(sampGetPlayerNickname(arg)) then  
+										splited = atlibs.textSplit(v, "~")
+										time_stamp_send = splited[4]
+										hour, min, sec = string.match(time_stamp_send, "(%d+):(%d+):(%d+)")
+										fulltimestamp = tonumber(hour) * 3600 + tonumber(min) * 60 + tonumber(sec)
+										if current_time_full - fulltimestamp >= 30 then  
+											time_send = splited[3]
+											reason_send = splited[2]
+										else 
+											sampAddChatMessage(tag .. 'КД между мутом по множителю 30 секунд ради Вашей безопасности.', -1)
+											sampAddChatMessage(tag .. 'Мут по множителю выдается каждые 30 секунд. Если КД не соблюдено, выдается стандартное наказание', -1)
+										end 
+									end  
 								end  
-							end  
+							end
 						end
 					end
 					if time_send and reason_send then
@@ -602,15 +626,27 @@ function main()
 					sampSendChat(cmd_massive[key].cmd .. " " .. arg .. " " .. cmd_massive[key].reason)
 				end 
 				if cmd_massive[key].cmd == '/jail' then  
-					if #multiply_punish_frame > 0 then 
-						for i, v in pairs(multiply_punish_frame) do  
-							if v:find(cmd_massive[key].reason) then  
-								if v:find(sampGetPlayerNickname(arg)) then  
-									splited = atlibs.textSplit(v, "~")
-									time_send = splited[3]
-									reason_send = splited[2]
+					if elm.boolean.automultiply.v then
+						current_time_hour, current_time_min, current_time_sec = string.match(os.date("%H:%M:%S"), "(%d+):(%d+):(%d+)")
+						current_time_full = tonumber(current_time_hour) * 3600 + tonumber(current_time_min) * 60 + tonumber(current_time_sec)
+						if #multiply_punish_frame > 0 then 
+							for i, v in pairs(multiply_punish_frame) do  
+								if v:find(cmd_massive[key].reason) then  
+									if v:find(sampGetPlayerNickname(arg)) then  
+										splited = atlibs.textSplit(v, "~")
+										time_stamp_send = splited[4]
+										hour, min, sec = string.match(time_stamp_send, "(%d+):(%d+):(%d+)")
+										fulltimestamp = tonumber(hour) * 3600 + tonumber(min) * 60 + tonumber(sec)
+										if current_time_full - fulltimestamp >= 30 then  
+											time_send = splited[3]
+											reason_send = splited[2]
+										else 
+											sampAddChatMessage(tag .. 'КД между мутом по множителю 30 секунд ради Вашей безопасности.', -1)
+											sampAddChatMessage(tag .. 'Мут по множителю выдается каждые 30 секунд.')
+										end 
+									end  
 								end  
-							end  
+							end
 						end
 					end
 					if time_send and reason_send then
@@ -627,7 +663,7 @@ function main()
 						end
 					end		
 				end
-				if cmd_massive[key].cmd == '/jailakk' or cmd_massive[key].cmd == '/offban' or cmd_massive[key].cmd == '/muteakk' then  
+				if cmd_massive[key].cmd == '/jailakk' or cmd_massive[key].cmd == '/offban' or cmd_massive[key].cmd == '/muteakk' or cmd_massive[key].cmd == '/rmuteakk' then  
 					sampSendChat(cmd_massive[key].cmd .. " " .. arg .. " " .. cmd_massive[key].time .. " " .. cmd_massive[key].reason)
 				end
 			else 
@@ -666,6 +702,18 @@ function main()
 			sampCloseCurrentDialogWithButton(0)
 		end)
 	end)
+	sampRegisterChatCommand('sl', function(id)
+		sampSendChat('/slap ' .. id)
+	end)
+	sampRegisterChatCommand('gh', function(id)
+		sampSendChat('/gethere ' .. id)
+	end)
+	sampRegisterChatCommand('ib', function(id)
+		sampSendChat('/iunban ' .. id)
+	end)
+	sampRegisterChatCommand('ubi', function(id)
+		sampSendChat('/unbanip ' .. id)
+	end)
 	sampRegisterChatCommand("akill", function(id)
 		lua_thread.create(function()
 			sampSendClickPlayer(id, 0)
@@ -681,6 +729,8 @@ function main()
 	sampRegisterChatCommand('devmassive', function()
 		for i, v in pairs(multiply_punish_frame) do  
 			sampAddChatMessage(v, -1)
+			splited = atlibs.textSplit(v, "~")
+			sampAddChatMessage(splited[4], -1)
 		end
 	end)
 
@@ -705,11 +755,42 @@ function main()
 		sampSendChat('/prefix ' .. arg .. ' Гл.Администратор ' .. prefix)
 	end)
 
+	sampRegisterChatCommand('checkoff', function(arg)
+		checking_control_on_frame = false
+		if #arg > 0 then  
+			if #players_control_frame > 0 then
+				for i, v in pairs(players_control_frame) do
+					if v:find(arg) then  
+						checking_control_on_frame = true
+					end 
+				end 
+			end
+			if checking_control_on_frame then
+				table.remove(players_control_frame, i)
+				sampAddChatMessage(tag .. 'Игрок ' .. arg .. ' убран из проверки на вход.', -1)
+			else
+				id_player = sampGetPlayerIdByNickname(arg)
+				if id_player ~= nil and sampIsPlayerConnected(id_player) then 
+					sampAddChatMessage(tag .. 'Данный игрок в сети! Его ID: ' .. id_player, -1)
+				else
+					sampAddChatMessage(tag .. 'Вы добавили ' .. arg .. ' в список проверки на вход.', -1)
+					table.insert(players_control_frame, arg)
+				end
+			end
+		else 
+			sampAddChatMessage(tag .. "Вы забыли ввести Nick игрока! ", -1)
+		end
+	end)
+
     -- ## Регистрация вспомогательных команд ## --
 
     while true do
         wait(0)
         imgui.Process = true 
+
+		if check_update then  
+			downloadAll()
+		end
 
         if control_spawn and elm.boolean.auto_login.v and not sampIsDialogActive() then  
             wait(10000)
@@ -821,6 +902,10 @@ function main()
 		if not sampIsPlayerConnected(recon_id) then
 			ATRecon.v = false
 			recon_id = -1
+			control_to_player = false
+			if other_res then
+				pother.ActivateKeySync("off")
+			end
 		end
 
         if not ATMenu.v and not ATRecon.v and not ATAdmins.v then  
@@ -861,7 +946,17 @@ function change_position_admins()
 end
 -- ## Блок рендерных функций, изменение их позиций и вывод ## -- 
 
--- ## Блок обработки ивентов и пакетов SA:MP ## -- 
+-- ## Блок обработки ивентов и пакетов SA:MP ## --
+function sampev.onPlayerJoin(id, color, npc, nickname)
+	if #players_control_frame > 0 then
+		for i, v in pairs(players_control_frame) do
+			if v == nickname then  
+				sampAddChatMessage(tag .. 'Игрок с ником ' .. v .. ' зашел в игру! Его ID: ' .. id, -1)
+			end 
+		end
+	end
+end
+
 function sampev.onShowDialog(id, style, title, button1, button2, text)
 	if title == "Mobile" then -- сюда айди нужного диалога
 		if ATRecon.v then 
@@ -1009,45 +1104,61 @@ function sampev.onServerMessage(color, text)
 		end	
 	return true 
 	end	
-	if text:find("Администратор .+ заткнул%(.+%) игрока .+ на .+ секунд. Причина: .+") or text:find("Администратор .+ посадил%(.+%) игрока .+ в тюрьму на .+ секунд. Причина: .+") or text:find("Администратор .+ закрыл%(.+%) доступ к репорту игроку .+ на .+ секунд. Причина: .+") then  
-		if text:find('заткнул') then  
-			_, nick_player, time, m_reason = text:match("Администратор (.+) заткнул%(.+%) игрока (.+) на (.+) секунд. Причина: (.+)")
-		elseif text:find('посадил') then  
-			_, nick_player, time, m_reason = text:match("Администратор (.+) посадил%(.+%) игрока (.+) в тюрьму на (.+) секунд. Причина: (.+)")
-		elseif text:find('закрыл%(.+%) доступ к репорту игроку') then
-			_, nick_player, time, m_reason = text:match("Администратор (.+) закрыл%(.+%) доступ к репорту игроку (.+) на (.+) секунд. Причина: (.+)")
-		end
-		for key in pairs(cmd_massive) do
-			if cmd_massive[key].reason == m_reason and cmd_massive[key].multi == true then   
-				found = false
-				changed = false
-				if #multiply_punish_frame > 0 then  
-					for i, v in pairs(multiply_punish_frame) do  
-						if v:find(nick_player) and v:find(m_reason) then  
-							keying = i
-							if not changed then 
-								sampAddChatMessage(tag .. 'Автоматически фиксирую следующее наказание по множителю для игрока: ' .. nick_player, -1)
-								changed = true
-							end 
-							multiply_punish_frame[i] = nick_player .. "~" .. m_reason .. "~" .. tonumber(time)+tonumber(cmd_massive[key].time)
-							found = true
-							break
-						end 
-					end 
-					if not found then  
-						table.insert(multiply_punish_frame, nick_player .. "~" .. m_reason .. "~" .. tonumber(time)+tonumber(cmd_massive[key].time))
-						if not changed then  
-							sampAddChatMessage(tag .. 'Автоматически фиксирую следующее наказание по множителю для игрока: ' .. nick_player, -1)
-							changed = true  
-						end
-					end
-				else 
-					sampAddChatMessage(tag .. 'Автоматически фиксирую следующее наказание по множителю для игрока: ' .. nick_player, -1)					
-					table.insert(multiply_punish_frame, nick_player .. "~" .. m_reason .. "~" .. tonumber(time)+tonumber(cmd_massive[key].time))
-				end
-				break
+	if elm.boolean.automultiply.v then
+		if text:find("Администратор .+ заткнул%(.+%) игрока .+ на .+ секунд. Причина: .+") or text:find("Администратор .+ посадил%(.+%) игрока .+ в тюрьму на .+ секунд. Причина: .+") or text:find("Администратор .+ закрыл%(.+%) доступ к репорту игроку .+ на .+ секунд. Причина: .+") then  
+			if text:find('заткнул') then  
+				_, nick_player, time, m_reason = text:match("Администратор (.+) заткнул%(.+%) игрока (.+) на (.+) секунд. Причина: (.+)")
+			elseif text:find('посадил') then  
+				_, nick_player, time, m_reason = text:match("Администратор (.+) посадил%(.+%) игрока (.+) в тюрьму на (.+) секунд. Причина: (.+)")
+			elseif text:find('закрыл%(.+%) доступ к репорту игроку') then
+				_, nick_player, time, m_reason = text:match("Администратор (.+) закрыл%(.+%) доступ к репорту игроку (.+) на (.+) секунд. Причина: (.+)")
 			end
-		end  
+			lua_thread.create(function()
+				for key in pairs(cmd_massive) do
+					if cmd_massive[key].reason == m_reason and cmd_massive[key].multi == true then   
+						found = false
+						changed = false
+						current_time_hour, current_time_min, current_time_sec = string.match(os.date("%H:%M:%S"), "(%d+):(%d+):(%d+)")
+						current_time_full = tonumber(current_time_hour) * 3600 + tonumber(current_time_min) * 60 + tonumber(current_time_sec)
+						if #multiply_punish_frame > 0 then  
+							for i, v in pairs(multiply_punish_frame) do  
+								if v:find(nick_player) and v:find(m_reason) then  
+									if v:find("%d+:%d+:%d+") then
+										time_stamp = v:match("%d+:%d+:%d+")
+										hour, min, sec = string.match(time_stamp, "(%d+):(%d+):(%d+)")
+										fulltimestamp = tonumber(hour) * 3600 + tonumber(min) * 60 + tonumber(sec)
+										if current_time_full - fulltimestamp >= 30 then 
+											keying = i
+											if not changed then 
+												sampAddChatMessage(tag .. 'Автоматически фиксирую следующее наказание по множителю для игрока: ' .. nick_player, -1)
+												changed = true
+											end 
+											multiply_punish_frame[i] = nick_player .. "~" .. m_reason .. "~" .. tonumber(time)+tonumber(cmd_massive[key].time) .. "~" .. os.date("%H:%M:%S")
+											found = true
+											break
+										else 
+											found = true  
+											break
+										end
+									end
+								end 
+							end 
+							if not found then  
+								table.insert(multiply_punish_frame, nick_player .. "~" .. m_reason .. "~" .. tonumber(time)+tonumber(cmd_massive[key].time) .. "~" .. os.date("%H:%M:%S"))
+								if not changed then  
+									sampAddChatMessage(tag .. 'Автоматически фиксирую следующее наказание по множителю для игрока: ' .. nick_player, -1)
+									changed = true  
+								end
+							end
+						else 
+							sampAddChatMessage(tag .. 'Автоматически фиксирую следующее наказание по множителю для игрока: ' .. nick_player, -1)					
+							table.insert(multiply_punish_frame, nick_player .. "~" .. m_reason .. "~" .. tonumber(time)+tonumber(cmd_massive[key].time) .. "~" .. os.date("%H:%M:%S"))
+						end
+						break
+					end
+				end  
+			end)
+		end
 	end
     if text:find("Вы успешно авторизовались!") then  
 		if elm.boolean.auto_login.v then 
@@ -1075,7 +1186,9 @@ function sampev.onDisplayGameText(style, time, text)
         ATRecon.v = false  
         imgui.Process = ATRecon.v
         imgui.ShowCursor = false  
-		pother.ActivateKeySync("off") 
+		if other_res then
+			pother.ActivateKeySync("off") 
+		end
         recon_id = -1
 	end
 	if text == "~y~REPORT++" then  
@@ -1532,10 +1645,16 @@ function imgui.OnDrawFrame()
 					config.main.takereport = elm.boolean.takereport.v  
 					ConfigSave()
 				end
-				imgui.Text(fai.ICON_FA_USER_MINUS .. u8' Авто-префикс'); ; imgui.Tooltip(u8'Автоматически выдает префиксы всем тем, у кого их нет. Для работы, введите /admins\n\nЦвета указывать в Настройках и строго в формате {RRGGBB}. Пример: {FF00FF}')
+				imgui.Text(fai.ICON_FA_USER_MINUS .. u8' Авто-префикс'); imgui.Tooltip(u8'Автоматически выдает префиксы всем тем, у кого их нет. Для работы, введите /admins\n\nЦвета указывать в Настройках и строго в формате {RRGGBB}. Пример: {FF00FF}')
 				imgui.SameLine()
 				if imgui.ToggleButton('##AutoPrefixGive', elm.boolean.auto_prefix) then  
 					config.main.auto_prefix = elm.boolean.auto_prefix.v  
+					ConfigSave()
+				end
+				imgui.Text(fai.ICON_FA_USER_TIMES .. u8' Авто-множитель'); imgui.Tooltip(u8'Автоматически считает множитель при выдаче одного и того же наказания одному и тому же пользователю.')
+				imgui.SameLine()
+				if imgui.ToggleButton('##AutoMultiplier', elm.boolean.automultiply) then
+					config.main.automultiply = elm.boolean.automultiply.v
 					ConfigSave()
 				end
             imgui.NextColumn()
@@ -1715,6 +1834,26 @@ function imgui.OnDrawFrame()
                 config.keys.SendRecon = "None"
                 ConfigSave()
             end
+			imgui.Separator()
+			imgui.Text(u8'Подтверждение автомута:  ')
+			imgui.SameLine()
+			if tonumber(config.keys.AgreeMute) then  
+				imgui.Text(tostring(config.keys.AgreeMute))
+			else 
+				imgui.Text(config.keys.AgreeMute)
+			end  
+			imgui.SameLine()
+			imgui.SetCursorPosX(imgui.GetWindowWidth() - 200)
+			if imgui.Button(u8"Записать ##9", imgui.ImVec2(75,0)) then  
+				config.keys.AgreeMute = atlibs.getDownKeysText()
+				ConfigSave()
+			end  
+			imgui.SameLine()
+			if imgui.Button(u8"Очистить ##9") then  
+				config.keys.AgreeMute = "None"
+				ConfigSave()
+			end
+			imgui.Separator()
         end
 
         if menuSelect == 3 then  
@@ -1725,8 +1864,11 @@ function imgui.OnDrawFrame()
             if imgui.TreeNode(u8"Наказания в онлайне") then 
                 if imgui.TreeNode("Ban") then  
 					for key in pairs(cmd_massive) do  
-						if cmd_massive[key].cmd == '/iban' or cmd_massive[key].cmd == '/ban' then  
+						if cmd_massive[key].cmd == '/iban' or cmd_massive[key].cmd == '/ban' or cmd_massive[key].cmd == '/siban' or cmd_massive[key].cmd == '/sban'then  
 							imgui.TextWrapped(u8'/'..key..u8' [ID] - ' .. u8(cmd_massive[key].reason))
+							if cmd_massive[key].tip then  
+								imgui.TextWrapped(u8('		' ..cmd_massive[key].tip))
+							end
 						end 
 					end 
                     imgui.TreePop()
@@ -1740,14 +1882,22 @@ function imgui.OnDrawFrame()
 
                     imgui.TreePop()
                 end
-                if imgui.TreeNode("Mute") then  
+                if imgui.TreeNode(u8"Mute за обычный чат") then  
 					for key in pairs(cmd_massive) do
-						if cmd_massive[key].cmd == "/mute" or cmd_massive[key].cmd == '/rmute' then
+						if cmd_massive[key].cmd == "/mute" then
 							imgui.TextWrapped(u8'/'..key..u8' [ID] - ' .. u8(cmd_massive[key].reason))
 						end
 					end
                     imgui.TreePop()
                 end
+				if imgui.TreeNode(u8'Mute за репорт') then  
+					for key in pairs(cmd_massive) do  
+						if cmd_massive[key].cmd == "/rmute" then  
+							imgui.TextWrapped(u8'/'..key..u8' [ID] - ' .. u8(cmd_massive[key].reason))
+						end 
+					end 
+					imgui.TreePop()
+				end
                 if imgui.TreeNode("Kick") then  
 					for key in pairs(cmd_massive) do
 						if cmd_massive[key].cmd == "/kick" then
@@ -1776,7 +1926,7 @@ function imgui.OnDrawFrame()
 					end
                     imgui.TreePop()
                 end
-                if imgui.TreeNode("Mute") then  
+                if imgui.TreeNode(u8"Mute за обычный чат") then  
 					for key in pairs(cmd_massive) do
 						if cmd_massive[key].cmd == "/muteakk" then
 							imgui.TextWrapped(u8'/'..key..u8' [NickName] - ' .. u8(cmd_massive[key].reason))
@@ -1784,19 +1934,30 @@ function imgui.OnDrawFrame()
 					end
                     imgui.TreePop()
                 end
+				if imgui.TreeNode(u8"Mute за репорт") then  
+					for key in pairs(cmd_massive) do
+						if cmd_massive[key].cmd == "/rmuteakk" then
+							imgui.TextWrapped(u8'/'..key..u8' [NickName] - ' .. u8(cmd_massive[key].reason))
+						end
+					end
+					imgui.TreePop()
+				end
                 imgui.TreePop()
             end
 
 			if imgui.TreeNode(u8"Быстрые ответы (сокр.)") then  
 				for key in pairs(cmd_helper_answers) do  
-					imgui.TextWrapped(u8'/' .. key .. u8' ' .. u8(cmd_helper_answers[key].reason))
+					imgui.TextWrapped(u8'/'..key..u8' [ID] - ' .. u8(cmd_helper_answers[key].reason))
 				end
 				imgui.TreePop()
 			end
 
             if imgui.TreeNode(u8"Дополнительные команды AT") then  
 				for key in pairs(cmd_helper_others) do 
-					imgui.TextWrapped(u8'/' .. key .. u8' ' .. u8(cmd_helper_others[key].reason))
+					imgui.TextWrapped(u8'/'..key..u8' ' .. u8(cmd_helper_others[key].reason))
+					if cmd_helper_others[key].tip then  
+						imgui.TextWrapped(u8(cmd_helper_others[key].tip))
+					end
 				end
                 imgui.TreePop()
             end
@@ -1951,6 +2112,12 @@ function imgui.OnDrawFrame()
 			imgui.Text(u8"Префикс для ответа в /ans: ")
 			if imgui.InputText("##EditPrefixForAnswer", elm.binder.reports.prefix) then  
 				configReports.main.prefix_for_answer = elm.binder.reports.prefix.v  
+				inicfg.save(configReports, directReports)
+			end
+			imgui.Text(u8'Включение/Выключение подстановки префикса в /ans')
+			imgui.SameLine()
+			if imgui.ToggleButton('##PrefixForAnswer', elm.boolean.prefix_answer) then
+				configReports.main.prefix_answer = elm.boolean.prefix_answer.v 
 				inicfg.save(configReports, directReports)
 			end
 			imgui.Separator()
@@ -2986,5 +3153,16 @@ function ActivateFlood(num)
 			num = -1
 		end
 	end)
+end
+
+function sampGetPlayerIdByNickname(nick)
+	nick = tostring(nick)
+	local _, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
+	if nick == sampGetPlayerNickname(myid) then return myid end
+	for i = 0, 1003 do
+	  if sampIsPlayerConnected(i) and sampGetPlayerNickname(i) == nick then
+		return i
+	  end
+	end
 end
 -- ## Блок активирующихся функций в процессе скрипта и различных взаимодействий с ним ## --
