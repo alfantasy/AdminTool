@@ -33,6 +33,8 @@ end
 -- ## Регистрация уведомлений ## --
 
 -- ## Блок для работы с конфигом и его переменными ## --
+local main_config = inicfg.load(nil, "AdminTool\\settings.ini")
+
 local directoryAM = getWorkingDirectory() .. "\\config\\AdminTool\\AutoMute"
 local directIni = "AdminTool\\amsettings.ini"
 local config = inicfg.load({
@@ -55,6 +57,7 @@ local elements = {
         automute_upom = imgui.ImBool(config.settings.automute_upom),
         automute_oadm = imgui.ImBool(config.settings.automute_oadm),
         agree_mute = imgui.ImBool(config.settings.agree_mute),
+        ButtonAgreeMute = 'None',
     },
     imgui = {
         selectable = 0,
@@ -177,7 +180,7 @@ function sampev.onServerMessage(color, text)
                             showNotification('Для подтверждения мута, нажмите Enter')
                             while os.time() - startTime < timeLimit do 
                                 wait(0)
-                                if isKeyJustPressed(VK_RETURN) then 
+                                if isKeyJustPressed(atlibs.strToIdKeys(main_config.keys.AgreeMute)) then 
                                     sampSendChat("/rmute " .. id_rep .. " 300 Нецензурная лексика")
                                     showNotification("Нарушитель: " .. nick_rep .. "[" .. id_rep .. "] \n Замучен за 'мат'. \n Его текст: " .. text_rep)
                                 end 
@@ -202,7 +205,7 @@ function sampev.onServerMessage(color, text)
                             showNotification('Для подтверждения мута, нажмите Enter')
                             while os.time() - startTime < timeLimit do 
                                 wait(0)
-                                if isKeyJustPressed(VK_RETURN) then 
+                                if isKeyJustPressed(atlibs.strToIdKeys(main_config.keys.AgreeMute)) then 
                                     sampSendChat("/rmute " .. id_rep .. " 400 Оск/Униж.")
                                     showNotification("Нарушитель: " .. nick_rep .. "[" .. id_rep .. "] \n Замучен за 'Оскорбление/Унижение'. \n Его текст: " .. text_rep)
                                 end 
@@ -227,7 +230,7 @@ function sampev.onServerMessage(color, text)
                             showNotification('Для подтверждения мута, нажмите Enter')
                             while os.time() - startTime < timeLimit do 
                                 wait(0)
-                                if isKeyJustPressed(VK_RETURN) then 
+                                if isKeyJustPressed(atlibs.strToIdKeys(main_config.keys.AgreeMute)) then 
                                     sampSendChat("/rmute " .. id_rep .. " 1000 Упом.стор.проектов")
                                     showNotification("Нарушитель: " .. nick_rep .. "[" .. id_rep .. "] \n Замучен за 'Упом.стор.проектов'. \n Его текст: " .. text_rep)
                                 end 
@@ -252,7 +255,7 @@ function sampev.onServerMessage(color, text)
                             showNotification('Для подтверждения мута, нажмите Enter')
                             while os.time() - startTime < timeLimit do 
                                 wait(0)
-                                if isKeyJustPressed(VK_RETURN) then 
+                                if isKeyJustPressed(atlibs.strToIdKeys(main_config.keys.AgreeMute)) then 
                                     sampSendChat("/rmute " .. id_rep .. " 5000 Оск/Униж. родных")
                                     showNotification("Нарушитель: " .. nick_rep .. "[" .. id_rep .. "] \n Замучен за 'Оскорбление/Унижение родных'. \n Его текст: " .. text_rep)
                                 end 
@@ -277,7 +280,7 @@ function sampev.onServerMessage(color, text)
                             showNotification('Для подтверждения мута, нажмите Enter')
                             while os.time() - startTime < timeLimit do
                                 wait(0)
-                                if isKeyJustPressed(VK_RETURN) then
+                                if isKeyJustPressed(atlibs.strToIdKeys(main_config.keys.AgreeMute)) then
                                     sampSendChat("/rmute " .. id_rep .. " 2500 Оск/Униж. адм")
                                     showNotification("Нарушитель: " .. nick_rep .. "[" .. id_rep .. "] \n Замучен за 'Оскорбление/Унижение администраторов'. \n Его текст: " .. text_rep)
                                 end
@@ -316,7 +319,7 @@ function sampev.onServerMessage(color, text)
                         showNotification('Для подтверждения мута, нажмите Enter')
                         while os.time() - startTime < timeLimit do 
                             wait(0)
-                            if isKeyJustPressed(VK_RETURN) then 
+                            if isKeyJustPressed(atlibs.strToIdKeys(main_config.keys.AgreeMute)) then 
                                 sampSendChat("/mute " .. check_id .. " 300 Нецензурная лексика")
                                 showNotification("Нарушитель: " .. check_nick .. "[" .. check_id .. "] \n Замучен за 'мат'. \n Его текст: " .. check_text)
                                 break 
@@ -342,7 +345,7 @@ function sampev.onServerMessage(color, text)
                         showNotification('Для подтверждения мута, нажмите Enter')
                         while os.time() - startTime < timeLimit do 
                             wait(0)
-                            if isKeyJustPressed(VK_RETURN) then  
+                            if isKeyJustPressed(atlibs.strToIdKeys(main_config.keys.AgreeMute)) then  
                                 sampSendChat("/mute " .. check_id .. " 400 Оск/Униж.")
                                 showNotification("Нарушитель: " .. check_nick .. "[" .. check_id .. "] \n Замучен за 'Оскорбление/Унижение'. \n Его текст: " .. check_text)
                                 break
@@ -368,7 +371,7 @@ function sampev.onServerMessage(color, text)
                         showNotification('Для подтверждения мута, нажмите Enter')
                         while os.time() - startTime < timeLimit do 
                             wait(0)
-                            if isKeyJustPressed(VK_RETURN) then 
+                            if isKeyJustPressed(atlibs.strToIdKeys(main_config.keys.AgreeMute)) then 
                                 sampSendChat("/mute " .. check_id .. " 1000 Упом.стор.проектов")
                                 showNotification("Нарушитель: " .. check_nick .. "[" .. check_id .. "] \n Замучен за 'Упом.стор.проектов'. \n Его текст: " .. check_text)
                                 break
@@ -394,7 +397,7 @@ function sampev.onServerMessage(color, text)
                         showNotification('Для подтверждения мута, нажмите Enter')
                         while os.time() - startTime < timeLimit do 
                             wait(0)
-                            if isKeyJustPressed(VK_RETURN) then 
+                            if isKeyJustPressed(atlibs.strToIdKeys(main_config.keys.AgreeMute)) then 
                                 sampSendChat("/mute " .. check_id .. " 5000 Оск/Униж. родных")
                                 showNotification("Нарушитель: " .. check_nick .. "[" .. check_id .. "] \n Замучен за 'Оскорбление/Унижение родных'. \n Его текст: " .. check_text)
                                 break
@@ -420,7 +423,7 @@ function sampev.onServerMessage(color, text)
                         showNotification('Для подтверждения мута, нажмите Enter')
                         while os.time() - startTime < timeLimit do
                             wait(0)
-                            if isKeyJustPressed(VK_RETURN) then
+                            if isKeyJustPressed(atlibs.strToIdKeys(main_config.keys.AgreeMute)) then
                                 sampSendChat("/mute " .. check_id .. " 2500 Оск/Униж. адм")
                                 showNotification("Нарушитель: " .. check_nick .. "[" .. check_id .. "] \n Замучен за 'Оскорбление/Унижение адм'. \n Его текст: " .. check_text)
                                 break

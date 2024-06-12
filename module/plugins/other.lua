@@ -330,11 +330,15 @@ function main()
 
 		imgui.Process = true
 
-		if not elements.boolean.skey.v and not key_helper.v then  
-			key_helper.v = false
+		if not elements.boolean.skey.v then  
 			elements.boolean.skey.v = false  
 			imgui.ShowCursor = false 
 			imgui.Process = false 
+		end
+
+		if not key_helper.v then  
+			imgui.ShowCursor = false  
+			imgui.Process = true  
 		end
 
 		change_pos_keysync()
@@ -922,7 +926,7 @@ function imgui.OnDrawFrame()
 								sampSetChatInputText("/" .. key)
 							end
 						end
-						if cmd_massive[key].cmd == '/iban' or cmd_massive[key].cmd == '/ban' then  
+						if cmd_massive[key].cmd == '/iban' or cmd_massive[key].cmd == '/ban' or cmd_massive[key].cmd == '/siban' or cmd_massive[key].cmd == '/sban' then  
 							imgui.Text('Ban: /' .. key .. u8 " [ID игрока] - " .. u8:encode(cmd_massive[key].reason))
 							if imgui.IsItemClicked() then  
 								sampSetChatInputText("/" .. key)
@@ -946,6 +950,12 @@ function imgui.OnDrawFrame()
 								sampSetChatInputText("/" .. key)
 							end
 						end  
+						if cmd_massive[key].cmd == '/rmuteakk' then
+							imgui.Text('Report Mute OffLine: /' .. key .. u8" [Ник игрока] - " .. u8:encode(cmd_massive[key].reason))
+							if imgui.IsItemClicked() then  
+								sampSetChatInputText("/" .. key)
+							end
+						end
 						if cmd_massive[key].cmd == '/jailakk' then
 							imgui.Text('Jail OffLine: /' .. key .. u8" [Ник игрока] - " .. u8:encode(cmd_massive[key].reason))
 							if imgui.IsItemClicked() then  
@@ -984,7 +994,7 @@ function imgui.OnDrawFrame()
 				end
 			else
 				for key, v in pairs(cmd_massive) do 
-					if cmd_massive[key].cmd == '/iban' or cmd_massive[key].cmd == '/ban' then  
+					if cmd_massive[key].cmd == '/iban' or cmd_massive[key].cmd == '/ban' or cmd_massive[key].cmd == '/siban' or cmd_massive[key].cmd == '/sban' then  
 						imgui.Text('Ban: /' .. key .. u8 " [ID игрока] - " .. u8:encode(cmd_massive[key].reason))
 						if imgui.IsItemClicked() then  
 							sampSetChatInputText("/" .. key)
@@ -1038,6 +1048,12 @@ function imgui.OnDrawFrame()
 							sampSetChatInputText("/" .. key)
 						end
 					end 
+					if cmd_massive[key].cmd == '/rmuteakk' then
+						imgui.Text('Report Mute OffLine: /' .. key .. u8" [Ник игрока] - " .. u8:encode(cmd_massive[key].reason))
+						if imgui.IsItemClicked() then  
+							sampSetChatInputText("/" .. key)
+						end
+					end
 				end
 				for key, v in pairs(cmd_helper_others) do  
 					imgui.Text('/' .. key .. u8:encode(cmd_helper_others[key].reason))

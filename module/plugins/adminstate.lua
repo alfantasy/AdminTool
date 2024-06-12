@@ -203,6 +203,16 @@ function sampev.onServerMessage(color, text)
             return true
         end	
 
+        if text:find('Администратор (.+) закрыл%(.+%) доступ к репорту игроку .+ на .+ секунд. Причина: .+')  then
+            amd_nick = text:match('Администратор (.+) закрыл%(.+%) доступ к репорту игроку .+ на .+ секунд. Причина: .+') 
+            if amd_nick:find(getMyNick()) then
+                config.adminstate.dayMute = config.adminstate.dayMute + 1 
+                varstate.LMute = varstate.LMute + 1 
+                save()
+            end
+            return true
+        end
+
         if text:find("Администратор .+ заткнул%(.+%) игрока .+ на .+ секунд. Причина: .+") then  
             amd_nick = text:match('Администратор (.+) заткнул%(.+%) игрока .+ на .+ секунд. Причина: .+') 
             if amd_nick:find(getMyNick()) then
@@ -232,6 +242,16 @@ function sampev.onServerMessage(color, text)
             end  
             return true 
         end 
+
+        if text:find("Администратор .+ забанил%(.+%) игрока .+ в оффлайне на .+ дней. Причина: .+") then  
+            amd_nick = text:match('Администратор (.+) забанил%(.+%) игрока .+ в оффлайне на .+ дней. Причина: .+')
+            if amd_nick:find(getMyNick()) then
+                config.adminstate.dayBan = config.adminstate.dayBan + 1
+                varstate.LBan = varstate.LBan + 1
+                save()
+            end
+            return true
+        end
 
         if text:find("Администратор .+ кикнул игрока .+. Причина: .+") then  
             amd_nick = text:match('Администратор (.+) кикнул игрока .+. Причина: .+') 
