@@ -332,13 +332,10 @@ function main()
 
 		if not elements.boolean.skey.v then  
 			elements.boolean.skey.v = false  
-			imgui.ShowCursor = false 
-			imgui.Process = false 
-		end
-
-		if not key_helper.v then  
-			imgui.ShowCursor = false  
-			imgui.Process = true  
+			if not key_helper.v then  
+				imgui.ShowCursor = false  
+				imgui.Process = false  
+			end 
 		end
 
 		change_pos_keysync()
