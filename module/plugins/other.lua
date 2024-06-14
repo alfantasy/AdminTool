@@ -302,7 +302,6 @@ function main()
 				sampAddChatMessage(tag .. 'Синхронизация клавиш отключена.', -1)
 				target = -1 
 				elements.boolean.skey.v = false  
-				imgui.Process = false  
 				return  
 			else 
 				playerId = tonumber(playerId)
@@ -422,7 +421,6 @@ function EXPORTS.ActivateKeySync(playerId)
 		if playerId == "off" then  
 			target = -1
 			elements.boolean.skey.v = false  
-			imgui.Process = false  
 			return  
 		else 
 			playerId = tonumber(playerId)
