@@ -1,7 +1,6 @@
 require 'lib.moonloader'
 local encoding = require 'encoding' -- работа с кодировкой
 local dlstatus = require('moonloader').download_status -- работа с скачиванием различных файлов при помощи URL
-local notf_res, notf = pcall(import, 'lib/imgui_notf.lua')  -- плагин уведомлений
 local imgui = require 'imgui' -- MoonImGUI || Пользовательский интерфейс
 local inicfg = require 'inicfg' -- работа с INI файлами
 local atlibs = require 'libsfor' -- библиотека для работы с АТ
@@ -10,9 +9,8 @@ local fai = require "fAwesome5" -- работа с иконками Font Awesome 5
 local fa = require 'faicons' -- работа с иконками Font Awesome 4
 
 -- ## Блок текстовых переменных ## --
-local tag = "{00BFFF} [IFS-Binder] {FFFFFF}" -- тэг AT
-local log = "{00BFFF} [IFS-Log] {FFFFFF}" -- тэг лога АТ
-local ntag = "{00BFFF} Notf - AdminTool" -- тэг уведомлений АТ
+local tag = "{980202} [IFS-Binder] {FFFFFF}" -- тэг AT
+local log = "{980202} [IFS-Log] {FFFFFF}" -- тэг лога АТ
 encoding.default = 'CP1251' -- смена кодировки на CP1251
 u8 = encoding.UTF8 -- переименовка стандтартного режима кодировки UTF8 - u8
 -- ## Блок текстовых переменных ## --
@@ -20,8 +18,11 @@ u8 = encoding.UTF8 -- переименовка стандтартного режима кодировки UTF8 - u8
 -- ## GitHub ## --
 local url = "https://raw.githubusercontent.com/alfantasy/AdminTool/main/IFSBinder.lua"
 local url_update = 'https://raw.githubusercontent.com/alfantasy/AdminTool/main/upbinder.ini'
+local url_library = 'https://raw.githubusercontent.com/alfantasy/AdminTool/main/libsfor.lua'
+
 local locate_binder = getWorkingDirectory() .. "/IFSBinder.lua"
 local locate_update = getWorkingDirectory() .. "/upbinder.ini"
+local locate_library = getWorkingDirectory() .. "/lib/libsfor.lua"
 
 local check_update_binder = false
 local version = 1
@@ -86,12 +87,13 @@ end
 local function downloadUpdateBinder()
     lua_thread.create(function()
         downloadUrlToFile(url, locate_binder, function(id, status)
-            if status == dlstatus.STATUS_ENDDOWNLOADDATA then
-                sampAddChatMessage(tag .. 'Обновление завершено. Перезагружаю скрипты.')
-            end 
-            wait(5000)
-            reloadScripts()
+            sampAddChatMessage(tag .. 'Обновление биндера скачено. Скачиваю библиотеку.', -1)
         end)
+        downloadUrlToFile(url_library, locate_library, function(id, status)
+            sampAddChatMessage(tag .. 'Библиотека скачена. Обновление завершено. Перезагрузка скриптов.', -1)
+        end)
+        wait(5000)
+        reloadScripts()
     end) 
 end
 
