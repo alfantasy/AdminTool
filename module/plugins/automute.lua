@@ -160,7 +160,7 @@ function sampev.onServerMessage(color, text)
         if text:find("Жалоба (.+) | {AFAFAF}(.+)%[(%d+)%]: (.+)") then  
             number_report, nick_rep, id_rep, text_rep = text:match("Жалоба (.+) | {AFAFAF}(.+)%[(%d+)%]: (.+)") 
             sampAddChatMessage(tag .. "Пришел репорт " .. number_report .. " от " .. nick_rep .. "[" .. id_rep .. "]: " .. text_rep, -1)
-            if elements.settings.automute_mat.v or elements.settings.automute_osk.v or elements.settings.automute_rod.v or elements.settings.automute_rod.v then  
+            if elements.settings.automute_mat.v or elements.settings.automute_osk.v or elements.settings.automute_rod.v or elements.settings.automute_upom.v or elements.settings.automute_oadm.v then  
                 local mat_text, _ = checkMessage(text_rep, 1)
                 local osk_text, _ = checkMessage(text_rep, 2)
                 local upom_text, _ = checkMessage(text_rep, 3)
@@ -621,16 +621,16 @@ function delete_upom(param)
     if param == nil then
         return false
     end
-    local file_read, file_read = io.open(directoryAM.. "\\upom.txt", "w"), 1
+    local file_write, file_read = io.open(directoryAM.. "\\upom.txt", "w"), 1
     for i, val in ipairs(onscene_upom) do
         if val == atlibs.string_rlower(param) then
             onscene_upom[i] = nil
             control_onscene_upom = true
         else
-            file_read:write(val .. "\n")
+            file_write:write(val .. "\n")
         end
     end
-    file_read:close()
+    file_write:close()
     if control_onscene_upom then
         sampAddChatMessage(tag .. " Фраза \"" .. atlibs.string_rlower(param) .. "\" была успешно удалено из списка фраз упоминаний сторонних проектов.")
         control_onscene_upom = false
@@ -975,7 +975,7 @@ function EXPORTS.ReadWriteAM()
                     delete_oadm(u8:decode(elements.imgui.input_word.v))
                 end
                 imgui.Separator()
-                elements.imgui.stream.v = check_files_automute("oskoadm")
+                elements.imgui.stream.v = check_files_automute("oadm")
                 for line in elements.imgui.stream.v:gmatch("[^\r\n]+") do
                     imgui.Text(u8(line))
                 end

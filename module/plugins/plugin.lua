@@ -160,8 +160,7 @@ local reasons = {
 
 function sampev.onServerMessage(color, text)
 
-    local lc_lvl, lc_adm, lc_color, lc_nick, lc_id, lc_text = text:match("%[A%-(%d+)%] %((.+){(.+)}%) (.+)%[(%d+)%]: {FFFFFF}(.+)")
-
+    lc_lvl, lc_adm, lc_color, lc_nick, lc_id, lc_text = text:match("%[A%-(%d+)%] %((.+){(.+)}%) (.+)%[(%d+)%]: {FFFFFF}(.+)")
     local check_string = string.match(text, "[^%s]+")
 
     -- ## –абота с административными формами ## --
@@ -220,7 +219,6 @@ function sampev.onServerMessage(color, text)
             value_pos = every_settings.admin_chat.X
         end
 
-
         thread = ease(0, 1, nil, 1.0, "linear", function(v)
             value = v
         end)
@@ -233,15 +231,17 @@ function sampev.onServerMessage(color, text)
 		if elements.boolean.adminchat.v then  
 			if every_settings.admin_chat.nick.v == 1 then
 				if lc_adm == nil then
-					lc_lvl, lc_nick, lc_id, lc_text = text:match("%[A%-(%d+)%] (.+)%[(%d+)%]: {FFFFFF}(.+)")
-					lc_text_chat = lc_lvl .. " Х " .. lc_nick .. "[" .. lc_id .. "] : {FFFFFF}" .. lc_text
+                    if text:find("%[A%-(%d+)%](.+)%[(%d+)%]: {FFFFFF}(.+)") then  
+                        lc_lvl, lc_nick, lc_id, lc_text = text:match("%[A%-(%d+)%](.+)%[(%d+)%]: {FFFFFF}(.+)")
+					    lc_text_chat = lc_lvl .. " Х " .. lc_nick .. "[" .. lc_id .. "] : {FFFFFF}" .. lc_text
+                    end
 				else
 					every_settings.admin_chat.color = color
 					lc_text_chat = lc_adm .. "{" .. (bit.tohex(atlibs.join_argb(atlibs.explode_argb(color)))):sub(3, 8) .. "} Х " .. lc_lvl .. " Х " .. lc_nick .. "[" .. lc_id .. "] : {FFFFFF}" .. lc_text 
 				end
 			else
 				if lc_adm == nil then
-					lc_lvl, lc_nick, lc_id, lc_text = text:match("%[A%-(%d+)%] (.+)%[(%d+)%]: {FFFFFF}(.+)")
+					lc_lvl, lc_nick, lc_id, lc_text = text:match("%[A%-(%d+)%](.+)%[(%d+)%]: {FFFFFF}(.+)")
 					lc_text_chat = "{FFFFFF}" .. lc_text .. " {" .. (bit.tohex(atlibs.join_argb(atlibs.explode_argb(color)))):sub(3, 8) .. "}: " .. lc_nick .. "[" .. lc_id .. "] Х " .. lc_lvl
 				else
 					lc_text_chat = "{FFFFFF}" .. lc_text .. "{" .. (bit.tohex(atlibs.join_argb(atlibs.explode_argb(color)))):sub(3, 8) .. "} : " .. lc_nick .. "[" .. lc_id .. "] Х " .. lc_lvl .. " Х " .. lc_adm
@@ -252,7 +252,7 @@ function sampev.onServerMessage(color, text)
 		if elements.boolean.imgui_adminchat.v then  
 			if every_settings.admin_chat.nick.v == 1 then
 				if lc_adm == nil then
-					lc_lvl, lc_nick, lc_id, lc_text = text:match("%[A%-(%d+)%] (.+)%[(%d+)%]: {FFFFFF}(.+)")
+					lc_lvl, lc_nick, lc_id, lc_text = text:match("%[A%-(%d+)%](.+)%[(%d+)%]: {FFFFFF}(.+)")
 					lc_text_chat = "[A-" .. lc_lvl .. "] " .. lc_nick .. "[" .. lc_id .. "] : {FFFFFF}" .. lc_text
 				else
 					every_settings.admin_chat.color = color
@@ -260,7 +260,7 @@ function sampev.onServerMessage(color, text)
 				end
 			else
 				if lc_adm == nil then
-					lc_lvl, lc_nick, lc_id, lc_text = text:match("%[A%-(%d+)%] (.+)%[(%d+)%]: {FFFFFF}(.+)")
+					lc_lvl, lc_nick, lc_id, lc_text = text:match("%[A%-(%d+)%](.+)%[(%d+)%]: {FFFFFF}(.+)")
 					lc_text_chat = "{FFFFFF}" .. lc_text .. " {" .. (bit.tohex(atlibs.join_argb(atlibs.explode_argb(color)))):sub(3, 8) .. "}: " .. lc_nick .. "[" .. lc_id .. "] *  " .. lc_lvl
 				else
 					lc_text_chat = "{FFFFFF}" .. lc_text .. "{" .. (bit.tohex(atlibs.join_argb(atlibs.explode_argb(color)))):sub(3, 8) .. "} : " .. lc_nick .. "[" .. lc_id .. "] *  " .. lc_lvl .. " *  " .. lc_adm

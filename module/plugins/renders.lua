@@ -240,13 +240,14 @@ end
 -- ## Сохранение рендерных параметров ## --
 
 function sampev.onServerMessage(color, text)
+    time = os.date("%H:%M:%S")
     if text:find("%[A] SMS:") and elements.boolean.pmchat.v then  
         local pm_text = text:match("%[A] SMS: (.+)")
         for i = elements.pmchat.lines.v, 1, -1 do  
             if i ~= 1 then  
                 elements.pmchat.chat_lines[i] = elements.pmchat.chat_lines[i-1]
             else 
-                elements.pmchat.chat_lines[i] = "{00BFFF} [AT-PM] {FFFFFF}: " .. pm_text
+                elements.pmchat.chat_lines[i] = "{00BFFF} [AT-PM] {FFFFFF}[" .. time .. "]: " .. pm_text
             end
         end 
         return false
@@ -257,7 +258,7 @@ function sampev.onServerMessage(color, text)
             if i ~= 1 then  
                 elements.dchat.chat_lines[i] = elements.dchat.chat_lines[i-1]
             else  
-                elements.dchat.chat_lines[i] = "{00BFFF} [AT-NEARBY]: {FFFFFF}" .. d_text
+                elements.dchat.chat_lines[i] = "{00BFFF} [AT-NEARBY] {FFFFFF}[" .. time .. "]: " .. d_text
             end 
         end
         return false
