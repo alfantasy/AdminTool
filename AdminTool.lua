@@ -114,7 +114,6 @@ local urls = {
 	["otherAT"] = "https://raw.githubusercontent.com/alfantasy/AdminTool/main/module/plugins/other.lua",
 	["libs"] = "https://raw.githubusercontent.com/alfantasy/AdminTool/main/lib/libsfor.lua",
 	["adminstate"] = "https://raw.githubusercontent.com/alfantasy/AdminTool/main/module/plugins/adminstate.lua",
-	['binder'] = "https://raw.githubusercontent.com/alfantasy/AdminTool/main/ATBinder.lua",
 	['renders'] = "https://raw.githubusercontent.com/alfantasy/AdminTool/main/module/plugins/renders.lua",
 	['notf'] = "https://raw.githubusercontent.com/alfantasy/AdminTool/main/lib/imgui_notf.lua",
 	['addons'] = "https://raw.githubusercontent.com/alfantasy/AdminTool/main/lib/imgui_addons.lua",
@@ -133,7 +132,6 @@ local paths = {
 	["otherAT"] = getWorkingDirectory() .. "/module/plugins/other.lua",
 	["libs"] = getWorkingDirectory() .. "/lib/libsfor.lua",
 	["adminstate"] = getWorkingDirectory() .. "/module/plugins/adminstate.lua",
-	['binder'] = getWorkingDirectory() .. "/ATBinder.lua",
 	['renders'] = getWorkingDirectory() .. "/module/plugins/renders.lua",
 	['notf'] = getWorkingDirectory() .. "/lib/imgui_notf.lua",
 	['addons'] = getWorkingDirectory() .. "/lib/imgui_addons.lua",
@@ -167,7 +165,6 @@ local upd_upvalue = { -- массив для регистрации выборочного обновления
 	otherAT = imgui.ImBool(false),
 	libs = imgui.ImBool(false),
 	adminstate = imgui.ImBool(false),
-	binder = imgui.ImBool(false),
 	renders = imgui.ImBool(false),
 	notf = imgui.ImBool(false),
 	addons = imgui.ImBool(false),
@@ -178,8 +175,8 @@ local upd_upvalue = { -- массив для регистрации выборочного обновления
 	events = imgui.ImBool(false),
 } 
 
-local script_stream = 6
-local script_version_text = "14.5"
+local script_stream = 7
+local script_version_text = "14.6"
 local check_update = false
 -- ## Регистрация ссылок для GitHub, переменных для обновления ## --
 
@@ -546,6 +543,13 @@ function main()
 						sampSendChat('/a ' .. cmd_massive[key].cmd .. " " .. arg .. " " .. cmd_massive[key].time .. " " .. cmd_massive[key].reason)
 					end
 				end
+				if cmd_massive[key].cmd == '/siban' or cmd_massive[key].cmd == '/sban' then
+					if config.access.ban then
+						sampSendChat(cmd_massive[key].cmd .. ' ' .. arg .. ' ' .. cmd_massive[key].time .. ' ' .. cmd_massive[key].reason)
+					else
+						sampSendChat('/a ' .. cmd_massive[key].cmd .. ' ' .. arg .. ' ' .. cmd_massive[key].time .. ' ' .. cmd_massive[key].reason)
+					end
+				end
 				if cmd_massive[key].cmd == "/mute" then  
 					if elm.boolean.automultiply.v then
 						current_time_hour, current_time_min, current_time_sec = string.match(os.date("%H:%M:%S"), "(%d+):(%d+):(%d+)")
@@ -570,15 +574,25 @@ function main()
 							end
 						end
 					end
-					if time_send and reason_send then
+					if time_send and reason_send and elm.boolean.automultiply.v then
 						if config.access.mute then 
-							sampSendChat(cmd_massive[key].cmd .. " " .. arg .. " " .. time_send .. " " .. reason_send)
+							sampSendChat(cmd_massive[key].cmd .. " " .. arg .. " " .. time_send .. " " .. reason_send .. ' x' .. tostring(tonumber(time_send)/cmd_massive[key].time))
 						else 
-							sampSendChat('/a ' .. cmd_massive[key].cmd .. " " .. arg .. " " .. time_send .. " " .. reason_send)
+							sampSendChat('/a ' .. cmd_massive[key].cmd .. " " .. arg .. " " .. time_send .. " " .. reason_send .. ' x' .. tostring(tonumber(time_send)/cmd_massive[key].time))
 						end
 					else 
 						if config.access.mute then 
-							sampSendChat(cmd_massive[key].cmd .. " " .. arg .. " " .. cmd_massive[key].time .. " " .. cmd_massive[key].reason)
+							if arg:find('(%d+) (%d+)') then
+								ids_punising, multiply_value = arg:match('(%d+) (%d+)')
+								if cmd_massive[key].multi then  
+									sampSendChat(cmd_massive[key].cmd .. " " .. arg .. " " .. tostring(tonumber(cmd_massive[key].time)*tonumber(multiply_value)) .. " " .. cmd_massive[key].reason .. ' x' .. multiply_value)
+								else 
+									sampAddChatMessage(tag .. 'У введенной Вами команды "' .. cmd_massive[key].cmd .. '" не существует множителя. Выдаю стандартное наказание.', -1)
+									sampSendChat(cmd_massive[key].cmd .. " " .. arg .. " " .. cmd_massive[key].time .. " " .. cmd_massive[key].reason)
+								end
+							else
+								sampSendChat(cmd_massive[key].cmd .. " " .. arg .. " " .. cmd_massive[key].time .. " " .. cmd_massive[key].reason)
+							end
 						else
 							sampSendChat('/a ' .. cmd_massive[key].cmd .. " " .. arg .. " " .. cmd_massive[key].time .. " " .. cmd_massive[key].reason)
 						end
@@ -608,15 +622,25 @@ function main()
 							end
 						end
 					end
-					if time_send and reason_send then
+					if time_send and reason_send and elm.boolean.automultiply.v then
 						if config.access.mute then 
-							sampSendChat(cmd_massive[key].cmd .. " " .. arg .. " " .. time_send .. " " .. reason_send)
+							sampSendChat(cmd_massive[key].cmd .. " " .. arg .. " " .. time_send .. " " .. reason_send .. ' x' .. tostring(tonumber(time_send)/cmd_massive[key].time))
 						else 
-							sampSendChat('/a ' .. cmd_massive[key].cmd .. " " .. arg .. " " .. time_send .. " " .. reason_send)
+							sampSendChat('/a ' .. cmd_massive[key].cmd .. " " .. arg .. " " .. time_send .. " " .. reason_send .. ' x' .. tostring(tonumber(time_send)/cmd_massive[key].time))
 						end
 					else 
 						if config.access.mute then 
-							sampSendChat(cmd_massive[key].cmd .. " " .. arg .. " " .. cmd_massive[key].time .. " " .. cmd_massive[key].reason)
+							if arg:find('(%d+) (%d+)') then
+								ids_punising, multiply_value = arg:match('(%d+) (%d+)')
+								if cmd_massive[key].multi then  
+									sampSendChat(cmd_massive[key].cmd .. " " .. arg .. " " .. tostring(tonumber(cmd_massive[key].time)*tonumber(multiply_value)) .. " " .. cmd_massive[key].reason .. ' x' .. multiply_value)
+								else 
+									sampAddChatMessage(tag .. 'У введенной Вами команды "' .. cmd_massive[key].cmd .. '" не существует множителя. Выдаю стандартное наказание.', -1)
+									sampSendChat(cmd_massive[key].cmd .. " " .. arg .. " " .. cmd_massive[key].time .. " " .. cmd_massive[key].reason)
+								end
+							else
+								sampSendChat(cmd_massive[key].cmd .. " " .. arg .. " " .. cmd_massive[key].time .. " " .. cmd_massive[key].reason)
+							end
 						else
 							sampSendChat('/a ' .. cmd_massive[key].cmd .. " " .. arg .. " " .. cmd_massive[key].time .. " " .. cmd_massive[key].reason)
 						end
@@ -649,15 +673,25 @@ function main()
 							end
 						end
 					end
-					if time_send and reason_send then
+					if time_send and reason_send and elm.boolean.automultiply.v then
 						if config.access.jail then 
-							sampSendChat(cmd_massive[key].cmd .. " " .. arg .. " " .. time_send .. " " .. reason_send)
+							sampSendChat(cmd_massive[key].cmd .. " " .. arg .. " " .. time_send .. " " .. reason_send .. ' x' .. tostring(tonumber(time_send)/cmd_massive[key].time))
 						else 
-							sampSendChat('/a ' .. cmd_massive[key].cmd .. " " .. arg .. " " .. time_send .. " " .. reason_send)
+							sampSendChat('/a ' .. cmd_massive[key].cmd .. " " .. arg .. " " .. time_send .. " " .. reason_send .. ' x' .. tostring(tonumber(time_send)/cmd_massive[key].time))
 						end
 					else 
 						if config.access.jail then 
-							sampSendChat(cmd_massive[key].cmd .. " " .. arg .. " " .. cmd_massive[key].time .. " " .. cmd_massive[key].reason)
+							if arg:find('(%d+) (%d+)') then
+								ids_punising, multiply_value = arg:match('(%d+) (%d+)')
+								if cmd_massive[key].multi then  
+									sampSendChat(cmd_massive[key].cmd .. " " .. arg .. " " .. tostring(tonumber(cmd_massive[key].time)*tonumber(multiply_value)) .. " " .. cmd_massive[key].reason .. ' x' .. multiply_value)
+								else 
+									sampAddChatMessage(tag .. 'У введенной Вами команды "' .. cmd_massive[key].cmd .. '" не существует множителя. Выдаю стандартное наказание.', -1)
+									sampSendChat(cmd_massive[key].cmd .. " " .. arg .. " " .. cmd_massive[key].time .. " " .. cmd_massive[key].reason)
+								end
+							else
+								sampSendChat(cmd_massive[key].cmd .. " " .. arg .. " " .. cmd_massive[key].time .. " " .. cmd_massive[key].reason)
+							end
 						else
 							sampSendChat('/a ' .. cmd_massive[key].cmd .. " " .. arg .. " " .. cmd_massive[key].time .. " " .. cmd_massive[key].reason)
 						end
@@ -714,6 +748,15 @@ function main()
 	sampRegisterChatCommand('ubi', function(id)
 		sampSendChat('/unbanip ' .. id)
 	end)
+	sampRegisterChatCommand('auj', function(nick)
+		sampSendChat('/jailakk ' .. nick .. ' 5 Ошибка/Разджаил')
+	end)
+	sampRegisterChatCommand('au', function(nick)
+		sampSendChat('/muteakk ' .. nick .. ' 5 Ошибка/Размут')
+	end)
+	sampRegisterChatCommand('aru', function(nick)
+		sampSendChat('/rmuteakk ' .. nick .. ' 5 Ошибка/Размут')
+	end)
 	sampRegisterChatCommand("akill", function(id)
 		lua_thread.create(function()
 			sampSendClickPlayer(id, 0)
@@ -762,13 +805,12 @@ function main()
 				for i, v in pairs(players_control_frame) do
 					if v:find(arg) then  
 						checking_control_on_frame = true
+						table.remove(players_control_frame, i)
+						sampAddChatMessage(tag .. 'Игрок ' .. arg .. ' убран из проверки на вход.', -1)
 					end 
 				end 
 			end
-			if checking_control_on_frame then
-				table.remove(players_control_frame, i)
-				sampAddChatMessage(tag .. 'Игрок ' .. arg .. ' убран из проверки на вход.', -1)
-			else
+			if checking_control_on_frame == false then
 				id_player = sampGetPlayerIdByNickname(arg)
 				if id_player ~= nil and sampIsPlayerConnected(id_player) then 
 					sampAddChatMessage(tag .. 'Данный игрок в сети! Его ID: ' .. id_player, -1)
@@ -1115,14 +1157,14 @@ function sampev.onServerMessage(color, text)
 			end
 			lua_thread.create(function()
 				for key in pairs(cmd_massive) do
-					if cmd_massive[key].reason == m_reason and cmd_massive[key].multi == true then   
+					if m_reason:find(cmd_massive[key].reason) and cmd_massive[key].multi == true then   
 						found = false
 						changed = false
 						current_time_hour, current_time_min, current_time_sec = string.match(os.date("%H:%M:%S"), "(%d+):(%d+):(%d+)")
 						current_time_full = tonumber(current_time_hour) * 3600 + tonumber(current_time_min) * 60 + tonumber(current_time_sec)
 						if #multiply_punish_frame > 0 then  
 							for i, v in pairs(multiply_punish_frame) do  
-								if v:find(nick_player) and v:find(m_reason) then  
+								if v:find(nick_player) and m_reason:find("(.+) x(%d+)") then  
 									if v:find("%d+:%d+:%d+") then
 										time_stamp = v:match("%d+:%d+:%d+")
 										hour, min, sec = string.match(time_stamp, "(%d+):(%d+):(%d+)")
@@ -1133,7 +1175,7 @@ function sampev.onServerMessage(color, text)
 												sampAddChatMessage(tag .. 'Автоматически фиксирую следующее наказание по множителю для игрока: ' .. nick_player, -1)
 												changed = true
 											end 
-											multiply_punish_frame[i] = nick_player .. "~" .. m_reason .. "~" .. tonumber(time)+tonumber(cmd_massive[key].time) .. "~" .. os.date("%H:%M:%S")
+											multiply_punish_frame[i] = nick_player .. "~" .. cmd_massive[key].reason .. "~" .. tonumber(time)+tonumber(cmd_massive[key].time) .. "~" .. os.date("%H:%M:%S")
 											found = true
 											break
 										else 
@@ -1144,15 +1186,16 @@ function sampev.onServerMessage(color, text)
 								end 
 							end 
 							if not found then  
-								table.insert(multiply_punish_frame, nick_player .. "~" .. m_reason .. "~" .. tonumber(time)+tonumber(cmd_massive[key].time) .. "~" .. os.date("%H:%M:%S"))
+								table.insert(multiply_punish_frame, nick_player .. "~" .. cmd_massive[key].reason .. "~" .. tonumber(time)+tonumber(cmd_massive[key].time) .. "~" .. os.date("%H:%M:%S"))
 								if not changed then  
 									sampAddChatMessage(tag .. 'Автоматически фиксирую следующее наказание по множителю для игрока: ' .. nick_player, -1)
 									changed = true  
 								end
+								break
 							end
 						else 
 							sampAddChatMessage(tag .. 'Автоматически фиксирую следующее наказание по множителю для игрока: ' .. nick_player, -1)					
-							table.insert(multiply_punish_frame, nick_player .. "~" .. m_reason .. "~" .. tonumber(time)+tonumber(cmd_massive[key].time) .. "~" .. os.date("%H:%M:%S"))
+							table.insert(multiply_punish_frame, nick_player .. "~" .. cmd_massive[key].reason .. "~" .. tonumber(time)+tonumber(cmd_massive[key].time) .. "~" .. os.date("%H:%M:%S"))
 						end
 						break
 					end
@@ -2183,7 +2226,6 @@ function imgui.OnDrawFrame()
 				imgui.Checkbox(u8'Скрипт отдельных функций', upd_upvalue.otherAT)
 				imgui.Checkbox(u8'Библиотека AdminTool', upd_upvalue.libs)
 				imgui.Checkbox(u8'Административная статистика', upd_upvalue.adminstate)
-				imgui.Checkbox(u8'Биндер', upd_upvalue.binder)
 				imgui.Checkbox(u8'Скрипт рендера отд.строк чата', upd_upvalue.renders)
 				imgui.Checkbox(u8'Система уведомлений', upd_upvalue.notf)
 				imgui.Checkbox(u8'Аддоны интерфейса', upd_upvalue.addons)

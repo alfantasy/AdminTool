@@ -5,6 +5,7 @@ local tag = "{FFC900}[Chat-Logger] {FFFFFF}"
 
 local sampev = require 'lib.samp.events'
 local inicfg = require 'inicfg'
+local atlibs = require 'libsfor'
 local lfs = require 'lfs'
 local imgui = require 'imgui' -- регистр imgui окон
 local encoding = require 'encoding' -- дешифровка форматов
@@ -167,6 +168,8 @@ function main()
         createDirectory(getWorkingDirectory() .. "\\config\\chatlog")
     end
 
+    scan_logs_file()
+
     sampAddChatMessage(tag .. 'Чат-логгер успешно запущен. Обо всех ошибках писать @alfantasy (VK)', -1)
     sampAddChatMessage(tag .. 'Помощь по чат-логгеру (/chelp)', -1)
 
@@ -177,24 +180,34 @@ function main()
     sampRegisterChatCommand("clog", function()
         chat_log_custom.v = not chat_log_custom.v  
         imgui.Process = chat_log_custom.v
-        scan_logs_file()
     end)
 
     if elements.clearFiles.v then  
-        scan_logs_file()
+        current_month = os.date("%m")
+        current_year = os.date("%Y")
         for key, v in pairs(logs_file) do
             if v:find("(%d+)-(%d+)-(%d+)") then
                 local day, month, year = v:match("(%d+)-(%d+)-(%d+)")
                 for i = 0, elements.days_for_clear.v do
                     if i ~= elements.days_for_clear.v then 
                         day = tonumber(day) - 1
-                        if os.remove(getWorkingDirectory() .. "\\config\\chatlog\\" .. day .. "-" .. month .. "-" .. year .. ".txt") then  
+                        if os.remove(getWorkingDirectory() .. "\\config\\chatlog\\"..day.."-"..month.."-"..year..".txt") then  
                             sampfuncsLog(tag .. "Удалил лог-файл " .. day .. "-" .. month .. "-" .. year .. ".txt")
                         end
                     end
                 end
+                if tonumber(current_month) ~= tonumber(month) then
+                    if os.remove(getWorkingDirectory() .. "\\config\\chatlog\\"..v..".txt") then  
+                        sampfuncsLog(tag .. "Удалил лог-файл " .. day .. "-" .. month .. "-" .. year .. ".txt")
+                    end
+                end
+                if tonumber(current_year) > tonumber(year) then
+                    if os.remove(getWorkingDirectory() .. "\\config\\chatlog\\"..v..".txt") then  
+                        sampfuncsLog(tag .. "Удалил лог-файл " .. day .. "-" .. month .. "-" .. year .. ".txt")
+                    end
+                end
             end
-        end        
+        end       
     end
     
     theme()
@@ -288,7 +301,7 @@ function imgui.OnDrawFrame()
         imgui.LockPlayer = true
         imgui.ShowCursor = true
 
-        imgui.SetNextWindowSize(imgui.ImVec2(600, 350), imgui.Cond.FirstUseEver)
+        imgui.SetNextWindowSize(imgui.ImVec2(750, 450), imgui.Cond.FirstUseEver)
         imgui.SetNextWindowPos(imgui.ImVec2((sw / 4.5), sh / 4), imgui.Cond.FirstUseEver, imgui.ImVec2(0.5, 0.5))
         imgui.Begin(u8"Чат-логгер", chat_log_custom)
         if update_files == false then 
@@ -358,7 +371,7 @@ function imgui.OnDrawFrame()
                 imgui.Text(u8"Введите текст для поиска \n")
                 imgui.Separator()
                 for key,v in pairs(text_ru) do 
-                    imgui.Text(v)
+                    atlibs.imgui_TextColoredRGB(u8:decode(v))
                     if imgui.IsItemClicked() then
                         imgui.LogToClipboard()
                         imgui.LogText(v) -- копирование текста
@@ -368,7 +381,7 @@ function imgui.OnDrawFrame()
             else 
                 for key,v in pairs(text_ru) do 
                     if v:find(chat_find.v, 1, true) ~= nil then  
-                        imgui.Text(v)
+                        atlibs.imgui_TextColoredRGB(u8:decode(v))
                         if imgui.IsItemClicked() then
                             imgui.LogToClipboard()
                             imgui.LogText(v) -- копирование текста

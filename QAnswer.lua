@@ -836,16 +836,22 @@ function imgui.OnDrawFrame()
 							wait(50)
 							sampSendDialogResponse(2350, 1, 0)
 							wait(50)
-							sampSendDialogResponse(2351, 1, 0, u8:decode(first_half) .. '...')
+							if sampIsPlayerConnected(pid_rep) then  
+								sampSendDialogResponse(2351, 1, 0, u8:decode(first_half) .. '...')
+							else 
+								sampSendDialogResponse(2351, 1, 0, u8:decode(elements.text.v))
+							end
 							wait(50)
 							sampCloseCurrentDialogWithButton(13)
 							wait(50)
 							elements.text.v = " "
 							wait(500)
-							if elements.prefix_answer.v then
-								sampSendChat('/ans ' .. pid_rep .. ' ...' .. u8:decode(second_half) .. " " .. u8:decode(config.main.prefix_for_answer))
-							else 
-								sampSendChat('/ans ' .. pid_rep .. ' ...' .. u8:decode(second_half))
+							if sampIsPlayerConnected(pid_rep) then
+								if elements.prefix_answer.v then
+									sampSendChat('/ans ' .. pid_rep .. ' ...' .. u8:decode(second_half) .. " " .. u8:decode(config.main.prefix_for_answer))
+								else 
+									sampSendChat('/ans ' .. pid_rep .. ' ...' .. u8:decode(second_half))
+								end
 							end
 						end)
 						ATReportShow.v = false
@@ -1210,14 +1216,18 @@ end
 
 function SendReport_Onclick(dtext, player_id)
 	local prefix = u8:decode(config.main.prefix_for_answer)
-	if #dtext < 100 and (#dtext + #prefix) < 100 then 
+	if #dtext < 110 and (#dtext + #prefix) < 110 then 
 		lua_thread.create(function()
 			sampSendDialogResponse(2349, 1, 0)
 			wait(50)
 			sampSendDialogResponse(2350, 1, 0)
 			wait(50)
-			if elements.prefix_answer.v then 
-				sampSendDialogResponse(2351, 1, 0, dtext .. ' ' .. color() .. prefix) 
+			if sampIsPlayerConnected(player_id) then
+				if elements.prefix_answer.v then 
+					sampSendDialogResponse(2351, 1, 0, dtext .. ' ' .. color() .. prefix) 
+				else 
+					sampSendDialogResponse(2351, 1, 0, dtext)
+				end
 			else 
 				sampSendDialogResponse(2351, 1, 0, dtext)
 			end
@@ -1232,16 +1242,20 @@ function SendReport_Onclick(dtext, player_id)
 		wait(50)
 		sampSendDialogResponse(2350, 1, 0)
 		wait(50)
-		sampSendDialogResponse(2351, 1, 0, first_half .. '...')
-		wait(50)
-		sampSendDialogResponse(2351, 1, 1, second_half)
+		if sampIsPlayerConnected(player_id) then
+			sampSendDialogResponse(2351, 1, 0, first_half .. '...')
+		else 
+			sampSendDialogResponse(2351, 1, 0, dtext)
+		end
 		wait(50)
 		sampCloseCurrentDialogWithButton(13)
 		wait(500)
-		if elements.prefix_answer.v then
-			sampSendChat('/ans ' .. player_id .. ' ...' .. second_half .. " " .. prefix)
-		else 
-			sampSendChat('/ans ' .. player_id .. ' ...' .. second_half)
-		end  
+		if sampIsPlayerConnected(player_id) then
+			if elements.prefix_answer.v then
+				sampSendChat('/ans ' .. player_id .. ' ...' .. second_half .. " " .. prefix)
+			else 
+				sampSendChat('/ans ' .. player_id .. ' ...' .. second_half)
+			end  
+		end
 	end
 end

@@ -589,7 +589,7 @@ function imgui.OnDrawFrame()
                     sampSendChat("/aspawn " .. v)
                 end; imgui.Tooltip(u8"При клике - игрока заспавнит")
                 imgui.SameLine()
-                if imgui.Button(fai.ICON_FA_USER_LOCK) then  
+                if imgui.Button(fai.ICON_FA_USER_LOCK .. '##JailMP') then  
                     sampSendChat("/jail " .. v .. " 300 Нарушение правил МП")
                 end; imgui.Tooltip(u8"При нажатии, кинет игрока в /jail за нарушение правил МП")
                 
