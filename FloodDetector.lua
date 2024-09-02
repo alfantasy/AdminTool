@@ -13,6 +13,8 @@ local string_number_max = 4
 local msgs = {chat = {}}
 local string_time = 30
 
+script_properties('work-in-pause')
+
 function detectedFlood(name,id,msg,time,count,number)
 	lua_thread.create(function()
 		if not isGamePaused() and not isPauseMenuActive() and isGameWindowForeground() then 

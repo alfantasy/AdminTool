@@ -1,5 +1,6 @@
 require 'lib.moonloader'
 script_author('alfantasyz')
+script_properties('work-in-pause')
 
 local tag = "{FFC900}[Chat-Logger] {FFFFFF}"
 
@@ -9,11 +10,9 @@ local atlibs = require 'libsfor'
 local lfs = require 'lfs'
 local imgui = require 'imgui' -- регистр imgui окон
 local encoding = require 'encoding' -- дешифровка форматов
-local chat_logger_text = { } -- текст логгера
-local text_ru = { } -- текст русского лога
-local accept_load_clog = false -- принятие переменной логгера
-local chat_log_custom = imgui.ImBool(false)
-local chat_find = imgui.ImBuffer(65536)
+
+local fai = require "fAwesome5" -- работа с иконками Font Awesome 5
+local fa = require 'faicons' -- работа с иконками Font Awesome 4
 
 local directIni = "clog.ini"
 
@@ -30,12 +29,33 @@ local elements = {
     days_for_clear = imgui.ImInt(configLog.settings.days_for_clear),
 }
 
-script_properties('work-in-pause')
+local chat_logger_text = { } -- текст логгера
+local text_ru = { } -- текст русского лога
+local accept_load_clog = false -- принятие переменной логгера
+local chat_log_custom = imgui.ImBool(false)
+local chat_find = imgui.ImBuffer(65536)
+local buff_change = imgui.ImBuffer(65536)
 
 encoding.default = 'CP1251' -- смена кодировки на CP1251
 u8 = encoding.UTF8 -- переименовка стандтартного режима кодировки UTF8 - u8
 
 local sw, sh = getScreenResolution() -- отвечает за второстепенную длину и ширину окон.
+
+local fa_glyph_ranges = imgui.ImGlyphRanges({ fa.min_range, fa.max_range })
+local fai_glyph_ranges = imgui.ImGlyphRanges({ fai.min_range, fai.max_range })
+
+function imgui.BeforeDrawFrame()
+    if fai_font == nil then
+        local font_config = imgui.ImFontConfig()
+        font_config.MergeMode = true
+        fai_font = imgui.GetIO().Fonts:AddFontFromFileTTF('moonloader/resource/fonts/fa-solid-900.ttf', 13.0, font_config, fai_glyph_ranges)
+    end
+    if fa_font == nil then
+		local font_config = imgui.ImFontConfig()
+		font_config.MergeMode = true 
+		fa_font = imgui.GetIO().Fonts:AddFontFromFileTTF('moonloader/resource/fonts/fontawesome-webfont.ttf', 14.0, font_config, fa_glyph_ranges)
+	end	
+end
 
 local b='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/' -- You will need this for encoding/decoding
 -- encoding
@@ -346,10 +366,11 @@ function imgui.OnDrawFrame()
             end)
         end    
         imgui.SameLine()
-        if imgui.Button("Settings") then  
+        if imgui.Button(u8"Настройки") then  
             imgui.OpenPopup('settings')
         end
         if imgui.BeginPopup('settings') then  
+            imgui.TextWrapped(u8'Скопировать ник в контекстной панели можно только, если игрок в сети!')
             if imgui.Checkbox(u8'Очистка файлов', elements.clearFiles) then  
                 configLog.settings.clearFiles = elements.clearFiles.v  
                 if inicfg.save(configLog, directIni) then  
@@ -371,27 +392,83 @@ function imgui.OnDrawFrame()
                 imgui.Text(u8"Введите текст для поиска \n")
                 imgui.Separator()
                 for key,v in pairs(text_ru) do 
-                    atlibs.imgui_TextColoredRGB(u8:decode(v))
-                    if imgui.IsItemClicked() then
-                        imgui.LogToClipboard()
-                        imgui.LogText(v) -- копирование текста
-                        imgui.LogFinish()
+                    if imgui.Button(fai.ICON_FA_FILTER .. '##ContextMenu' .. key, imgui.ImVec2(0, 0)) then  
+                        imgui.OpenPopup('ContextMenu')
+                        buff = v
                     end
+                    imgui.SameLine()
+                    atlibs.imgui_TextColoredRGB(u8:decode(v))
                 end 
             else 
                 for key,v in pairs(text_ru) do 
                     if v:find(chat_find.v, 1, true) ~= nil then  
-                        atlibs.imgui_TextColoredRGB(u8:decode(v))
-                        if imgui.IsItemClicked() then
-                            imgui.LogToClipboard()
-                            imgui.LogText(v) -- копирование текста
-                            imgui.LogFinish()
+                        if imgui.Button(fai.ICON_FA_FILTER .. '##ContextMenu' .. key, imgui.ImVec2(0, 0)) then  
+                            imgui.OpenPopup('ContextMenu')
+                            buff = v
                         end
+                        imgui.SameLine()
+                        atlibs.imgui_TextColoredRGB(u8:decode(v))
                     end 
                 end 
             end
         end    
+        if imgui.BeginPopup('ContextMenu') then
+            if buff:find('{......}') then  
+                buff = buff:gsub('{......}', '')
+            end             
+            boolCheck, nick_chk = CheckPlayer(buff)            
+            if imgui.Button(u8'Копировать всю строку в буфер') then
+                sampAddChatMessage(tag .. 'Успешно скопировано в буфер обмена!')
+                imgui.LogToClipboard()
+                imgui.LogText(buff) -- копирование текста
+                imgui.LogFinish()
+            end
+            if imgui.Button(u8'Скопировать часть строки в буфер') then
+                imgui.OpenPopup('copy_part')
+                buff_change.v = buff
+            end
+            if boolCheck then
+                if imgui.Button(u8'Копировать ник') then  
+                    sampAddChatMessage(tag .. 'Успешно скопировано в буфер обмена!')
+                    imgui.LogToClipboard()
+                    imgui.LogText(nick_chk) -- копирование текста
+                    imgui.LogFinish()
+                end
+            end
+            if imgui.BeginPopupModal('copy_part', true, imgui.WindowFlags.NoTitleBar + imgui.WindowFlags.AlwaysAutoResize) then  
+                imgui.Text(u8'Выберите часть строки для копирования')
+                imgui.Text(u8'Уберите то, что не нужно и нажмите "Копировать"')
+                imgui.Separator()
+                imgui.PushItemWidth(500)
+                imgui.InputText(u8'##BuffChangeInput', buff_change)
+                imgui.PopItemWidth()
+                imgui.Separator()
+                if imgui.Button(u8'Скопировать') then  
+                    sampAddChatMessage(tag .. 'Успешно скопировано в буфер обмена!')
+                    imgui.LogToClipboard()
+                    imgui.LogText(buff_change.v) -- копирование текста
+                    imgui.LogFinish()
+                    imgui.CloseCurrentPopup()
+                end
+                imgui.SameLine()
+                if imgui.Button(u8'Закрыть') then  
+                    imgui.CloseCurrentPopup()
+                end
+                imgui.EndPopup()
+            end            
+            imgui.EndPopup()
+        end    
         imgui.End()
     end    
-
 end 
+
+function CheckPlayer(text_log)
+    for playerId = 0, 1000 do 
+        if sampIsPlayerConnected(playerId) then  
+            local playerName = sampGetPlayerNickname(playerId)
+            if text_log:find(playerName) then
+                return true, playerName
+            end
+        end 
+    end 
+end

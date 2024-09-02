@@ -24,7 +24,6 @@ local plugins_main_res, plugin = pcall(import, "module/plugins/plugin.lua") -- и
 local adminstate_res, admst = pcall(import, 'module/plugins/adminstate.lua') -- импорт специального плагина (скрипта), где содержится сбор административной статистики.
 local renders_res, prender = pcall(import, 'module/plugins/renders.lua') -- импорт специального плагина (скрипта), где содержится рендеры отдельных строк чата
 
- 
 local fai = require "fAwesome5" -- работа с иконками Font Awesome 5
 local fa = require 'faicons' -- работа с иконками Font Awesome 4
 -- ## Регистрация библиотек, плагинов и аддонов ## --
@@ -175,8 +174,8 @@ local upd_upvalue = { -- массив для регистрации выборочного обновления
 	events = imgui.ImBool(false),
 } 
 
-local script_stream = 7
-local script_version_text = "14.6"
+local script_stream = 8
+local script_version_text = "14.7"
 local check_update = false
 -- ## Регистрация ссылок для GitHub, переменных для обновления ## --
 
@@ -398,7 +397,7 @@ end
 local refresh_button_textdraw = 0
 local info_textdraw_recon = 0
 local info_to_player = {}
-local recon_info = { "Здоровье: ", "Броня: ", "ХП машины: ", "Скорость: ", "Пинг: ", "Патроны: ", "Выстрел: ", "Тайминг выстрела: ", "Время в АФК: ", "P.Loss: ", "Уровень VIP: ", "Пассивный режим: ", "Турбо-режим: ", "Коллизия: "}
+local recon_info = { "Здоровье: ", "Броня: ", "ХП машины: ", "Скорость: ", "Пинг: ", "Патроны: ", "Выстрел: ", "Тайминг выстрела: ", "Время в АФК: ", "P.Loss: ", "Уровень VIP: ", "Пассивный режим: ", "Турбо-режим: ", "Коллизия: ", 'Дрифт-мод: '}
 local control_to_player = false
 local select_recon = 0
 local recon_punish = 0
@@ -421,10 +420,6 @@ local render_font = renderCreateFont("Arial", tonumber(elm.int.font.v), fflags.B
 -- ## Регистрация автоматической авторизации под админку ## --
 local control_spawn = false 
 -- ## Регистрация автоматической авторизации под админку ## -- 
-
--- ## Блок регистров команд ## --
-
--- ## Блок регистров команд ## --
 
 -- ## Переменные для системы выдачи наказаний ## -- 
 local multiply_punish_frame = {}
@@ -504,7 +499,6 @@ function main()
 	lua_thread.create(function()
 		while true do 
 			renderFontDrawText(font_watermark, " {6A5ACD}[AdminTool]{FFFFFF} version - " .. script_version_text .. "", 10, sh-20, 0xCCFFFFFF)
-
 			wait(1)
 		end	
 	end)
@@ -516,16 +510,6 @@ function main()
         ATMenu.v = not ATMenu.v 
         imgui.Process = ATMenu.v
     end)
-
-	sampRegisterChatCommand('check', function()
-		for i, param in pairs(upd_upvalue) do  
-			if param.v then  
-				if paths[i] then  
-					sampAddChatMessage("Наименование: " .. i .. ' | Параметр: ' .. tostring(param.v), -1)
-				end
-			end
-		end
-	end)
     -- ## Регистрация основных команд для прямого взаимодействия с АТ ## --
 
 	-- ## Регистрация команд для выдачи наказаний ## --
@@ -562,7 +546,7 @@ function main()
 										time_stamp_send = splited[4]
 										hour, min, sec = string.match(time_stamp_send, "(%d+):(%d+):(%d+)")
 										fulltimestamp = tonumber(hour) * 3600 + tonumber(min) * 60 + tonumber(sec)
-										if current_time_full - fulltimestamp >= 30 then  
+										if current_time_full - fulltimestamp >= 30 and splited[5] == 'basemute' then  
 											time_send = splited[3]
 											reason_send = splited[2]
 										else 
@@ -610,7 +594,7 @@ function main()
 										time_stamp_send = splited[4]
 										hour, min, sec = string.match(time_stamp_send, "(%d+):(%d+):(%d+)")
 										fulltimestamp = tonumber(hour) * 3600 + tonumber(min) * 60 + tonumber(sec)
-										if current_time_full - fulltimestamp >= 30 then  
+										if current_time_full - fulltimestamp >= 30 and splited[5] == 'report' then  
 											time_send = splited[3]
 											reason_send = splited[2]
 										else 
@@ -767,14 +751,6 @@ function main()
 			wait(200)
 			sampCloseCurrentDialogWithButton(0)
 		end)
-	end)
-
-	sampRegisterChatCommand('devmassive', function()
-		for i, v in pairs(multiply_punish_frame) do  
-			sampAddChatMessage(v, -1)
-			splited = atlibs.textSplit(v, "~")
-			sampAddChatMessage(splited[4], -1)
-		end
 	end)
 
 	sampRegisterChatCommand('prfm', function(arg)
@@ -1175,7 +1151,13 @@ function sampev.onServerMessage(color, text)
 												sampAddChatMessage(tag .. 'Автоматически фиксирую следующее наказание по множителю для игрока: ' .. nick_player, -1)
 												changed = true
 											end 
-											multiply_punish_frame[i] = nick_player .. "~" .. cmd_massive[key].reason .. "~" .. tonumber(time)+tonumber(cmd_massive[key].time) .. "~" .. os.date("%H:%M:%S")
+											if text:find('закрыл %(.+%) доступ к репорту игроку') then
+												multiply_punish_frame[i] = nick_player .. "~" .. cmd_massive[key].reason .. "~" .. tonumber(time)+tonumber(cmd_massive[key].time) .. "~" .. os.date("%H:%M:%S") .. '~' .. 'report'
+											elseif text:find('заткнул%(.+%)') then
+												multiply_punish_frame[i] = nick_player .. "~" .. cmd_massive[key].reason .. "~" .. tonumber(time)+tonumber(cmd_massive[key].time) .. "~" .. os.date("%H:%M:%S") .. '~' .. 'basemute'
+											else 
+												multiply_punish_frame[i] = nick_player .. "~" .. cmd_massive[key].reason .. "~" .. tonumber(time)+tonumber(cmd_massive[key].time) .. "~" .. os.date("%H:%M:%S")
+											end
 											found = true
 											break
 										else 
@@ -1186,7 +1168,13 @@ function sampev.onServerMessage(color, text)
 								end 
 							end 
 							if not found then  
-								table.insert(multiply_punish_frame, nick_player .. "~" .. cmd_massive[key].reason .. "~" .. tonumber(time)+tonumber(cmd_massive[key].time) .. "~" .. os.date("%H:%M:%S"))
+								if text:find('закрыл %(.+%) доступ к репорту игроку') then
+									table.insert(multiply_punish_frame, nick_player .. "~" .. cmd_massive[key].reason .. "~" .. tonumber(time)+tonumber(cmd_massive[key].time) .. "~" .. os.date("%H:%M:%S") .. '~' .. 'report')
+								elseif text:find('заткнул%(.+%)') then
+									table.insert(multiply_punish_frame, nick_player .. "~" .. cmd_massive[key].reason .. "~" .. tonumber(time)+tonumber(cmd_massive[key].time) .. "~" .. os.date("%H:%M:%S") .. '~' .. 'basemute')
+								else
+									table.insert(multiply_punish_frame, nick_player .. "~" .. cmd_massive[key].reason .. "~" .. tonumber(time)+tonumber(cmd_massive[key].time) .. "~" .. os.date("%H:%M:%S"))
+								end
 								if not changed then  
 									sampAddChatMessage(tag .. 'Автоматически фиксирую следующее наказание по множителю для игрока: ' .. nick_player, -1)
 									changed = true  
@@ -1194,8 +1182,14 @@ function sampev.onServerMessage(color, text)
 								break
 							end
 						else 
-							sampAddChatMessage(tag .. 'Автоматически фиксирую следующее наказание по множителю для игрока: ' .. nick_player, -1)					
-							table.insert(multiply_punish_frame, nick_player .. "~" .. cmd_massive[key].reason .. "~" .. tonumber(time)+tonumber(cmd_massive[key].time) .. "~" .. os.date("%H:%M:%S"))
+							sampAddChatMessage(tag .. 'Автоматически фиксирую следующее наказание по множителю для игрока: ' .. nick_player, -1)				
+							if text:find('закрыл %(.+%) доступ к репорту игроку') then	
+								table.insert(multiply_punish_frame, nick_player .. "~" .. cmd_massive[key].reason .. "~" .. tonumber(time)+tonumber(cmd_massive[key].time) .. "~" .. os.date("%H:%M:%S") .. '~' .. 'report')
+							elseif text:find('заткнул%(.+%)') then
+								table.insert(multiply_punish_frame, nick_player .. "~" .. cmd_massive[key].reason .. "~" .. tonumber(time)+tonumber(cmd_massive[key].time) .. "~" .. os.date("%H:%M:%S") .. '~' .. 'basemute')
+							else
+								table.insert(multiply_punish_frame, nick_player .. "~" .. cmd_massive[key].reason .. "~" .. tonumber(time)+tonumber(cmd_massive[key].time) .. "~" .. os.date("%H:%M:%S"))
+							end
 						end
 						break
 					end
@@ -2483,8 +2477,15 @@ function imgui.OnDrawFrame()
 												str_lvl = u8'Personal'
 											end
 											imgui.Text(u8:encode(recon_info[key]) .. " " .. str_lvl)
-										else
-                                        	imgui.Text(u8:encode(recon_info[key]) .. " " .. info_to_player[key])
+										elseif key == 15 then  
+											local chkdrv = string.match(info_to_player[15], '(.+)')
+											if chkdrv == 'DISABLED' then  
+												imgui.Text(u8:encode(recon_info[key]) .. " " .. u8'Отключено')
+											elseif chkdrv == 'ENABLED' then
+												imgui.Text(u8:encode(recon_info[key]) .. " " .. u8'Включено')
+											end
+										else 
+											imgui.Text(u8:encode(recon_info[key]) .. " " .. info_to_player[key])
 										end
                                     end
                                 end
