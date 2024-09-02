@@ -168,23 +168,29 @@ function sampev.onServerMessage(color, text)
         if elements.boolean.adminforms.v and lc_text ~= nil then  
             for k, v in ipairs(reasons) do  
                 if lc_text:match(v) ~= nil then  
-                    if lc_text:find(lc_nick) then
-                        form = lc_text 
-                    else   
-                        form = lc_text .. " // " .. lc_nick
-                    end  
-                    showNotification("Пришла административная форма! \n Если у Вас включено автоматическое принятие форм, проигнорируйте уведомление\n /fac - принять | /fn - отклонить")
-                    sampAddChatMessage(tag .. "Форма: " .. form, -1)
-                    if elements.boolean.auto_adminforms.v then
-                        lua_thread.create(function()
-                            sampSendChat("/a [AT] Форма принята.")
-                            wait(5)
-                            sampSendChat(form)
-                            form = ''
-                        end)
-                    else
-                        start_forms()
-                    end  
+                    if lc_text:find("/(.+) (%d+) (%d+) (.+)") or lc_text:find('/(.+) (.+) (%d+) (.+)') then  
+                        if lc_text:find(lc_nick) then
+                            form = lc_text
+                        else   
+                            form = lc_text .. " // " .. lc_nick
+                        end  
+                    else 
+                        form = ''
+                    end
+                    if #form > 1 then
+                        showNotification("Пришла административная форма! \n Если у Вас включено автоматическое принятие форм, проигнорируйте уведомление\n /fac - принять | /fn - отклонить")
+                        sampAddChatMessage(tag .. "Форма: " .. form, -1)
+                        if elements.boolean.auto_adminforms.v then
+                            lua_thread.create(function()
+                                sampSendChat("/a [AT] Форма принята.")
+                                wait(5)
+                                sampSendChat(form)
+                                form = ''
+                            end)
+                        else
+                            start_forms()
+                        end  
+                    end
                 end  
             end
         end
