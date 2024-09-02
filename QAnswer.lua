@@ -806,7 +806,7 @@ function imgui.OnDrawFrame()
             --     inicfg.save(config, directIni)
             -- end
             imgui.Separator()
-            if imgui.Button(fai.ICON_FA_SMS .. u8" Ответить", imgui.ImVec2(110,20)) then
+            if imgui.Button(fai.ICON_FA_SMS .. u8" Ответить", imgui.ImVec2(90,20)) then
 				if #elements.text.v < 80 then 
 					lua_thread.create(function()
 						sampSendDialogResponse(2349, 1, 0)
@@ -859,7 +859,7 @@ function imgui.OnDrawFrame()
 				end
             end  
             imgui.SameLine()
-            if imgui.Button(fa.ICON_BAN .. u8" Отклонить", imgui.ImVec2(110,20)) then  
+            if imgui.Button(fa.ICON_BAN .. u8" Отклонить", imgui.ImVec2(100,20)) then  
                 lua_thread.create(function()
                     sampSendDialogResponse(2349, 1, 0)
                     wait(50)
@@ -871,8 +871,14 @@ function imgui.OnDrawFrame()
                     imgui.ShowCursor = ATReportShow.v
                 end)
             end
-            imgui.SameLine()
+			imgui.SameLine()
+			if imgui.Button(fa.ICON_BAN .. u8' Наказать', imgui.ImVec2(100,20)) then
+				lua_thread.create(function()
+					imgui.OpenPopup('SendPunishment')
+				end) 
+			end
 			imgui.SetCursorPosX(imgui.GetWindowWidth() - 115)
+			imgui.SameLine()
             if imgui.Button(fa.ICON_WINDOW_CLOSE .. u8" Закрыть", imgui.ImVec2(110,20)) then  
                 lua_thread.create(function()
                     sampSendDialogResponse(2349, 0, 0)
@@ -883,8 +889,85 @@ function imgui.OnDrawFrame()
                     imgui.ShowCursor = ATReportShow.v
                 end)
             end
+			if imgui.BeginPopupModal('SendPunishment', false, imgui.WindowFlags.NoTitleBar + imgui.WindowFlags.AlwaysAutoResize) then  
+				imgui.BeginChild('##SendPunishmentChild', imgui.ImVec2(500, 300), true)
+					if imgui.Button(u8'Закрыть', imgui.ImVec2(150, 20)) then
+						imgui.CloseCurrentPopup()
+					end
+					imgui.Separator()
+						if imgui.TreeNode(u8'Муты') then
+							for key in pairs(cmd_massive) do  
+								if cmd_massive[key].cmd == "/rmute" then  
+									if imgui.Button(u8(cmd_massive[key].reason)) then  
+										lua_thread.create(function()
+											sampSendDialogResponse(2349, 1, 0)
+											wait(50)
+											sampSendDialogResponse(2350, 1, 0)
+											wait(50)
+											sampSendDialogResponse(2351, 1, 0, '{FFFFFF} Связи с правилами, Вы будете наказаны. // Приятной игры на RDS <3')
+											wait(50)
+											sampCloseCurrentDialogWithButton(13)
+											wait(500)
+											sampSendChat(cmd_massive[key].cmd .. " " .. pid_rep .. " " .. cmd_massive[key].time .. " " .. cmd_massive[key].reason)
+											ATReportShow.v = false  
+											imgui.Process = ATReportShow.v
+											imgui.ShowCursor = ATReportShow.v										
+										end)
+									end 
+								end 
+							end						
+							imgui.TreePop()
+						end
+						if imgui.TreeNode(u8'Джайлы') then  
+							for key in pairs(cmd_massive) do  
+								if cmd_massive[key].cmd == "/jail" then  
+									if imgui.Button(u8(cmd_massive[key].reason)) then  
+										lua_thread.create(function()
+											sampSendDialogResponse(2349, 1, 0)
+											wait(50)
+											sampSendDialogResponse(2350, 1, 0)
+											wait(50)
+											sampSendDialogResponse(2351, 1, 0, '{FFFFFF} Связи с правилами, Вы будете наказаны. // Приятной игры на RDS <3')
+											wait(50)
+											sampCloseCurrentDialogWithButton(13)
+											wait(500)
+											sampSendChat(cmd_massive[key].cmd .. " " .. pid_rep .. " " .. cmd_massive[key].time .. " " .. cmd_massive[key].reason)
+											ATReportShow.v = false  
+											imgui.Process = ATReportShow.v
+											imgui.ShowCursor = ATReportShow.v				
+										end)						
+									end 
+								end 
+							end		
+							imgui.TreePop()
+						end						
+						if imgui.TreeNode(u8'Баны') then
+							for key in pairs(cmd_massive) do  
+								if cmd_massive[key].cmd == "/ban" or cmd_massive[key].cmd == '/iban' then  
+									if imgui.Button(u8(cmd_massive[key].reason)) then  
+										lua_thread.create(function()
+											sampSendDialogResponse(2349, 1, 0)
+											wait(50)
+											sampSendDialogResponse(2350, 1, 0)
+											wait(50)
+											sampSendDialogResponse(2351, 1, 0, '{FFFFFF} Связи с правилами, Вы будете наказаны. // Приятной игры на RDS <3')
+											wait(50)
+											sampCloseCurrentDialogWithButton(13)
+											wait(500)										
+											sampSendChat(cmd_massive[key].cmd .. " " .. pid_rep .. " " .. cmd_massive[key].time .. " " .. cmd_massive[key].reason)
+											ATReportShow.v = false  
+											imgui.Process = ATReportShow.v
+											imgui.ShowCursor = ATReportShow.v			
+										end)								
+									end 
+								end 
+							end		
+							imgui.TreePop()	
+						end					
+				imgui.EndChild()
+				imgui.EndPopup()
+			end
 			imgui.PopStyleVar(1)
-            
             if imgui.BeginPopupModal(u8'Binder', false, imgui.WindowFlags.NoResize + imgui.WindowFlags.AlwaysAutoResize) then
                 imgui.BeginChild("##EditBinder", imgui.ImVec2(600, 210), true)
                 imgui.Text(u8'Название бинда:'); imgui.SameLine()
