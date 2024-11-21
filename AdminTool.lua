@@ -174,8 +174,8 @@ local upd_upvalue = { -- массив для регистрации выборочного обновления
 	events = imgui.ImBool(false),
 } 
 
-local script_stream = 8
-local script_version_text = "14.6.1"
+local script_stream = 9
+local script_version_text = "14.7.1"
 local check_update = false
 -- ## Регистрация ссылок для GitHub, переменных для обновления ## --
 
