@@ -179,10 +179,10 @@ function main()
                                         end
                                     end
                                     input = input:gsub("arg", arg)
-                                    sampAddChatMessage(u8:decode(tostring(input)), -1)
+                                    sampSendChat(u8:decode(tostring(input)))
                                 end
                             else 
-                                sampAddChatMessage(u8:decode(tostring(input)), -1)
+                                sampSendChat(u8:decode(tostring(input)))
                             end 
                         end                         
                     end
