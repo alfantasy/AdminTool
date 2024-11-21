@@ -25,8 +25,8 @@ local locate_update = getWorkingDirectory() .. "/upbinder.ini"
 local locate_library = getWorkingDirectory() .. "/lib/libsfor.lua"
 
 local check_update_binder = false
-local version = 1
-local version_text = '1.0'
+local version = 2
+local version_text = '1.1'
 -- ## GitHub ## --
 
 -- ## Блок работы с конфигом и переменными ## --
@@ -38,6 +38,7 @@ local configB = inicfg.load({
     bind_int = {},
     bind_delay = {},
     bind_argument = {},
+    bind_my_id_arguments = {},
 }, directIni)
 inicfg.save(configB,directIni)
 
@@ -53,6 +54,7 @@ local elements = {
         keys = imgui.ImBuffer(256),
         delay = imgui.ImBuffer(2500),
         argument = imgui.ImBool(false),
+        my_id_arg = imgui.ImBool(false),
     },
     boolean = {
         CreateOrEditCommand = false,
@@ -133,7 +135,22 @@ function main()
                     else 
                         local full_input_to_cmd = atlibs.string_split(configB.bind_int[key], "~")
                         for _, input in pairs(full_input_to_cmd) do
-                            sampSendChat(u8:decode(tostring(input)))
+                            if configB.bind_argument[key] then
+                                if arg ~= nil then
+                                    if configB.bind_my_id_arguments[key] then
+                                        if input:find('my_id') then
+                                            my_id = atlibs.getMyId()
+                                            input = input:gsub('my_id', my_id)
+                                        else
+                                            sampAddChatMessage(tag .. 'Произошла ошибка при инициализации команды с собственным ID.', -1)
+                                        end
+                                    end
+                                    input = input:gsub("arg", arg)
+                                    sampSendChat(u8:decode(tostring(input)))
+                                end
+                            else 
+                                sampSendChat(u8:decode(tostring(input)))
+                            end
                         end                         
                     end
                 end 
@@ -153,11 +170,19 @@ function main()
                         for _, input in pairs(full_input_to_cmd) do
                             if configB.bind_argument[key] then  
                                 if arg ~= nil then
+                                    if configB.bind_my_id_arguments[key] then
+                                        if input:find('my_id') then
+                                            my_id = atlibs.getMyId()
+                                            input = input:gsub('my_id', my_id)
+                                        else
+                                            sampAddChatMessage(tag .. 'Произошла ошибка при инициализации команды с собственным ID.', -1)
+                                        end
+                                    end
                                     input = input:gsub("arg", arg)
-                                    sampSendChat(u8:decode(tostring(input)))
+                                    sampAddChatMessage(u8:decode(tostring(input)), -1)
                                 end
                             else 
-                                sampSendChat(u8:decode(tostring(input)))
+                                sampAddChatMessage(u8:decode(tostring(input)), -1)
                             end 
                         end                         
                     end
@@ -290,6 +315,9 @@ function imgui.OnDrawFrame()
                         if configB.bind_argument[key] ~= nil then 
                             elements.buff.argument.v = configB.bind_argument[key]
                         end
+                        if configB.bind_my_id_arguments[key] ~= nil then 
+                            elements.buff.my_id_arg.v = configB.bind_my_id_arguments[key]
+                        end
                         if configB.bind_keys[key] ~= nil then  
                             elements.buff.keys.v = configB.bind_keys[key]
                         else 
@@ -304,6 +332,7 @@ function imgui.OnDrawFrame()
                         table.remove(configB.bind_keys, key)
                         table.remove(configB.bind_delay, key)
                         table.remove(configB.bind_argument, key)
+                        table.remove(configB.bind_my_id_arguments, key)
                         BinderSave()
                     end
                 end
@@ -345,8 +374,12 @@ function imgui.OnDrawFrame()
                     imgui.PopItemWidth()
                     imgui.Checkbox(u8'Работа с аргументом', elements.buff.argument)
                     imgui.Tooltip(u8'Если Ваша команда предназначена для выдачи наказаний и тому подобное, то включите данную настройку для ввода ID с командой.')
+                    if elements.buff.argument.v then
+                        imgui.Checkbox(u8'Автоматическое подставление своего ID', elements.buff.my_id_arg)
+                        imgui.Tooltip(u8'Работает только с включенной галочкой "Работа с аргументом". В тексте необходимо [my_id], где нужен ваш ID.')
+                    end
                     imgui.CenterText(u8"Выполняемые действия")
-                    imgui.Tooltip(u8"Не забывайте про Enter, если Ваша команда выполняет несколько действий одновременно. \n Для работы с аргументом, необходимо также в команде написать arg, если вместо этого должно быть в команде Ваше значение. \n Пример: /mute arg 400 Оскобрление/Унижение \nГде в данном случае, arg - ID игрока")
+                    imgui.Tooltip(u8"Не забывайте про Enter, если Ваша команда выполняет несколько действий одновременно. \n Для работы с аргументом, необходимо также в команде написать arg, если вместо этого должно быть в команде Ваше значение. \n Пример: /mute arg 400 Оскобрление/Унижение \nГде в данном случае, arg - ID игрока\n\nЧтобы биндер автоматически подставлял ваш ID, в необходимое место поставьте [my_id]")
                     imgui.PushItemWidth(120)
                     imgui.InputTextMultiline("##command_input", elements.buff.int, imgui.ImVec2(-1,100))
                     imgui.PopItemWidth()
@@ -364,9 +397,10 @@ function imgui.OnDrawFrame()
                             table.insert(configB.bind_int, refresh_text)
                             table.insert(configB.bind_delay, elements.buff.delay.v)
                             table.insert(configB.bind_argument, elements.buff.argument.v)
+                            table.insert(configB.bind_my_id_arguments, elements.buff.my_id_arg.v)
                             if inicfg.save(configB, directIni) then  
                                 sampAddChatMessage(tag .. 'Команда "' ..u8:decode(elements.buff.name.v).. '" создана.', -1)
-                                elements.buff.name.v, elements.buff.int.v, elements.buff.delay.v, elements.buff.argument.v = "", "", "0", false
+                                elements.buff.name.v, elements.buff.int.v, elements.buff.delay.v, elements.buff.argument.v, elements.buff.my_id_arg.v = "", "", "0", false, false
                             end
                             elements.boolean.CreateOrEditCommand = false  
                         else 
@@ -380,14 +414,16 @@ function imgui.OnDrawFrame()
                             end
                             table.insert(configB.bind_delay, getpos, elements.buff.delay.v)
                             table.insert(configB.bind_argument, getpos, elements.buff.argument.v)
+                            table.insert(configB.bind_my_id_arguments, getpos, elements.buff.my_id_arg.v)
                             table.remove(configB.bind_name, getpos + 1)
                             table.remove(configB.bind_keys, getpos + 1)
                             table.remove(configB.bind_int, getpos + 1)
                             table.remove(configB.bind_delay, getpos + 1)
                             table.remove(configB.bind_argument, getpos + 1)
+                            table.remove(configB.bind_my_id_arguments, getpos + 1)
                             if inicfg.save(configB, directIni) then  
                                 sampAddChatMessage(tag .. 'Команда "' ..u8:decode(elements.buff.name.v).. '" отредактирована.', -1)
-                                elements.buff.name.v, elements.buff.int.v, elements.buff.delay.v, elements.buff.argument.v = "", "", "0", false
+                                elements.buff.name.v, elements.buff.int.v, elements.buff.delay.v, elements.buff.argument.v, elements.buff.my_id_arg.v = "", "", "0", false, false
                             end  
                             EditOldBind = false
                             elements.boolean.CreateOrEditCommand = false  

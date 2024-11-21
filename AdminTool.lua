@@ -175,7 +175,7 @@ local upd_upvalue = { -- массив для регистрации выборочного обновления
 } 
 
 local script_stream = 8
-local script_version_text = "14.7"
+local script_version_text = "14.6.1"
 local check_update = false
 -- ## Регистрация ссылок для GitHub, переменных для обновления ## --
 
@@ -429,6 +429,10 @@ local multiply_punish_frame = {}
 local quitlogin_control = true 
 local players_control_frame = {}
 -- ## Переменные для контролирования входа/выхода игрока ## --
+
+-- ## Резервные переменные ## --
+local param_for_chgn, param_for_chgn2
+-- ## Резервные переменные ## --
 
 function main()
     while not isSampAvailable() do wait(0) end
@@ -691,6 +695,28 @@ function main()
 	end
 	-- ## Регистрация команд для выдачи наказаний ## --
     -- ## Регистрация вспомогательных команд ## --
+
+	sampRegisterChatCommand('chgn', function(id, text)
+		if #id > 0 then
+			if text ~= nil then
+				param_for_chgn = id
+				if tonumber(id) == nil then
+					id = sampGetPlayerIdByNickname(id)
+				end
+				lua_thread.create(function()
+					sampSendClickPlayer(id, 0)
+					wait(200)
+					sampSendDialogResponse(500, 1, 10)
+					wait(200)
+				end)
+				sampSendChat('/changegname ' .. param_for_chgn2 .. ' ' .. text)
+			else
+				sampAddChatMessage(tag .. "Вы забыли ввести новое название банды!", -1)
+			end
+		else
+			sampAddChatMessage(tag .. "Вы забыли ввести ID/Nick/ID банды!", -1)
+		end
+	end)
 
     sampRegisterChatCommand("u", cmd_u)
 	sampRegisterChatCommand("uu", cmd_uu)
@@ -976,6 +1002,43 @@ function sampev.onPlayerJoin(id, color, npc, nickname)
 end
 
 function sampev.onShowDialog(id, style, title, button1, button2, text)
+	if title == '{9980cc}Статистика персонажа' then
+		if param_for_chgn ~= nil then
+			local this_option = false
+			sampAddChatMessage('test', -1)
+			sampAddChatMessage("спец.парам: " .. param_for_chgn, -1)
+			dialog_text = atlibs.string_split(text, '\n')
+			if tostring(param_for_chgn) then
+				this_option = false
+			elseif tonumber(param_for_chgn) then
+				this_option = true
+				name = sampGetPlayerNickname(tonumber(param_for_chgn))
+			end
+			for dialog_text_key, dialog_text_value in pairs(dialog_text) do
+				if this_option == false then
+					if dialog_text_value:match("{ffffff}ID:(.+)") then
+						id_gang = dialog_text_value:match("ID:(.+)")
+						id_gang = id_gang:gsub("{......}", "")
+						param_for_chgn2 = id_gang
+					end
+				elseif this_option == true then
+					if #name > 0 then
+						if dialog_text_value:match("{ffffff}ID:(.+)") then
+							id_gang = dialog_text_value:match("{ffffff}ID:(.+)")
+							id_gang = id_gang:gsub("{......}", "")
+							param_for_chgn2 = id_gang
+						end
+					else
+						if dialog_text_value:match("{ffffff}ID:(.+)") then
+							id_gang = dialog_text_value:match("{ffffff}ID:(.+)")
+							id_gang = id_gang:gsub("{......}", "")
+							param_for_chgn2 = id_gang
+						end
+					end
+				end
+			end
+		end
+	end
 	if title == "Mobile" then -- сюда айди нужного диалога
 		if ATRecon.v then 
 			if text:match(recon_nick) then
@@ -1120,7 +1183,7 @@ function sampev.onServerMessage(color, text)
 		if elm.boolean.render_admins_imgui.v then 
 			sampSendChat("/admins ")
 		end	
-	return true 
+		return true 
 	end	
 	if elm.boolean.automultiply.v then
 		if text:find("Администратор .+ заткнул%(.+%) игрока .+ на .+ секунд. Причина: .+") or text:find("Администратор .+ посадил%(.+%) игрока .+ в тюрьму на .+ секунд. Причина: .+") or text:find("Администратор .+ закрыл%(.+%) доступ к репорту игроку .+ на .+ секунд. Причина: .+") then  
