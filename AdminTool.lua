@@ -696,20 +696,27 @@ function main()
 	-- ## Регистрация команд для выдачи наказаний ## --
     -- ## Регистрация вспомогательных команд ## --
 
-	sampRegisterChatCommand('chgn', function(id, text)
+	sampRegisterChatCommand('chgn', function(args)
+		local id, text = args:match('(%d+) (.+)')
 		if #id > 0 then
 			if text ~= nil then
-				param_for_chgn = id
-				if tonumber(id) == nil then
-					id = sampGetPlayerIdByNickname(id)
-				end
 				lua_thread.create(function()
+					param_for_chgn = id
+					if tonumber(id) == nil then
+						id = sampGetPlayerIdByNickname(id)
+					end
 					sampSendClickPlayer(id, 0)
 					wait(200)
 					sampSendDialogResponse(500, 1, 10)
-					wait(200)
+					wait(500)
+					sampCloseCurrentDialogWithButton(0)
+					wait(1000)
+					if param_for_chgn2 ~= nil then 
+						sampSendChat('/changegname ' .. param_for_chgn2 .. ' ' .. text)
+					else
+						sampAddChatMessage(tag .. 'Ошибка в выполнении команды.', -1)
+					end
 				end)
-				sampSendChat('/changegname ' .. param_for_chgn2 .. ' ' .. text)
 			else
 				sampAddChatMessage(tag .. "Вы забыли ввести новое название банды!", -1)
 			end
