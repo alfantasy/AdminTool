@@ -310,12 +310,12 @@ cmd_massive = {
 
         -- ## Команды для выдачи бана ## --
         ['ahl'] = {
-            cmd = '/offban',
+            cmd = '/ioffban',
             reason = 'Оск/Униж/Мат in Helper',
             time = 3,
         },
         ['ank'] = {
-            cmd = '/offban',
+            cmd = '/ioffban',
             reason = 'Ник с запр.словами',
             time = 7,
         },
@@ -325,54 +325,44 @@ cmd_massive = {
             cmd = 3,
         },
         ['aob'] = {
-            cmd = '/offban',
+            cmd = '/ioffban',
             reason = 'Обход бана',
             time = 7,
         },
         ['apl'] = {
-            cmd = '/offban',
+            cmd = '/ioffban',
             reason = 'Плагиат никнейма',
             time = 7,
         },
         ['ach'] = {
-            cmd = '/offban',
-            reason = 'ИЧС/ПО',
-            time = 7,
-        },
-        ['achi'] = {
-            cmd = '/banip',
+            cmd = '/ioffban',
             reason = 'ИЧС/ПО',
             time = 7,
         },
         ['agk'] = {
-            cmd = '/offban',
+            cmd = '/ioffban',
             reason = 'Банда с нецензурной лексикой',
             time = 7,
         },
         ['obman'] = {
-            cmd = '/offban',
-            reason = 'Обман администрации/игроков',
-            time = 30,
-        },
-        ['obmanip'] = {
-            cmd = '/banip',
+            cmd = '/ioffban',
             reason = 'Обман администрации/игроков',
             time = 30,
         },
         ['abnm'] = {
-            cmd = '/offban',
+            cmd = '/ioffban',
             reason = 'Неадекватное поведение',
             time = 7,
         },
 
 		['arekl'] = {
-			cmd = '/offban',
+			cmd = '/ioffban',
 			reason = 'Реклама стор.проектов',
 			time = 999,
 		},
 	
 		['aospr'] = {
-			cmd = '/offban',
+			cmd = '/ioffban',
 			reason = 'Оскорбление проекта',
 			time = 999,
 		},
