@@ -97,7 +97,7 @@ cmd_massive = {
 	['kl'] = {
 		cmd = "/mute",
 		reason = "Клевета на администрацию",
-		time = 3000,
+		time = 2000,
 	},
 	['up'] = {
 		cmd = "/mute",
