@@ -524,8 +524,8 @@ function main()
 			if #arg > 0 then  
 				if cmd_massive[key].cmd == "/iban" or cmd_massive[key].cmd == "/ban" then
 					if config.access.ban then
-						sampSendChat("/ans " .. arg .. " Уважаемый игрок, вы нарушали правила сервера, и если вы..")
-						sampSendChat("/ans " .. arg .. " ..не согласны с наказанием, напишите жалобу на форум https://forumrds.ru")
+						sampSendChat("/ot " .. arg .. " Уважаемый игрок, вы нарушали правила сервера, и если вы..")
+						sampSendChat("/ot " .. arg .. " ..не согласны с наказанием, напишите жалобу на форум https://forumrds.ru")
 						sampSendChat(cmd_massive[key].cmd .. " " .. arg .. " " .. cmd_massive[key].time .. " " .. cmd_massive[key].reason)
 					else 
 						sampSendChat('/a ' .. cmd_massive[key].cmd .. " " .. arg .. " " .. cmd_massive[key].time .. " " .. cmd_massive[key].reason)
@@ -1428,7 +1428,7 @@ function cmd_uu(arg)
     lua_thread.create(function()
         sampSendChat("/unmute " .. arg)
         
-        sampSendChat("/ans " .. arg .. " Извиняемся за ошибку, наказание снято. Приятной игры")
+        sampSendChat("/ot " .. arg .. " Извиняемся за ошибку, наказание снято. Приятной игры")
     end)
 end
 
@@ -1436,7 +1436,7 @@ function cmd_uj(arg)
     lua_thread.create(function()
         sampSendChat("/unjail " .. arg)
         
-        sampSendChat("/ans " .. arg .. " Извиняемся за ошибку, наказание снято. Приятной игры")
+        sampSendChat("/ot " .. arg .. " Извиняемся за ошибку, наказание снято. Приятной игры")
     end)
 end
 
@@ -1451,7 +1451,7 @@ end
 function cmd_ru(arg)
     lua_thread.create(function()
 	    sampSendChat("/unrmute " .. arg)
-	    sampSendChat("/ans " .. arg .. " Извиняемся за ошибку, наказание снято. Приятной игры.")
+	    sampSendChat("/ot " .. arg .. " Извиняемся за ошибку, наказание снято. Приятной игры.")
     end)
 end
 -- ## Блок функций к вспомогательным командам ## --
@@ -2697,8 +2697,8 @@ function imgui.OnDrawFrame()
 										if cmd_massive[key].cmd == "/ban" or cmd_massive[key].cmd == '/iban' then  
 											if imgui.Button(u8(cmd_massive[key].reason)) then  
 												if config.access.ban then
-													sampSendChat("/ans " .. recon_id .. " Уважаемый игрок, вы нарушали правила сервера, и если вы..")
-													sampSendChat("/ans " .. recon_id .. " ..не согласны с наказанием, напишите жалобу на форум https://forumrds.ru")
+													sampSendChat("/ot " .. recon_id .. " Уважаемый игрок, вы нарушали правила сервера, и если вы..")
+													sampSendChat("/ot " .. recon_id .. " ..не согласны с наказанием, напишите жалобу на форум https://forumrds.ru")
 													sampSendChat(cmd_massive[key].cmd .. " " .. recon_id .. " " .. cmd_massive[key].time .. " " .. cmd_massive[key].reason)
 												else 
 													sampSendChat('/a ' .. cmd_massive[key].cmd .. " " .. recon_id .. " " .. cmd_massive[key].time .. " " .. cmd_massive[key].reason)
